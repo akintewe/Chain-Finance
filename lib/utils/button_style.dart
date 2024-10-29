@@ -3,6 +3,15 @@ import 'colors.dart';
 import 'text_styles.dart';
 
 class AppButtonStyles {
+  static final LinearGradient _buttonGradient = const LinearGradient(
+    colors: [
+      Color.fromRGBO(62, 198, 235, 1),
+      Color.fromRGBO(234, 105, 240, 1),
+    ],
+    begin: Alignment.centerLeft,
+    end: Alignment.centerRight,
+  );
+
   static ButtonStyle primaryButton = ElevatedButton.styleFrom(
     foregroundColor: Colors.white,
     minimumSize: const Size(165, 56),
@@ -17,12 +26,28 @@ class AppButtonStyles {
   );
 
   static ButtonStyle outlinedButton = OutlinedButton.styleFrom(
-    foregroundColor: AppColors.secondary,
     backgroundColor: Colors.black,
     minimumSize: const Size(165, 56),
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(10),
     ),
-    side: const BorderSide(color: AppColors.secondary),
+    side: BorderSide(
+      width: 1,
+      color: Colors.transparent,
+    ),
+  ).copyWith(
+    foregroundColor: MaterialStateProperty.all(
+      const Color.fromRGBO(62, 198, 235, 1),
+    ),
+    overlayColor: MaterialStateProperty.all(Colors.transparent),
+  );
+
+  static Decoration get outlinedButtonDecoration => BoxDecoration(
+    gradient: _buttonGradient,
+    borderRadius: BorderRadius.circular(10),
+    border: Border.all(
+      width: 1,
+      color: Colors.transparent,
+    ),
   );
 }

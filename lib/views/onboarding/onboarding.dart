@@ -74,22 +74,21 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: SizedBox(
-              height: MediaQuery.of(context).size.height - 48,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return Padding(
+              padding: EdgeInsets.all(constraints.maxWidth * 0.05), // Responsive padding
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Logo
                   SizedBox(
-                    height: 50,
-                    width: 50,
+                    height: constraints.maxHeight * 0.06,
+                    width: constraints.maxHeight * 0.06,
                     child: Image.asset('assets/images/WhatsApp_Image_2024-10-27_at_3.41.28_PM-removebg-preview.png'),
                   ),
                   
-                  const Spacer(flex: 1),
+                  SizedBox(height: constraints.maxHeight * 0.02),
                   
                   // Animated content
                   Expanded(
@@ -107,18 +106,18 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           duration: const Duration(milliseconds: 500),
                           opacity: currentIndex == index ? 1.0 : 0.0,
                           child: Column(
+                            mainAxisAlignment: MainAxisAlignment.end,
                             children: [
                               // Image
                               SizedBox(
-                               
-                                width: Get.width * 0.9,
+                                height: constraints.maxHeight * 0.5,
                                 child: Image.asset(
                                   contents[index].image,
-                                  fit: BoxFit.cover,
+                                  fit: BoxFit.contain,
                                 ),
                               ),
                               
-                            
+                              SizedBox(height: constraints.maxHeight * 0.02),
                               
                               // Text
                               Container(
@@ -126,14 +125,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                 child: RichText(
                                   textAlign: TextAlign.left,
                                   text: TextSpan(
-                                    style: AppTextStyles.heading2,
+                                    style: AppTextStyles.heading2.copyWith(
+                                      fontSize: constraints.maxWidth * 0.055,
+                                    ),
                                     children: [
-                                      TextSpan(
-                                        text: contents[index].mainText,
-                                      ),
+                                      TextSpan(text: contents[index].mainText),
                                       TextSpan(
                                         text: contents[index].gradientText,
                                         style: AppTextStyles.heading2.copyWith(
+                                          fontSize: constraints.maxWidth * 0.055,
                                           foreground: Paint()..shader = AppColors.primaryGradient.createShader(
                                             const Rect.fromLTWH(0.0, 0.0, 200.0, 70.0),
                                           ),
@@ -149,18 +149,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       },
                     ),
                   ),
-                  
-                  const SizedBox(height: 20),
-                  
+                   SizedBox(height: constraints.maxHeight * 0.02),
                   // Page indicators
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: List.generate(
                       contents.length,
                       (index) => Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 4),
-                        height: 8,
-                        width: currentIndex == index ? 24 : 8,
+                        margin: EdgeInsets.symmetric(horizontal: constraints.maxWidth * 0.01),
+                        height: constraints.maxHeight * 0.01,
+                        width: currentIndex == index ? constraints.maxWidth * 0.06 : constraints.maxWidth * 0.02,
                         decoration: BoxDecoration(
                           gradient: currentIndex == index ? AppColors.primaryGradient : null,
                           color: currentIndex == index ? null : AppColors.textSecondary,
@@ -170,41 +168,44 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     ),
                   ),
                   
-                  SizedBox(height: Get.height * 0.02),
+                  SizedBox(height: constraints.maxHeight * 0.03),
                   
                   // Buttons row
                   Row(
                     children: [
-                     
                       Expanded(
-                        child: Container(
-                          decoration: BoxDecoration(
-                            gradient: AppColors.primaryGradient,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: ElevatedButton(
-                            style: AppButtonStyles.primaryButton,
-                           onPressed: () => Routes.navigateToSignup(),
-                            child: Text('Sign Up', style: AppTextStyles.button),
+                        child: SizedBox(
+                          height: constraints.maxHeight * 0.06,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              gradient: AppColors.primaryGradient,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: ElevatedButton(
+                              style: AppButtonStyles.primaryButton,
+                              onPressed: () => Routes.navigateToSignup(),
+                              child: Text('Sign Up', style: AppTextStyles.button),
+                            ),
                           ),
                         ),
                       ),
-                      
-                      const SizedBox(width: 16),
-                      
-                      // Sign In button
+                      SizedBox(width: constraints.maxWidth * 0.04),
                       Expanded(
-                        child: Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: OutlinedButton(
-                            style: AppButtonStyles.outlinedButton,
-                         onPressed: () => Routes.navigateToSignin(),
-                            child: Text(
-                              'Sign In',
-                              style: AppTextStyles.button.copyWith(
-                                color: AppColors.secondary,
+                        child: SizedBox(
+                          height: constraints.maxHeight * 0.06,
+                          child: Container(
+                            decoration: AppButtonStyles.outlinedButtonDecoration,
+                            child: OutlinedButton(
+                              style: AppButtonStyles.outlinedButton,
+                              onPressed: () => Routes.navigateToSignin(),
+                              child: ShaderMask(
+                                shaderCallback: (Rect bounds) => AppColors.primaryGradient.createShader(bounds),
+                                child: Text(
+                                  'Sign In',
+                                  style: AppTextStyles.button.copyWith(
+                                    color: Colors.white,
+                                  ),
+                                ),
                               ),
                             ),
                           ),
@@ -213,7 +214,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     ],
                   ),
                   
-                  const SizedBox(height: 24),
+                  SizedBox(height: constraints.maxHeight * 0.02),
                   
                   // Login text
                   Center(
@@ -221,7 +222,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       onTap: () => Routes.navigateToSignin(),
                       child: RichText(
                         text: TextSpan(
-                          style: AppTextStyles.body,
+                          style: AppTextStyles.body.copyWith(
+                            fontSize: constraints.maxWidth * 0.035,
+                          ),
                           children: [
                             const TextSpan(
                               text: 'If you already have an account, you can ',
@@ -229,7 +232,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             TextSpan(
                               text: 'Login Here',
                               style: AppTextStyles.body.copyWith(
-                                color: AppColors.secondary,
+                                fontSize: constraints.maxWidth * 0.035,
+                                color: AppColors.gradient,
                                 decoration: TextDecoration.underline,
                               ),
                             ),
@@ -239,11 +243,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     ),
                   ),
                   
-                  const SizedBox(height: 24),
+                  SizedBox(height: constraints.maxHeight * 0.02),
                 ],
               ),
-            ),
-          ),
+            );
+          },
         ),
       ),
     );

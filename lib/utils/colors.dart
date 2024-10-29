@@ -7,6 +7,7 @@ class AppColors {
   static const Color surface = Color(0xFF1E1E1E);
   static const Color text = Colors.white;
   static const Color textSecondary = Color(0xFF8E8E93);
+  static  Color gradient = Color.fromRGBO(62, 198, 235, 1);
   
   static const LinearGradient primaryGradient = LinearGradient(
     colors: [Color(0xFF00F8E2), Color(0xFF6E8BFF)],
