@@ -114,7 +114,9 @@ class SignInScreen extends StatelessWidget {
                   ),
                   child: ElevatedButton(
                     style: AppButtonStyles.primaryButton,
-                    onPressed: () {},
+                    onPressed: () {
+                      Routes.navigateToDashboard();
+                    },
                     child: Text('Sign in', style: AppTextStyles.button),
                   ),
                 ),

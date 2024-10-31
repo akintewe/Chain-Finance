@@ -24,6 +24,12 @@ class AppTextStyles {
     color: AppColors.textSecondary,
   );
 
+  static TextStyle get body2 => GoogleFonts.manrope(
+    fontSize: 14,
+    fontWeight: FontWeight.w600,
+    color: AppColors.white,
+  );
+
   static TextStyle get button => GoogleFonts.manrope(
     fontSize: 16,
     fontWeight: FontWeight.w600,
