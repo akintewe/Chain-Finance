@@ -26,6 +26,20 @@ class _WalletScreenState extends State<WalletScreen> {
       'change': '+0.45%',
       'icon': 'assets/icons/Cryptocurrency (1).png',
     },
+     {
+      'name': 'Bitcoin',
+      'symbol': 'BTC',
+      'price': '\$3,676.76',
+      'change': '+0.45%',
+      'icon': 'assets/icons/Cryptocurrency (2).png',
+    },
+    {
+      'name': 'United States Dollar',
+      'symbol': 'USDT',
+      'price': '\$3,676.76',
+      'change': '+0.45%',
+      'icon': 'assets/icons/Cryptocurrency (3).png',
+    },
   ];
 
   final List<Map<String, dynamic>> cryptoList = [
@@ -247,46 +261,57 @@ class _WalletScreenState extends State<WalletScreen> {
                 ],
               ),
 
-              SizedBox(
-                height: 80,
+              // Updated Favorites ListView
+              Container(
+                height: 100, // Increased height
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
                   itemCount: favorites.length,
                   itemBuilder: (context, index) {
                     return Container(
-                      margin: const EdgeInsets.only(right: 10),
+                      width: 150, // Fixed width for each card
+                      margin: const EdgeInsets.only(right: 12),
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         color: AppColors.surface,
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Row(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Image.asset(
-                            favorites[index]['icon'],
-                            width: 24,
-                            height: 24,
-                          ),
-                          const SizedBox(width: 8),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.center,
+                          Row(
                             children: [
-                              Text(
-                                favorites[index]['amount'],
-                                style: const TextStyle(
-                                  color: AppColors.text,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                              Image.asset(
+                                favorites[index]['icon'],
+                                width: 24,
+                                height: 24,
                               ),
+                              const SizedBox(width: 8),
                               Text(
-                                favorites[index]['change'],
+                                favorites[index]['symbol'],
                                 style: const TextStyle(
-                                  color: Colors.green,
-                                  fontSize: 12,
+                                  color: AppColors.textSecondary,
+                                  fontSize: 14,
                                 ),
                               ),
                             ],
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            favorites[index]['amount'] ?? favorites[index]['price'],
+                            style: const TextStyle(
+                              color: AppColors.text,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                          Text(
+                            favorites[index]['change'],
+                            style: const TextStyle(
+                              color: Colors.green,
+                              fontSize: 12,
+                            ),
                           ),
                         ],
                       ),
