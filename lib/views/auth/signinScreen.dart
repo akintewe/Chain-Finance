@@ -1,5 +1,6 @@
 import 'package:chain_finance/routes/routes.dart';
 import 'package:chain_finance/utils/custom_textfield.dart';
+import 'package:chain_finance/views/auth/forgot_password_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../utils/colors.dart';
@@ -92,7 +93,7 @@ class SignInScreen extends StatelessWidget {
                       ],
                     ),
                     TextButton(
-                      onPressed: () {},
+                      onPressed: () => Get.to(() => ForgotPasswordScreen()),
                       child: Text(
                         'Forgot password?',
                         style: AppTextStyles.body.copyWith(

@@ -1,7 +1,10 @@
 import 'package:chain_finance/utils/colors.dart';
 import 'package:chain_finance/utils/text_styles.dart';
+import 'package:chain_finance/views/home/receive_screen.dart';
+import 'package:chain_finance/views/home/send_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:get/get.dart';
 
 class WalletScreen extends StatefulWidget {
   const WalletScreen({super.key});
@@ -199,7 +202,7 @@ class _WalletScreenState extends State<WalletScreen> {
                             borderRadius: BorderRadius.circular(10),
                           ),
                         ),
-                        onPressed: () {},
+                      onPressed: () => Get.to(() => const SendScreen()),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -226,7 +229,7 @@ class _WalletScreenState extends State<WalletScreen> {
                             borderRadius: BorderRadius.circular(15),
                           ),
                         ),
-                        onPressed: () {},
+                       onPressed: () => Get.to(() => const ReceiveScreen()),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children:  [

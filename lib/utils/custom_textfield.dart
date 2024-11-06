@@ -8,6 +8,7 @@ class CustomTextField extends StatefulWidget {
   final String? hintText;
   final TextEditingController controller;
   final bool hasIcon;
+  final Widget? prefixIcon;
 
   const CustomTextField({
     super.key,
@@ -16,6 +17,7 @@ class CustomTextField extends StatefulWidget {
     this.hintText,
     required this.controller,
     this.hasIcon = false,
+    this.prefixIcon,
   });
 
   @override
@@ -66,6 +68,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
                 horizontal: 16,
                 vertical: 16,
               ),
+              prefixIcon: widget.prefixIcon,
               suffixIcon: widget.isPassword && widget.hasIcon
                   ? IconButton(
                       icon: Icon(
