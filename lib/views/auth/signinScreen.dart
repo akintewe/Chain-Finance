@@ -1,6 +1,7 @@
 import 'package:chain_finance/routes/routes.dart';
 import 'package:chain_finance/utils/custom_textfield.dart';
 import 'package:chain_finance/views/auth/forgot_password_screen.dart';
+import 'package:chain_finance/views/dashboard/dashboard_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../utils/colors.dart';
@@ -116,7 +117,11 @@ class SignInScreen extends StatelessWidget {
                   child: ElevatedButton(
                     style: AppButtonStyles.primaryButton,
                     onPressed: () {
-                      Routes.navigateToDashboard();
+                      Get.off(
+                        () => const DashboardScreen(),
+                        transition: Transition.fade,
+                        duration: const Duration(milliseconds: 500),
+                      );
                     },
                     child: Text('Sign in', style: AppTextStyles.button),
                   ),
