@@ -3,10 +3,12 @@ import 'package:chain_finance/utils/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'views/onboarding/onboarding.dart';
-
-
+import 'controllers/auth_controller.dart';
 
 void main() {
+  // Initialize Get controllers
+  Get.put(AuthController());
+  
   runApp(const MyApp());
 }
 

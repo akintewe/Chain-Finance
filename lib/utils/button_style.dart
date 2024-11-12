@@ -50,4 +50,18 @@ class AppButtonStyles {
       color: Colors.transparent,
     ),
   );
+
+  static final disabledButton = ButtonStyle(
+    backgroundColor: MaterialStateProperty.all(Colors.transparent),
+    foregroundColor: MaterialStateProperty.all(Colors.white.withOpacity(0.5)),
+    elevation: MaterialStateProperty.all(0),
+    shape: MaterialStateProperty.all(
+      RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10),
+      ),
+    ),
+    padding: MaterialStateProperty.all(
+      const EdgeInsets.symmetric(vertical: 16),
+    ),
+  );
 }

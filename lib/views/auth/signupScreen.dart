@@ -5,7 +5,8 @@ import 'package:get/get.dart';
 import '../../utils/colors.dart';
 import '../../utils/text_styles.dart';
 import '../../utils/button_style.dart';
-
+import 'package:chain_finance/controllers/auth_controller.dart';
+import 'package:flutter_rx/flutter_rx.dart';
 
 class SignUpScreen extends StatelessWidget {
   SignUpScreen({super.key});
@@ -15,6 +16,30 @@ class SignUpScreen extends StatelessWidget {
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmPasswordController = TextEditingController();
   final TextEditingController referralController = TextEditingController();
+
+  final AuthController authController = Get.find();
+
+  final RxBool _isFormValid = false.obs;
+
+  void validateForm() {
+    final bool isEmailValid = emailController.text.isNotEmpty;
+    final bool isUsernameValid = usernameController.text.isNotEmpty;
+    final bool isPasswordValid = passwordController.text.isNotEmpty;
+    final bool isConfirmPasswordValid = confirmPasswordController.text.isNotEmpty && 
+                                      passwordController.text == confirmPasswordController.text;
+
+    print('Email valid: $isEmailValid');
+    print('Username valid: $isUsernameValid');
+    print('Password valid: $isPasswordValid');
+    print('Confirm password valid: $isConfirmPasswordValid');
+
+    _isFormValid.value = isEmailValid && 
+                        isUsernameValid && 
+                        isPasswordValid && 
+                        isConfirmPasswordValid;
+    
+    print('Form valid: ${_isFormValid.value}');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -63,6 +88,7 @@ class SignUpScreen extends StatelessWidget {
                   label: 'Email',
                   controller: emailController,
                   hintText: 'johngray@gmail.com',
+                  onChanged: (val) => validateForm(),
                 ),
                 const SizedBox(height: 16),
                 
@@ -70,6 +96,7 @@ class SignUpScreen extends StatelessWidget {
                   label: 'User name',
                   controller: usernameController,
                   hintText: 'JohnGrayy123',
+                  onChanged: (val) => validateForm(),
                 ),
                 const SizedBox(height: 16),
                 
@@ -79,6 +106,7 @@ class SignUpScreen extends StatelessWidget {
                   isPassword: true,
                   hasIcon: true,
                   hintText: '**************',
+                  onChanged: (val) => validateForm(),
                 ),
                 const SizedBox(height: 16),
                 
@@ -88,23 +116,42 @@ class SignUpScreen extends StatelessWidget {
                   isPassword: true,
                   hasIcon: true,
                   hintText: 'Re-enter Password',
+                  onChanged: (val) => validateForm(),
                 ),
                 const SizedBox(height: 30),
                 
               
                 
-                Container(
+                Obx(() => Container(
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    gradient: AppColors.primaryGradient,
+                    gradient: _isFormValid.value 
+                      ? AppColors.primaryGradient
+                      : LinearGradient(
+                          colors: AppColors.primaryGradient.colors
+                              .map((color) => color.withOpacity(0.5))
+                              .toList(),
+                          begin: AppColors.primaryGradient.begin,
+                          end: AppColors.primaryGradient.end,
+                        ),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: ElevatedButton(
                     style: AppButtonStyles.primaryButton,
-                    onPressed: () {},
+                    onPressed: _isFormValid.value 
+                      ? () {
+                          authController.registerUser(
+                            name: usernameController.text,
+                            email: emailController.text,
+                            username: usernameController.text,
+                            password: passwordController.text,
+                            passwordConfirmation: confirmPasswordController.text,
+                          );
+                        }
+                      : null,
                     child: Text('Get Started', style: AppTextStyles.button),
                   ),
-                ),
+                )),
               ],
             ),
           ),

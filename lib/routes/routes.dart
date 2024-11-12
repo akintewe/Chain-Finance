@@ -2,6 +2,8 @@ import 'package:chain_finance/utils/custom_page_route.dart';
 import 'package:chain_finance/views/auth/signinScreen.dart';
 import 'package:chain_finance/views/auth/signupScreen.dart';
 import 'package:chain_finance/views/dashboard/dashboard_screen.dart';
+import 'package:chain_finance/views/auth/email_verification_screen.dart';
+import 'package:chain_finance/views/auth/create_passcode_screen.dart';
 
 import 'package:get/get.dart';
 
@@ -10,6 +12,8 @@ class Routes {
   static const String signup = '/signup';
   static const String signin = '/signin';
   static const String dashboard = '/dashboard';
+  static const String emailVerification = '/email-verification';
+  static const String createPasscode = '/create-passcode';
 
   static final routes = [
     GetPage(
@@ -27,6 +31,18 @@ class Routes {
     GetPage(
       name: dashboard,
       page: () => const DashboardScreen(),
+      customTransition: CustomPageRoute(),
+      transitionDuration: const Duration(milliseconds: 400),
+    ),
+    GetPage(
+      name: emailVerification,
+      page: () => EmailVerificationScreen(),
+      transition: Transition.rightToLeft,
+      transitionDuration: const Duration(milliseconds: 300),
+    ),
+    GetPage(
+      name: createPasscode,
+      page: () => CreatePasscodeScreen(),
       customTransition: CustomPageRoute(),
       transitionDuration: const Duration(milliseconds: 400),
     ),

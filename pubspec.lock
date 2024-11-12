@@ -94,6 +94,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.0.0"
+  flutter_rx:
+    dependency: "direct main"
+    description:
+      name: flutter_rx
+      sha256: "50f2571b9479800b7145b7f24f31e8427d619bf45c76de366e7b71a88decd7aa"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.5.1"
+  flutter_rx_core:
+    dependency: transitive
+    description:
+      name: flutter_rx_core
+      sha256: "7cf058b1f76932c061f1de722e12b526af9f27ed020f88f971826d9db6ee4989"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.1.0"
   flutter_svg:
     dependency: "direct main"
     description:
@@ -179,6 +195,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.0.0"
+  loading_animation_widget:
+    dependency: "direct main"
+    description:
+      name: loading_animation_widget
+      sha256: "9fe23381f3096e902f39e87e487648ff7f74925e86234353fa885bb9f6c98004"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.3.0"
   matcher:
     dependency: transitive
     description:
@@ -195,6 +219,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.11.1"
+  memoize:
+    dependency: transitive
+    description:
+      name: memoize
+      sha256: "51481d328c86cbdc59711369179bac88551ca0556569249be5317e66fc796cac"
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.0.0"
   meta:
     dependency: transitive
     description:
@@ -315,6 +347,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.1.0"
+  rxdart:
+    dependency: transitive
+    description:
+      name: rxdart
+      sha256: "0c7c0cedd93788d996e33041ffecda924cc54389199cde4e6a34b440f50044cb"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.27.7"
   sky_engine:
     dependency: transitive
     description: flutter

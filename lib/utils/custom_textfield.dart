@@ -9,6 +9,7 @@ class CustomTextField extends StatefulWidget {
   final TextEditingController controller;
   final bool hasIcon;
   final Widget? prefixIcon;
+  final Function(String)? onChanged;
 
   const CustomTextField({
     super.key,
@@ -18,6 +19,7 @@ class CustomTextField extends StatefulWidget {
     required this.controller,
     this.hasIcon = false,
     this.prefixIcon,
+    this.onChanged,
   });
 
   @override
@@ -83,6 +85,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
                     )
                   : null,
             ),
+            onChanged: widget.onChanged,
           ),
         ),
       ],
