@@ -15,6 +15,14 @@ class SignInScreen extends StatelessWidget {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final RxBool rememberMe = false.obs;
+  final RxBool _isFormValid = false.obs;
+
+  void validateForm() {
+    final bool isEmailValid = emailController.text.isNotEmpty;
+    final bool isPasswordValid = passwordController.text.isNotEmpty;
+
+    _isFormValid.value = isEmailValid && isPasswordValid;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -63,6 +71,7 @@ class SignInScreen extends StatelessWidget {
                   label: 'Email',
                   controller: emailController,
                   hintText: 'johngray@gmail.com',
+                  onChanged: (val) => validateForm(),
                 ),
                 const SizedBox(height: 16),
                 
@@ -72,6 +81,7 @@ class SignInScreen extends StatelessWidget {
                   isPassword: true,
                   hasIcon: true,
                   hintText: '**************',
+                  onChanged: (val) => validateForm(),
                 ),
                 const SizedBox(height: 16),
                 
@@ -108,24 +118,28 @@ class SignInScreen extends StatelessWidget {
                 const SizedBox(height: 32),
                 
                 // Sign in button
-                Container(
+                Obx(() => Container(
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    gradient: AppColors.primaryGradient,
+                    gradient: _isFormValid.value 
+                      ? AppColors.primaryGradient
+                      : LinearGradient(
+                          colors: AppColors.primaryGradient.colors
+                              .map((color) => color.withOpacity(0.5))
+                              .toList(),
+                          begin: AppColors.primaryGradient.begin,
+                          end: AppColors.primaryGradient.end,
+                        ),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: ElevatedButton(
                     style: AppButtonStyles.primaryButton,
-                    onPressed: () {
-                      Get.off(
-                        () => const DashboardScreen(),
-                        transition: Transition.fade,
-                        duration: const Duration(milliseconds: 500),
-                      );
-                    },
-                    child: Text('Sign in', style: AppTextStyles.button),
+                    onPressed: _isFormValid.value 
+                      ? () => Get.off(() => const DashboardScreen())
+                      : null,
+                    child: Text('Sign In', style: AppTextStyles.button),
                   ),
-                ),
+                )),
               ],
             ),
           ),

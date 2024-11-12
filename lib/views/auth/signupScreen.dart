@@ -20,6 +20,7 @@ class SignUpScreen extends StatelessWidget {
   final AuthController authController = Get.find();
 
   final RxBool _isFormValid = false.obs;
+  final RxString _passwordError = ''.obs;
 
   void validateForm() {
     final bool isEmailValid = emailController.text.isNotEmpty;
@@ -28,17 +29,17 @@ class SignUpScreen extends StatelessWidget {
     final bool isConfirmPasswordValid = confirmPasswordController.text.isNotEmpty && 
                                       passwordController.text == confirmPasswordController.text;
 
-    print('Email valid: $isEmailValid');
-    print('Username valid: $isUsernameValid');
-    print('Password valid: $isPasswordValid');
-    print('Confirm password valid: $isConfirmPasswordValid');
+    if (confirmPasswordController.text.isNotEmpty && 
+        passwordController.text != confirmPasswordController.text) {
+      _passwordError.value = 'Passwords do not match';
+    } else {
+      _passwordError.value = '';
+    }
 
     _isFormValid.value = isEmailValid && 
                         isUsernameValid && 
                         isPasswordValid && 
                         isConfirmPasswordValid;
-    
-    print('Form valid: ${_isFormValid.value}');
   }
 
   @override
@@ -118,9 +119,20 @@ class SignUpScreen extends StatelessWidget {
                   hintText: 'Re-enter Password',
                   onChanged: (val) => validateForm(),
                 ),
+                Obx(() => _passwordError.value.isNotEmpty
+                  ? Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Text(
+                        _passwordError.value,
+                        style: TextStyle(
+                          color: Colors.red,
+                          fontSize: 12,
+                        ),
+                      ),
+                    )
+                  : const SizedBox.shrink()
+                ),
                 const SizedBox(height: 30),
-                
-              
                 
                 Obx(() => Container(
                   width: double.infinity,
