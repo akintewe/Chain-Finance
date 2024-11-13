@@ -5,11 +5,14 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 import 'package:chain_finance/views/auth/new_password_screen.dart';
+import 'package:chain_finance/controllers/auth_controller.dart';
 
 class OTPVerificationScreen extends StatelessWidget {
   OTPVerificationScreen({super.key});
 
   final TextEditingController otpController = TextEditingController();
+  final RxBool _isOtpComplete = false.obs;
+  final AuthController authController = Get.find();
 
   @override
   Widget build(BuildContext context) {
@@ -66,7 +69,9 @@ class OTPVerificationScreen extends StatelessWidget {
                     selectedColor: AppColors.secondary,
                   ),
                   enableActiveFill: true,
-                  onChanged: (value) {},
+                  onChanged: (value) {
+                    _isOtpComplete.value = value.length == 4;
+                  },
                 ),
                 
                 const SizedBox(height: 24),
@@ -81,7 +86,9 @@ class OTPVerificationScreen extends StatelessWidget {
                       ),
                     ),
                     TextButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        authController.resendOTP();
+                      },
                       child: Text(
                         'Resend',
                         style: AppTextStyles.body.copyWith(
@@ -95,18 +102,28 @@ class OTPVerificationScreen extends StatelessWidget {
                 
                 const SizedBox(height: 32),
                 
-                Container(
+                Obx(() => Container(
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    gradient: AppColors.primaryGradient,
+                    gradient: _isOtpComplete.value 
+                      ? AppColors.primaryGradient
+                      : LinearGradient(
+                          colors: AppColors.primaryGradient.colors
+                              .map((color) => color.withOpacity(0.5))
+                              .toList(),
+                          begin: AppColors.primaryGradient.begin,
+                          end: AppColors.primaryGradient.end,
+                        ),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: ElevatedButton(
                     style: AppButtonStyles.primaryButton,
-                    onPressed: () => Get.to(() => NewPasswordScreen()),
+                    onPressed: _isOtpComplete.value
+                      ? () => authController.verifyOTP(otpController.text)
+                      : null,
                     child: Text('Verify', style: AppTextStyles.button),
                   ),
-                ),
+                )),
               ],
             ),
           ),

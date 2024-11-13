@@ -7,6 +7,7 @@ import 'package:get/get.dart';
 import '../../utils/colors.dart';
 import '../../utils/text_styles.dart';
 import '../../utils/button_style.dart';
+import '../../controllers/auth_controller.dart';
 
 
 class SignInScreen extends StatelessWidget {
@@ -16,6 +17,7 @@ class SignInScreen extends StatelessWidget {
   final TextEditingController passwordController = TextEditingController();
   final RxBool rememberMe = false.obs;
   final RxBool _isFormValid = false.obs;
+  final AuthController _authController = Get.find<AuthController>();
 
   void validateForm() {
     final bool isEmailValid = emailController.text.isNotEmpty;
@@ -135,7 +137,10 @@ class SignInScreen extends StatelessWidget {
                   child: ElevatedButton(
                     style: AppButtonStyles.primaryButton,
                     onPressed: _isFormValid.value 
-                      ? () => Get.off(() => const DashboardScreen())
+                      ? () => _authController.login(
+                          email: emailController.text,
+                          password: passwordController.text,
+                        )
                       : null,
                     child: Text('Sign In', style: AppTextStyles.button),
                   ),

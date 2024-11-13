@@ -42,7 +42,7 @@ class AuthController extends GetxController {
         print(response.body);
         final data = jsonDecode(response.body);
         Get.snackbar('Success', 'Registration successful');
-        Get.toNamed(Routes.emailVerification);
+        Routes.navigateToEmailVerification(email);
       } else {
         print(response.body);
         throw jsonDecode(response.body)['message'] ?? 'Registration failed';
@@ -69,7 +69,7 @@ class AuthController extends GetxController {
 
       if (response.statusCode == 200) {
         Get.snackbar('Success', 'OTP verified successfully');
-        Get.toNamed(Routes.signin);
+        // Get.to(() => NewPasswordScreen());
       } else {
         throw jsonDecode(response.body)['message'] ?? 'Invalid OTP';
       }
@@ -87,6 +87,7 @@ class AuthController extends GetxController {
     required String password,
   }) async {
     try {
+      Loader.show();
       _isLoading.value = true;
       
       final response = await http.post(
@@ -98,18 +99,35 @@ class AuthController extends GetxController {
         }),
       );
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        _token.value = data['token']; // Assuming the token is returned
-        Get.snackbar('Success', 'Login successful');
-        Get.offAllNamed(Routes.dashboard);
+      final data = jsonDecode(response.body);
+      
+      if (response.statusCode == 200 && data['status'] == true) {
+        // Store token
+        _token.value = data['data']['token'];
+        
+        // Store user data if needed
+        final userData = data['data']['user'];
+        // You might want to create a User model and store this data
+        
+        Get.snackbar(
+          'Success', 
+          data['message'] ?? 'Login successful',
+          snackPosition: SnackPosition.TOP,
+        );
+        
+        Routes.navigateToDashboard();
       } else {
-        throw jsonDecode(response.body)['message'] ?? 'Invalid credentials';
+        throw data['message'] ?? 'Invalid credentials';
       }
     } catch (e) {
-      Get.snackbar('Error', e.toString());
+      Get.snackbar(
+        'Error', 
+        e.toString(),
+        snackPosition: SnackPosition.TOP,
+      );
     } finally {
       _isLoading.value = false;
+      Loader.hide();
     }
   }
 
@@ -140,26 +158,33 @@ class AuthController extends GetxController {
     }
   }
 
-  Future<void> verifyEmailOTP(String otp) async {
+  Future<void> verifyEmailOTP(String otp, String email) async {
     try {
+      Loader.show();
       _isLoading.value = true;
       
       final response = await http.post(
-        Uri.parse('$baseUrl/verify-email'),
+        Uri.parse('$baseUrl/verify-otp'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'otp': otp}),
+        body: jsonEncode({
+          'email': email,
+          'otp': otp
+        }),
       );
 
       if (response.statusCode == 200) {
+        print(response.body);
         Get.snackbar('Success', 'Email verified successfully');
         Get.toNamed(Routes.createPasscode);
       } else {
+        print(response.body);
         throw jsonDecode(response.body)['message'] ?? 'Invalid OTP';
       }
     } catch (e) {
       Get.snackbar('Error', e.toString());
     } finally {
       _isLoading.value = false;
+      Loader.hide();
     }
   }
 
@@ -179,6 +204,50 @@ class AuthController extends GetxController {
         Get.offAllNamed(Routes.signin);
       } else {
         throw jsonDecode(response.body)['message'] ?? 'Failed to create passcode';
+      }
+    } catch (e) {
+      Get.snackbar('Error', e.toString());
+    } finally {
+      _isLoading.value = false;
+      Loader.hide();
+    }
+  }
+
+  Future<void> resendEmailVerification() async {
+    try {
+      _isLoading.value = true;
+      
+      final response = await http.post(
+        Uri.parse('$baseUrl/resend-email-verification'),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        Get.snackbar('Success', 'Verification code resent successfully');
+      } else {
+        throw jsonDecode(response.body)['message'] ?? 'Failed to resend verification code';
+      }
+    } catch (e) {
+      Get.snackbar('Error', e.toString());
+    } finally {
+      _isLoading.value = false;
+    }
+  }
+
+  Future<void> resendOTP() async {
+    try {
+      Loader.show();
+      _isLoading.value = true;
+      
+      final response = await http.post(
+        Uri.parse('$baseUrl/resend-otp'),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        Get.snackbar('Success', 'OTP resent successfully');
+      } else {
+        throw jsonDecode(response.body)['message'] ?? 'Failed to resend OTP';
       }
     } catch (e) {
       Get.snackbar('Error', e.toString());

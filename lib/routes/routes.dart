@@ -36,7 +36,7 @@ class Routes {
     ),
     GetPage(
       name: emailVerification,
-      page: () => EmailVerificationScreen(),
+      page: () =>  EmailVerificationScreen(email: Get.arguments),
       transition: Transition.rightToLeft,
       transitionDuration: const Duration(milliseconds: 300),
     ),
@@ -58,5 +58,9 @@ class Routes {
 
   static void navigateToDashboard() {
     Get.offAllNamed(dashboard);
+  }
+
+  static void navigateToEmailVerification(String email) {
+    Get.toNamed(emailVerification, arguments: email);
   }
 }

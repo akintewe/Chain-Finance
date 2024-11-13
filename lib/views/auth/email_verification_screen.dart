@@ -8,7 +8,8 @@ import 'package:pin_code_fields/pin_code_fields.dart';
 import 'package:chain_finance/controllers/auth_controller.dart';
 
 class EmailVerificationScreen extends StatefulWidget {
-  const EmailVerificationScreen({super.key});
+  final String email;
+  const EmailVerificationScreen({super.key, required this.email});
 
   @override
   State<EmailVerificationScreen> createState() => _EmailVerificationScreenState();
@@ -124,6 +125,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                       onPressed: _canResend.value 
                         ? () {
                             // Implement resend logic here
+                            authController.resendEmailVerification();
                             startTimer();
                           }
                         : null,
@@ -151,10 +153,13 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                   decoration: BoxDecoration(
                     gradient: _isOtpComplete.value 
                       ? AppColors.primaryGradient
-                      : null,
-                    color: _isOtpComplete.value 
-                      ? null 
-                      : AppColors.surface,
+                      : LinearGradient(
+                          colors: AppColors.primaryGradient.colors
+                              .map((color) => color.withOpacity(0.5))
+                              .toList(),
+                          begin: AppColors.primaryGradient.begin,
+                          end: AppColors.primaryGradient.end,
+                        ),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: ElevatedButton(
@@ -162,7 +167,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                       ? AppButtonStyles.primaryButton
                       : AppButtonStyles.disabledButton,
                     onPressed: _isOtpComplete.value
-                      ? () => authController.verifyEmailOTP(otpController.text)
+                      ? () => authController.verifyEmailOTP(otpController.text, widget.email)
                       : null,
                     child: Text('Verify', style: AppTextStyles.button),
                   ),
