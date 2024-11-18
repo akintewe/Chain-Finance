@@ -124,8 +124,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                     Obx(() => TextButton(
                       onPressed: _canResend.value 
                         ? () {
-                            // Implement resend logic here
-                            authController.resendEmailVerification();
+                            authController.resendOTP(widget.email);
                             startTimer();
                           }
                         : null,

@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../routes/routes.dart';
 import '../utils/loader.dart';
+import 'package:flutter/material.dart';
 
 class AuthController extends GetxController {
   static AuthController get instance => Get.find();
@@ -68,9 +69,14 @@ class AuthController extends GetxController {
       );
 
       if (response.statusCode == 200) {
+          _isLoading.value = false;
+      Loader.hide();
         Get.snackbar('Success', 'OTP verified successfully');
         // Get.to(() => NewPasswordScreen());
       } else {
+          _isLoading.value = false;
+      Loader.hide();
+        Get.snackbar('Error', jsonDecode(response.body)['message'] ?? 'Invalid OTP');
         throw jsonDecode(response.body)['message'] ?? 'Invalid OTP';
       }
     } catch (e) {
@@ -102,28 +108,41 @@ class AuthController extends GetxController {
       final data = jsonDecode(response.body);
       
       if (response.statusCode == 200 && data['status'] == true) {
-        // Store token
         _token.value = data['data']['token'];
-        
-        // Store user data if needed
-        final userData = data['data']['user'];
-        // You might want to create a User model and store this data
-        
         Get.snackbar(
           'Success', 
           data['message'] ?? 'Login successful',
-          snackPosition: SnackPosition.TOP,
+          backgroundColor: Colors.green.withOpacity(0.1),
+          colorText: Colors.green,
         );
-        
         Routes.navigateToDashboard();
+      } else if (response.statusCode == 401) {
+         _isLoading.value = false;
+      Loader.hide();
+        print(data);
+        Get.snackbar(
+          'Error', 
+          data['message'] ?? 'Invalid credentials',
+          backgroundColor: Colors.red.withOpacity(0.1),
+          colorText: Colors.red,
+        );
       } else {
-        throw data['message'] ?? 'Invalid credentials';
+         _isLoading.value = false;
+      Loader.hide();
+        print(data);
+        Get.snackbar(
+          'Error', 
+          data['message'] ?? 'Login failed',
+          backgroundColor: Colors.red.withOpacity(0.1),
+          colorText: Colors.red,
+        );
       }
     } catch (e) {
       Get.snackbar(
         'Error', 
-        e.toString(),
-        snackPosition: SnackPosition.TOP,
+        'An error occurred. Please try again.',
+        backgroundColor: Colors.red.withOpacity(0.1),
+        colorText: Colors.red,
       );
     } finally {
       _isLoading.value = false;
@@ -172,38 +191,63 @@ class AuthController extends GetxController {
         }),
       );
 
-      if (response.statusCode == 200) {
-        print(response.body);
-        Get.snackbar('Success', 'Email verified successfully');
-        Get.toNamed(Routes.createPasscode);
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200 && data['status'] == true) {
+          _isLoading.value = false;
+      Loader.hide();
+        Get.snackbar(
+          'Success', 
+          data['message'] ?? 'Email verified successfully',
+          backgroundColor: Colors.green.withOpacity(0.1),
+          colorText: Colors.green,
+        );
+        Get.toNamed(Routes.createPasscode, arguments: email);
       } else {
-        print(response.body);
-        throw jsonDecode(response.body)['message'] ?? 'Invalid OTP';
+          _isLoading.value = false;
+      Loader.hide();
+        Get.snackbar(
+          'Error',
+          data['message'] ?? 'Invalid OTP',
+          backgroundColor: Colors.red.withOpacity(0.1),
+          colorText: Colors.red,
+        );
       }
     } catch (e) {
-      Get.snackbar('Error', e.toString());
+        _isLoading.value = false;
+      Loader.hide();
+      Get.snackbar(
+        'Error',
+        'An error occurred. Please try again.',
+        backgroundColor: Colors.red.withOpacity(0.1),
+        colorText: Colors.red,
+      );
     } finally {
       _isLoading.value = false;
       Loader.hide();
     }
   }
 
-  Future<void> createPasscode(String passcode) async {
+  Future<void> createPasscode(String passcode, String email) async {
     try {
+      print('Running createPasscode');
       Loader.show();
       _isLoading.value = true;
       
       final response = await http.post(
-        Uri.parse('$baseUrl/create-passcode'),
+        Uri.parse('$baseUrl/set-transaction-pin'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'passcode': passcode}),
+        body: jsonEncode({
+          'email': email,
+          'transaction_pin': passcode,
+        }),
       );
 
       if (response.statusCode == 200) {
-        Get.snackbar('Success', 'Passcode created successfully');
+        Get.snackbar('Success', 'Transaction PIN set successfully');
         Get.offAllNamed(Routes.signin);
       } else {
-        throw jsonDecode(response.body)['message'] ?? 'Failed to create passcode';
+        throw jsonDecode(response.body)['message'] ?? 'Failed to set transaction PIN';
       }
     } catch (e) {
       Get.snackbar('Error', e.toString());
@@ -234,7 +278,9 @@ class AuthController extends GetxController {
     }
   }
 
-  Future<void> resendOTP() async {
+  Future<void> resendOTP(String email) async {
+    print('Running resendOTP');
+    print(email);
     try {
       Loader.show();
       _isLoading.value = true;
@@ -242,15 +288,53 @@ class AuthController extends GetxController {
       final response = await http.post(
         Uri.parse('$baseUrl/resend-otp'),
         headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'email': email,
+        }),
       );
 
+      final data = jsonDecode(response.body);
+
       if (response.statusCode == 200) {
-        Get.snackbar('Success', 'OTP resent successfully');
+        _isLoading.value = false;
+      Loader.hide();
+        print(data);
+        Get.snackbar(
+          'Success', 
+          'OTP sent successfully',
+          backgroundColor: Colors.green.withOpacity(0.1),
+          colorText: Colors.green,
+        );
+      } else if (response.statusCode == 400) {
+        _isLoading.value = false;
+      Loader.hide();
+        print(data);
+        Get.snackbar(
+          'Error',
+          data['message'] ?? 'Bad request',
+          backgroundColor: Colors.red.withOpacity(0.1),
+          colorText: Colors.red,
+        );
       } else {
-        throw jsonDecode(response.body)['message'] ?? 'Failed to resend OTP';
+        _isLoading.value = false;
+      Loader.hide();
+        print(data);
+        Get.snackbar(
+          'Error',
+          'Failed to send OTP',
+          backgroundColor: Colors.red.withOpacity(0.1),
+          colorText: Colors.red,
+        );
       }
     } catch (e) {
-      Get.snackbar('Error', e.toString());
+      _isLoading.value = false;
+      Loader.hide();
+      Get.snackbar(
+        'Error',
+        'An error occurred. Please try again.',
+        backgroundColor: Colors.red.withOpacity(0.1),
+        colorText: Colors.red,
+      );
     } finally {
       _isLoading.value = false;
       Loader.hide();

@@ -11,9 +11,12 @@ class CreatePasscodeScreen extends StatelessWidget {
 
   final TextEditingController passcodeController = TextEditingController();
   final AuthController authController = Get.find();
+  final RxBool _isPasscodeComplete = false.obs;
 
   @override
   Widget build(BuildContext context) {
+    final String email = Get.arguments as String;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -36,7 +39,7 @@ class CreatePasscodeScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'Please create a 6-digit passcode to secure your account',
+                  'Please create a 4-digit passcode to secure your account',
                   style: AppTextStyles.body.copyWith(
                     color: AppColors.textSecondary,
                     fontSize: 16,
@@ -46,7 +49,7 @@ class CreatePasscodeScreen extends StatelessWidget {
                 
                 PinCodeTextField(
                   appContext: context,
-                  length: 6,
+                  length: 4,
                   controller: passcodeController,
                   cursorColor: AppColors.secondary,
                   keyboardType: TextInputType.number,
@@ -68,23 +71,35 @@ class CreatePasscodeScreen extends StatelessWidget {
                     selectedColor: AppColors.secondary,
                   ),
                   enableActiveFill: true,
-                  onChanged: (value) {},
+                  onChanged: (value) {
+                    _isPasscodeComplete.value = value.length == 4;
+                  },
                 ),
                 
                 const SizedBox(height: 32),
                 
-                Container(
+                Obx(() => Container(
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    gradient: AppColors.primaryGradient,
+                    gradient: _isPasscodeComplete.value 
+                      ? AppColors.primaryGradient
+                      : LinearGradient(
+                          colors: AppColors.primaryGradient.colors
+                              .map((color) => color.withOpacity(0.5))
+                              .toList(),
+                          begin: AppColors.primaryGradient.begin,
+                          end: AppColors.primaryGradient.end,
+                        ),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: ElevatedButton(
                     style: AppButtonStyles.primaryButton,
-                    onPressed: () => authController.createPasscode(passcodeController.text),
-                    child: Text('Create Passcode', style: AppTextStyles.button),
+                    onPressed: _isPasscodeComplete.value
+                      ? () => authController.createPasscode(passcodeController.text, email)
+                      : null,
+                    child: Text('Create PIN', style: AppTextStyles.button),
                   ),
-                ),
+                )),
               ],
             ),
           ),

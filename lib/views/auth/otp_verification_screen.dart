@@ -16,6 +16,8 @@ class OTPVerificationScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final String email = Get.arguments as String;
+    
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -87,7 +89,7 @@ class OTPVerificationScreen extends StatelessWidget {
                     ),
                     TextButton(
                       onPressed: () {
-                        authController.resendOTP();
+                        authController.resendOTP(email);
                       },
                       child: Text(
                         'Resend',
