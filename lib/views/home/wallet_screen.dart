@@ -1,3 +1,4 @@
+import 'package:chain_finance/controllers/auth_controller.dart';
 import 'package:chain_finance/utils/colors.dart';
 import 'package:chain_finance/utils/text_styles.dart';
 import 'package:chain_finance/views/home/receive_screen.dart';
@@ -14,6 +15,8 @@ class WalletScreen extends StatefulWidget {
 }
 
 class _WalletScreenState extends State<WalletScreen> with SingleTickerProviderStateMixin {
+  final AuthController authController = Get.find();
+  late String username = 'User';
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
 
@@ -90,6 +93,7 @@ class _WalletScreenState extends State<WalletScreen> with SingleTickerProviderSt
   @override
   void initState() {
     super.initState();
+    _loadUserData();
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1000),
@@ -104,6 +108,13 @@ class _WalletScreenState extends State<WalletScreen> with SingleTickerProviderSt
     ));
 
     _animationController.forward();
+  }
+
+  Future<void> _loadUserData() async {
+    final userData = await authController.getUserData();
+    setState(() {
+      username = userData['name'] ?? 'User';
+    });
   }
 
   @override
@@ -127,7 +138,7 @@ class _WalletScreenState extends State<WalletScreen> with SingleTickerProviderSt
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Hey Jason!',
+                    'Hey ${username}!',
                     style: AppTextStyles.heading.copyWith(fontSize: 30),
                   ),
                   Row(

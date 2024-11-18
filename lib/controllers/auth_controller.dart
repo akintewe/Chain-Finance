@@ -4,6 +4,7 @@ import 'dart:convert';
 import '../routes/routes.dart';
 import '../utils/loader.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class AuthController extends GetxController {
   static AuthController get instance => Get.find();
@@ -11,6 +12,7 @@ class AuthController extends GetxController {
   final baseUrl = 'https://chainfinance.com.ng/api';
   final _isLoading = false.obs;
   final _token = ''.obs;
+  final storage = const FlutterSecureStorage();
   
   bool get isLoading => _isLoading.value;
   String get token => _token.value;
@@ -109,6 +111,7 @@ class AuthController extends GetxController {
       
       if (response.statusCode == 200 && data['status'] == true) {
         _token.value = data['data']['token'];
+        await _storeUserData(data['data']);
         Get.snackbar(
           'Success', 
           data['message'] ?? 'Login successful',
@@ -164,6 +167,7 @@ class AuthController extends GetxController {
       );
 
       if (response.statusCode == 200) {
+        await storage.deleteAll();
         _token.value = '';
         Get.snackbar('Success', 'Logout successful');
         Get.offAllNamed(Routes.signin);
@@ -339,5 +343,28 @@ class AuthController extends GetxController {
       _isLoading.value = false;
       Loader.hide();
     }
+  }
+
+  Future<void> _storeUserData(Map<String, dynamic> userData) async {
+    await storage.write(key: 'token', value: userData['token']);
+    await storage.write(key: 'user_id', value: userData['user']['id'].toString());
+    await storage.write(key: 'name', value: userData['user']['name']);
+    await storage.write(key: 'email', value: userData['user']['email']);
+    await storage.write(key: 'username', value: userData['user']['username']);
+    await storage.write(key: 'uuid', value: userData['user']['uuid']);
+  }
+
+  Future<String?> getStoredToken() async {
+    return await storage.read(key: 'token');
+  }
+
+  Future<Map<String, String?>> getUserData() async {
+    return {
+      'id': await storage.read(key: 'user_id'),
+      'name': await storage.read(key: 'name'),
+      'email': await storage.read(key: 'email'),
+      'username': await storage.read(key: 'username'),
+      'uuid': await storage.read(key: 'uuid'),
+    };
   }
 } 
