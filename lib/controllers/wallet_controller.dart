@@ -80,4 +80,8 @@ class WalletController extends GetxController {
   }
 
   String get walletAddress => _walletData.value?['address'] ?? '';
+
+  Map<String, dynamic> get userData => _walletData.value ?? {};
+  String get userEmail => userData['email'] ?? '';
+  String get userName => userData['name'] ?? '';
 } 

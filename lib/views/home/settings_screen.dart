@@ -1,3 +1,5 @@
+import 'package:chain_finance/controllers/wallet_controller.dart';
+import 'package:chain_finance/controllers/auth_controller.dart';
 import 'package:chain_finance/utils/colors.dart';
 import 'package:chain_finance/utils/text_styles.dart';
 import 'package:chain_finance/routes/routes.dart';
@@ -12,10 +14,25 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  // Notification settings
+  final WalletController walletController = Get.find();
+  final AuthController authController = Get.find();
   final RxBool _pushNotifications = true.obs;
   final RxBool _emailNotifications = false.obs;
   final RxBool _transactionAlerts = true.obs;
+  final RxString userName = ''.obs;
+  final RxString userEmail = ''.obs;
+
+  @override
+  void initState() {
+    super.initState();
+    loadUserData();
+  }
+
+  void loadUserData() async {
+    final userData = await authController.getUserData();
+    userName.value = userData['name'] ?? '';
+    userEmail.value = userData['email'] ?? '';
+  }
 
   Widget _buildSettingTile({
     required String title,
@@ -62,20 +79,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       backgroundImage: AssetImage('assets/icons/Photo by Brooke Cagle.png'),
                     ),
                     const SizedBox(width: 16),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Jason Gray',
-                          style: AppTextStyles.heading.copyWith(fontSize: 24),
-                        ),
-                        Text(
-                          'jason.gray@example.com',
-                          style: AppTextStyles.body.copyWith(
-                            color: AppColors.textSecondary,
+                    Expanded(
+                      child: Obx(() => Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            userName.value,
+                            style: AppTextStyles.heading.copyWith(fontSize: 24),
+                            overflow: TextOverflow.ellipsis,
                           ),
-                        ),
-                      ],
+                          Text(
+                            userEmail.value,
+                            style: AppTextStyles.body.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      )),
                     ),
                   ],
                 ),
