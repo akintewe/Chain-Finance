@@ -1,3 +1,4 @@
+import 'package:chain_finance/controllers/wallet_controller.dart';
 import 'package:chain_finance/routes/routes.dart';
 import 'package:chain_finance/utils/colors.dart';
 import 'package:flutter/material.dart';
@@ -8,6 +9,7 @@ import 'controllers/auth_controller.dart';
 void main() {
   // Initialize Get controllers
   Get.put(AuthController());
+   Get.put(WalletController());
   
   runApp(const MyApp());
 }

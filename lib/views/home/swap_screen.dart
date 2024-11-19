@@ -1,3 +1,4 @@
+import 'package:chain_finance/controllers/wallet_controller.dart';
 import 'package:chain_finance/utils/colors.dart';
 import 'package:chain_finance/utils/text_styles.dart';
 import 'package:chain_finance/utils/button_style.dart';
@@ -14,7 +15,11 @@ class SwapScreen extends StatefulWidget {
 class _SwapScreenState extends State<SwapScreen> {
   final TextEditingController fromAmountController = TextEditingController();
   final TextEditingController toAmountController = TextEditingController();
+  final WalletController walletController = Get.put(WalletController());
   
+  String? selectedFromToken;
+  String? selectedToToken;
+
   // Dummy conversion rates (you would fetch these from an API in production)
   final Map<String, double> conversionRates = {
     'BTC': 35000.0,
@@ -22,36 +27,6 @@ class _SwapScreenState extends State<SwapScreen> {
     'TRX': 0.08,
     'USDT': 1.0,
   };
-
-  String? selectedFromToken;
-  String? selectedToToken;
-
-  final List<Map<String, dynamic>> tokens = [
-    {
-      'name': 'Bitcoin (BTC)',
-      'symbol': 'BTC',
-      'icon': 'assets/icons/Cryptocurrency (2).png',
-      'balance': '0.0234 BTC'
-    },
-    {
-      'name': 'Ethereum (ETH)',
-      'symbol': 'ETH',
-      'icon': 'assets/icons/Cryptocurrency (1).png',
-      'balance': '1.234 ETH'
-    },
-    {
-      'name': 'Tron (TRX)',
-      'symbol': 'TRX',
-      'icon': 'assets/icons/Cryptocurrency.png',
-      'balance': '1,234.56 TRX'
-    },
-    {
-      'name': 'USDT',
-      'symbol': 'USDT',
-      'icon': 'assets/icons/Cryptocurrency (3).png',
-      'balance': '500.00 USDT'
-    },
-  ];
 
   void calculateToAmount(String fromAmount) {
     if (fromAmount.isEmpty || selectedFromToken == null || selectedToToken == null) {
@@ -78,11 +53,6 @@ class _SwapScreenState extends State<SwapScreen> {
     TextEditingController? controller,
     bool readOnly = false,
   }) {
-    Map<String, dynamic>? selectedTokenData = tokens.firstWhere(
-      (token) => token['symbol'] == selectedToken,
-      orElse: () => {},
-    );
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -121,12 +91,12 @@ class _SwapScreenState extends State<SwapScreen> {
                         color: AppColors.background,
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: DropdownButton<String>(
+                      child: Obx(() => DropdownButton<String>(
                         value: selectedToken,
                         hint: Text('Select', style: AppTextStyles.body2),
                         underline: const SizedBox(),
                         dropdownColor: AppColors.surface,
-                        items: tokens.map((token) {
+                        items: walletController.tokens.map((token) {
                           return DropdownMenuItem<String>(
                             value: token['symbol'],
                             child: Row(
@@ -147,12 +117,12 @@ class _SwapScreenState extends State<SwapScreen> {
                           );
                         }).toList(),
                         onChanged: onChanged,
-                      ),
+                      )),
                     ),
                   ],
                 ),
               ),
-              if (selectedTokenData.isNotEmpty) ...[
+              if (selectedToken != null) ...[
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
@@ -171,10 +141,10 @@ class _SwapScreenState extends State<SwapScreen> {
                           color: AppColors.textSecondary,
                         ),
                       ),
-                      Text(
-                        selectedTokenData['balance'],
+                      Obx(() => Text(
+                        walletController.getBalanceForToken(selectedToken),
                         style: AppTextStyles.body2,
-                      ),
+                      )),
                     ],
                   ),
                 ),
@@ -184,6 +154,12 @@ class _SwapScreenState extends State<SwapScreen> {
         ),
       ],
     );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    walletController.fetchWalletDetails();
   }
 
   @override

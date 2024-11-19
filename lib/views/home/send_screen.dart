@@ -1,9 +1,11 @@
+import 'package:chain_finance/controllers/wallet_controller.dart';
 import 'package:chain_finance/utils/colors.dart';
 import 'package:chain_finance/utils/custom_textfield.dart';
 import 'package:chain_finance/utils/text_styles.dart';
 import 'package:chain_finance/utils/button_style.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
 
 class SendScreen extends StatefulWidget {
   const SendScreen({super.key});
@@ -15,31 +17,66 @@ class SendScreen extends StatefulWidget {
 class _SendScreenState extends State<SendScreen> {
   final TextEditingController amountController = TextEditingController();
   final TextEditingController addressController = TextEditingController();
+  final WalletController walletController = Get.put(WalletController());
   String? selectedToken;
 
-  // Dummy data for tokens
-  final List<Map<String, dynamic>> tokens = [
-    {
-      'name': 'Bitcoin (BTC)',
-      'symbol': 'BTC',
-      'icon': 'assets/icons/Cryptocurrency (2).png',
-    },
-    {
-      'name': 'Ethereum (ETH)',
-      'symbol': 'ETH',
-      'icon': 'assets/icons/Cryptocurrency (1).png',
-    },
-    {
-      'name': 'Tron (TRX)',
-      'symbol': 'TRX',
-      'icon': 'assets/icons/Cryptocurrency.png',
-    },
-    {
-      'name': 'USDT',
-      'symbol': 'USDT',
-      'icon': 'assets/icons/Cryptocurrency (3).png',
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    walletController.fetchWalletDetails();
+  }
+
+  Widget _buildTokenDropdown() {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Obx(() => DropdownButtonFormField<String>(
+        value: selectedToken,
+        decoration: InputDecoration(
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide.none,
+          ),
+          filled: true,
+          fillColor: AppColors.surface,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 16,
+          ),
+        ),
+        dropdownColor: AppColors.surface,
+        style: AppTextStyles.body.copyWith(
+          color: AppColors.text,
+        ),
+        hint: Text('Select Token', style: AppTextStyles.body.copyWith(
+          color: AppColors.textSecondary,
+        )),
+        items: walletController.tokens.map((token) {
+          return DropdownMenuItem<String>(
+            value: token['symbol'],
+            child: Row(
+              children: [
+                Image.asset(
+                  token['icon'],
+                  width: 24,
+                  height: 24,
+                ),
+                const SizedBox(width: 12),
+                Text(token['name']),
+              ],
+            ),
+          );
+        }).toList(),
+        onChanged: (value) {
+          setState(() {
+            selectedToken = value;
+          });
+        },
+      )),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -97,63 +134,11 @@ class _SendScreenState extends State<SendScreen> {
                   fontSize: 16,
                 )),
                 const SizedBox(height: 8),
-                Container(
-                  decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: DropdownButtonFormField<String>(
-                    value: selectedToken,
-                    decoration: InputDecoration(
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide.none,
-                      ),
-                      filled: true,
-                      fillColor: AppColors.surface,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 16,
-                      ),
-                    ),
-                    dropdownColor: AppColors.surface,
-                    style: AppTextStyles.body.copyWith(
-                      color: AppColors.text,
-                    ),
-                    hint: Text('Select Token', style: AppTextStyles.body.copyWith(
-                      color: AppColors.textSecondary,
-                    )),
-                    items: tokens.map((token) {
-                      return DropdownMenuItem<String>(
-                        value: token['symbol'],
-                        child: Row(
-                          children: [
-                            Image.asset(
-                              token['icon'],
-                              width: 24,
-                              height: 24,
-                            ),
-                            const SizedBox(width: 12),
-                            Text(token['name']),
-                          ],
-                        ),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        selectedToken = value;
-                      });
-                    },
-                  ),
-                ),
+                _buildTokenDropdown(),
                 const SizedBox(height: 24),
 
                 // Amount Input
-                CustomTextField(
-                  label: 'Amount',
-                  controller: amountController,
-                  hintText: '0.00',
-                ),
+                _buildAmountField(),
                 const SizedBox(height: 24),
 
                 // Address Input
@@ -184,6 +169,32 @@ class _SendScreenState extends State<SendScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildAmountField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        CustomTextField(
+          label: 'Amount',
+          controller: amountController,
+          hintText: '0.00',
+        ),
+        if (selectedToken != null) ...[
+          const SizedBox(height: 8),
+          Obx(() {
+            final balance = walletController.getBalanceForToken(selectedToken!);
+            return Text(
+              'Available Balance: $balance $selectedToken',
+              style: AppTextStyles.body.copyWith(
+                color: AppColors.textSecondary,
+                fontSize: 12,
+              ),
+            );
+          }),
+        ],
+      ],
     );
   }
 } 

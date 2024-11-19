@@ -1,4 +1,5 @@
 import 'package:chain_finance/controllers/auth_controller.dart';
+import 'package:chain_finance/controllers/wallet_controller.dart';
 import 'package:chain_finance/utils/colors.dart';
 import 'package:chain_finance/utils/text_styles.dart';
 import 'package:chain_finance/views/home/receive_screen.dart';
@@ -16,6 +17,7 @@ class WalletScreen extends StatefulWidget {
 
 class _WalletScreenState extends State<WalletScreen> with SingleTickerProviderStateMixin {
   final AuthController authController = Get.find();
+  final WalletController walletController = Get.find();
   late String username = 'User';
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -209,10 +211,13 @@ class _WalletScreenState extends State<WalletScreen> with SingleTickerProviderSt
                       ],
                     ),
                     const SizedBox(height: 10),
-                    Text(
-                      '\$20,456.23',
-                      style: AppTextStyles.heading.copyWith(fontSize: 36),
-                    ),
+                    Obx(() => Text(
+                      '\$${walletController.getTotalBalance()}',
+                      style: AppTextStyles.heading.copyWith(
+                        color: AppColors.text,
+                        fontSize: 24,
+                      ),
+                    )),
                   ],
                 ),
               ),

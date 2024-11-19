@@ -110,6 +110,7 @@ class AuthController extends GetxController {
       final data = jsonDecode(response.body);
       
       if (response.statusCode == 200 && data['status'] == true) {
+        print(data);
         _token.value = data['data']['token'];
         await _storeUserData(data['data']);
         Get.snackbar(
