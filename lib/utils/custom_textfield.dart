@@ -10,6 +10,7 @@ class CustomTextField extends StatefulWidget {
   final bool hasIcon;
   final Widget? prefixIcon;
   final Function(String)? onChanged;
+  final int? maxLines;
 
   const CustomTextField({
     super.key,
@@ -20,6 +21,7 @@ class CustomTextField extends StatefulWidget {
     this.hasIcon = false,
     this.prefixIcon,
     this.onChanged,
+    this.maxLines,
   });
 
   @override
@@ -86,6 +88,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
                   : null,
             ),
             onChanged: widget.onChanged,
+            maxLines: widget.maxLines ?? 1,
           ),
         ),
       ],

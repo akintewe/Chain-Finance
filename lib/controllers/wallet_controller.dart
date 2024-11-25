@@ -84,4 +84,67 @@ class WalletController extends GetxController {
   Map<String, dynamic> get userData => _walletData.value ?? {};
   String get userEmail => userData['email'] ?? '';
   String get userName => userData['name'] ?? '';
+
+  Future<Map<String, dynamic>?> getUserByUUID(String uuid) async {
+    try {
+      final response = await http.get(
+        Uri.parse('https://chainfinance.com.ng/api/users/$uuid'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ${_authController.token}',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        print(response.body);
+        final data = jsonDecode(response.body);
+        return data['data'];
+      }
+      else {
+        print(response.body);
+        return null;
+      }
+    } catch (e) {
+      Get.snackbar('Error', e.toString());
+      return null;
+    }
+  }
+
+  Future<void> sendInternal(Map<String, dynamic> data) async {
+    try {
+      final response = await http.post(
+        Uri.parse('https://chainfinance.com.ng/api/transaction/internal'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ${_authController.token}',
+        },
+        body: jsonEncode(data),
+      );
+
+      if (response.statusCode != 200) {
+        throw jsonDecode(response.body)['message'] ?? 'Failed to send transaction';
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<void> sendExternal(Map<String, dynamic> data) async {
+    try {
+      final response = await http.post(
+        Uri.parse('https://chainfinance.com.ng/api/transaction/send'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ${_authController.token}',
+        },
+        body: jsonEncode(data),
+      );
+
+      if (response.statusCode != 200) {
+        throw jsonDecode(response.body)['message'] ?? 'Failed to send transaction';
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
 } 

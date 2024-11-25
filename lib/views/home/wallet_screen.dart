@@ -125,6 +125,130 @@ class _WalletScreenState extends State<WalletScreen> with SingleTickerProviderSt
     super.dispose();
   }
 
+  void _showSendOptions() {
+    Get.bottomSheet(
+      Container(
+        padding: const EdgeInsets.all(24),
+        decoration: const BoxDecoration(
+          color: AppColors.background,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Send To',
+              style: AppTextStyles.heading.copyWith(fontSize: 24),
+            ),
+            const SizedBox(height: 24),
+            
+            // Chain Finance User Option
+            InkWell(
+              onTap: () {
+                Get.back();
+                Get.to(() => const SendScreen(isSendingToExternal: false));
+              },
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(Icons.person_outline, color: AppColors.primary),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Chain Finance User',
+                            style: AppTextStyles.body2.copyWith(fontSize: 16),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Send to another Chain Finance user',
+                            style: AppTextStyles.body.copyWith(
+                              color: AppColors.textSecondary,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Icon(Icons.arrow_forward_ios, size: 16, color: AppColors.textSecondary),
+                  ],
+                ),
+              ),
+            ),
+            
+            const SizedBox(height: 16),
+            
+            // External Wallet Option
+            InkWell(
+              onTap: () {
+                Get.back();
+                Get.to(() => const SendScreen(isSendingToExternal: true));
+              },
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.secondary.withOpacity(0.1)),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppColors.secondary.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(Icons.wallet_outlined, color: AppColors.secondary),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'External Wallet',
+                            style: AppTextStyles.body2.copyWith(fontSize: 16),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Send to any blockchain wallet address',
+                            style: AppTextStyles.body.copyWith(
+                              color: AppColors.textSecondary,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Icon(Icons.arrow_forward_ios, size: 16, color: AppColors.textSecondary),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      isScrollControlled: true,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -246,7 +370,7 @@ class _WalletScreenState extends State<WalletScreen> with SingleTickerProviderSt
                             borderRadius: BorderRadius.circular(10),
                           ),
                         ),
-                      onPressed: () => Get.to(() => const SendScreen()),
+                        onPressed: _showSendOptions,
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
