@@ -6,6 +6,7 @@ import '../routes/routes.dart';
 import '../utils/loader.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'dart:io';
 
 class AuthController extends GetxController {
   static AuthController get instance => Get.find();
@@ -452,6 +453,80 @@ class AuthController extends GetxController {
       _isLoading.value = false;
       Loader.hide();
       Get.snackbar('Error', e.toString());
+    }
+  }
+
+  Future<void> updateProfile(String name, [File? imageFile]) async {
+    try {
+      _isLoading.value = true;
+      
+      if (imageFile != null) {
+        // Create multipart request
+        var request = http.MultipartRequest(
+          'POST',
+          Uri.parse('$baseUrl/update-profile'),
+        );
+
+        // Add authorization header
+        request.headers.addAll({
+          'Authorization': 'Bearer $_token',
+        });
+
+        // Add text fields
+        request.fields['name'] = name;
+
+        // Add file
+        request.files.add(
+          await http.MultipartFile.fromPath(
+            'profile_image',
+            imageFile.path,
+          ),
+        );
+
+        // Send request
+        final response = await request.send();
+        final responseData = await response.stream.bytesToString();
+
+        if (response.statusCode == 200) {
+          Get.back();
+          Get.snackbar(
+            'Success',
+            'Profile updated successfully',
+            backgroundColor: Colors.green.withOpacity(0.1),
+            colorText: Colors.green,
+          );
+        } else {
+          throw jsonDecode(responseData)['message'] ?? 'Failed to update profile';
+        }
+      } else {
+        // If no image, just update name
+        final response = await http.post(
+          Uri.parse('$baseUrl/update-profile'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $_token'
+          },
+          body: jsonEncode({
+            'name': name,
+          }),
+        );
+
+        if (response.statusCode == 200) {
+          Get.back();
+          Get.snackbar(
+            'Success',
+            'Profile updated successfully',
+            backgroundColor: Colors.green.withOpacity(0.1),
+            colorText: Colors.green,
+          );
+        } else {
+          throw jsonDecode(response.body)['message'] ?? 'Failed to update profile';
+        }
+      }
+    } catch (e) {
+      Get.snackbar('Error', e.toString());
+    } finally {
+      _isLoading.value = false;
     }
   }
 } 

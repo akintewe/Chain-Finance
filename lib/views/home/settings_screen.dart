@@ -3,6 +3,7 @@ import 'package:chain_finance/controllers/auth_controller.dart';
 import 'package:chain_finance/utils/colors.dart';
 import 'package:chain_finance/utils/text_styles.dart';
 import 'package:chain_finance/routes/routes.dart';
+import 'package:chain_finance/views/home/edit_profile_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -117,7 +118,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 _buildSettingTile(
                   title: 'Edit Profile',
                   icon: Icons.person_outline,
-                  onTap: () {},
+                  onTap: () => Get.to(() => const EditProfileScreen()),
                 ),
 
                 _buildSettingTile(
