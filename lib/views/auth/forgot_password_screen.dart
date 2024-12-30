@@ -1,3 +1,4 @@
+import 'package:chain_finance/controllers/auth_controller.dart';
 import 'package:chain_finance/utils/colors.dart';
 import 'package:chain_finance/utils/custom_textfield.dart';
 import 'package:chain_finance/utils/text_styles.dart';
@@ -10,6 +11,7 @@ class ForgotPasswordScreen extends StatelessWidget {
   ForgotPasswordScreen({super.key});
 
   final TextEditingController phoneController = TextEditingController();
+  final AuthController authController = Get.find<AuthController>();
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +37,7 @@ class ForgotPasswordScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'Please enter the phone number you want an OTP to be sent to',
+                  'Please enter the email you want an OTP to be sent to',
                   style: AppTextStyles.body.copyWith(
                     color: AppColors.textSecondary,
                     fontSize: 16,
@@ -46,9 +48,9 @@ class ForgotPasswordScreen extends StatelessWidget {
                 
                 const SizedBox(height: 8),
                 CustomTextField(
-                  label: 'Phone Number',
+                  label: 'Email Address',
                   controller: phoneController,
-                  hintText: 'Enter Phone number',
+                  hintText: 'Enter Email Address',
                 ),
                 
                 const SizedBox(height: 32),
@@ -62,7 +64,9 @@ class ForgotPasswordScreen extends StatelessWidget {
                   child: ElevatedButton(
                     style: AppButtonStyles.primaryButton,
                     onPressed: () {
-                      Get.to(() => OTPVerificationScreen());
+                      if (phoneController.text.isNotEmpty) {
+                        authController.forgotPassword(phoneController.text);
+                      }
                     },
                     child: Text('Continue', style: AppTextStyles.button),
                   ),

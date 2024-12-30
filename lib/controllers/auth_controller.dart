@@ -1,3 +1,4 @@
+import 'package:chain_finance/views/auth/otp_verification_screen.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -367,5 +368,90 @@ class AuthController extends GetxController {
       'username': await storage.read(key: 'username'),
       'uuid': await storage.read(key: 'uuid'),
     };
+  }
+
+  Future<void> forgotPassword(String email) async {
+    try {
+      Loader.show();
+      _isLoading.value = true;
+      
+      final response = await http.post(
+        Uri.parse('$baseUrl/forgot-password'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'email': email,
+        }),
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        _isLoading.value = false;
+        Loader.hide();
+        Get.snackbar(
+          'Success', 
+          'OTP sent to your email',
+          backgroundColor: Colors.green.withOpacity(0.1),
+          colorText: Colors.green,
+        );
+        Get.to(() => OTPVerificationScreen(), arguments: email);
+      } else {
+        _isLoading.value = false;
+        Loader.hide();
+        Get.snackbar(
+          'Error',
+          data['message'] ?? 'Failed to send OTP',
+          backgroundColor: Colors.red.withOpacity(0.1),
+          colorText: Colors.red,
+        );
+      }
+    } catch (e) {
+      _isLoading.value = false;
+      Loader.hide();
+      Get.snackbar('Error', e.toString());
+    }
+  }
+
+  Future<void> resetPassword(String email, String otp, String password, String passwordConfirmation) async {
+    try {
+      Loader.show();
+      _isLoading.value = true;
+      
+      final response = await http.post(
+        Uri.parse('$baseUrl/reset-password'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'email': email,
+          'otp': otp,
+          'password': password,
+          'password_confirmation': passwordConfirmation
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        _isLoading.value = false;
+        Loader.hide();
+        Get.snackbar(
+          'Success', 
+          'Password reset successfully',
+          backgroundColor: Colors.green.withOpacity(0.1),
+          colorText: Colors.green,
+        );
+        Get.offAllNamed(Routes.signin);
+      } else {
+        _isLoading.value = false;
+        Loader.hide();
+        Get.snackbar(
+          'Error',
+          jsonDecode(response.body)['message'] ?? 'Failed to reset password',
+          backgroundColor: Colors.red.withOpacity(0.1),
+          colorText: Colors.red,
+        );
+      }
+    } catch (e) {
+      _isLoading.value = false;
+      Loader.hide();
+      Get.snackbar('Error', e.toString());
+    }
   }
 } 

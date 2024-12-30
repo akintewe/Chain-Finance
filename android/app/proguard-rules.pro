@@ -1,0 +1,19 @@
+-keep class com.google.crypto.tink.** { *; }
+-keep class javax.annotation.** { *; }
+-keep class com.google.errorprone.annotations.** { *; }
+-dontwarn com.google.errorprone.annotations.**
+-dontwarn javax.annotation.**
+-keepattributes *Annotation*
+-keepattributes Signature
+-dontwarn sun.misc.Unsafe 
+
+-keep class com.google.api.client.** { *; }
+-keep class com.google.http.** { *; }
+-keep class org.joda.time.** { *; }
+-dontwarn com.google.api.client.**
+-dontwarn com.google.http.**
+-dontwarn org.joda.time.**
+-dontwarn javax.annotation.**
+-dontwarn org.apache.http.**
+-dontwarn com.google.auto.value.AutoValue
+-dontwarn com.google.auto.value.AutoValue$Builder 

@@ -32,6 +32,13 @@ class _SendScreenState extends State<SendScreen> {
   final RxBool isLoadingUser = false.obs;
   Timer? _debounceTimer;
 
+  @override
+  void initState() {
+    super.initState();
+    // Fetch wallet details when screen initializes
+    walletController.fetchWalletDetails();
+  }
+
   void _onUUIDChanged(String uuid) {
     if (_debounceTimer?.isActive ?? false) _debounceTimer!.cancel();
     if (uuid.length < 4) return;
