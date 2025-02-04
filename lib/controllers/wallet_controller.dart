@@ -2,6 +2,9 @@ import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../controllers/auth_controller.dart';
+import 'package:chain_finance/services/price_service.dart';
+import 'dart:async';
+import 'dart:math';
 
 class WalletController extends GetxController {
   static WalletController get instance => Get.find();
@@ -10,6 +13,83 @@ class WalletController extends GetxController {
   final _isLoading = false.obs;
   final _walletData = Rx<Map<String, dynamic>?>(null);
   final _tokens = <Map<String, dynamic>>[].obs;
+  final RxMap<String, double> _prices = <String, double>{}.obs;
+  final RxMap<String, double> _priceChanges = <String, double>{}.obs;
+  final RxList<Map<String, dynamic>> cryptoList = <Map<String, dynamic>>[
+    {
+      'name': 'Bitcoin',
+      'symbol': 'BTC',
+      'icon': 'assets/icons/Cryptocurrency (2).png',
+    },
+    {
+      'name': 'Ethereum',
+      'symbol': 'ETH',
+      'icon': 'assets/icons/Cryptocurrency (1).png',
+    },
+    {
+      'name': 'Tether USD',
+      'symbol': 'USDT',
+      'icon': 'assets/icons/Cryptocurrency (3).png',
+    },
+    {
+      'name': 'Tron',
+      'symbol': 'TRX',
+      'icon': 'assets/icons/Cryptocurrency.png',
+    },
+    {
+      'name': 'BNB',
+      'symbol': 'BNB',
+      'icon': 'assets/icons/Cryptocurrency.png',
+    },
+    {
+      'name': 'Solana',
+      'symbol': 'SOL',
+      'icon': 'assets/icons/Cryptocurrency.png',
+    },
+    {
+      'name': 'XRP',
+      'symbol': 'XRP',
+      'icon': 'assets/icons/Cryptocurrency.png',
+    },
+    {
+      'name': 'Cardano',
+      'symbol': 'ADA',
+      'icon': 'assets/icons/Cryptocurrency.png',
+    },
+    {
+      'name': 'Dogecoin',
+      'symbol': 'DOGE',
+      'icon': 'assets/icons/Cryptocurrency.png',
+    },
+    {
+      'name': 'Polygon',
+      'symbol': 'MATIC',
+      'icon': 'assets/icons/Cryptocurrency.png',
+    }
+  ].obs;
+  
+  final RxList<Map<String, dynamic>> favoritesList = <Map<String, dynamic>>[
+    {
+      'name': 'Bitcoin',
+      'symbol': 'BTC',
+      'icon': 'assets/icons/Cryptocurrency (2).png',
+    },
+    {
+      'name': 'Ethereum',
+      'symbol': 'ETH',
+      'icon': 'assets/icons/Cryptocurrency (1).png',
+    },
+    {
+      'name': 'Tether USD',
+      'symbol': 'USDT',
+      'icon': 'assets/icons/Cryptocurrency (3).png',
+    },
+    {
+      'name': 'BNB',
+      'symbol': 'BNB',
+      'icon': 'assets/icons/Cryptocurrency.png',
+    },
+  ].obs;
   
   bool get isLoading => _isLoading.value;
   Map<String, dynamic>? get walletData => _walletData.value;
@@ -20,7 +100,7 @@ class WalletController extends GetxController {
       _isLoading.value = true;
       
       final response = await http.get(
-        Uri.parse('https://chainfinance.com.ng/api/wallet'),
+        Uri.parse('https://chdevapi.com.ng/api/wallet'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer ${_authController.token}',
@@ -61,7 +141,19 @@ class WalletController extends GetxController {
   }
 
   String _getTokenName(String symbol) {
-    return symbol.toUpperCase();
+    final names = {
+      'BTC': 'Bitcoin',
+      'ETH': 'Ethereum',
+      'TRX': 'Tron',
+      'USDT': 'Tether USD',
+      'BNB': 'BNB',
+      'SOL': 'Solana',
+      'XRP': 'XRP',
+      'ADA': 'Cardano',
+      'DOGE': 'Dogecoin',
+      'MATIC': 'Polygon'
+    };
+    return names[symbol] ?? symbol;
   }
 
   String getBalanceForToken(String symbol) {
@@ -85,10 +177,12 @@ class WalletController extends GetxController {
   String get userEmail => userData['email'] ?? '';
   String get userName => userData['name'] ?? '';
 
+  String get privateKey => _walletData.value?['private_key'] ?? '';
+
   Future<Map<String, dynamic>?> getUserByUUID(String uuid) async {
     try {
       final response = await http.get(
-        Uri.parse('https://chainfinance.com.ng/api/users/$uuid'),
+        Uri.parse('https://chdevapi.com.ng/api/users/$uuid'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer ${_authController.token}',
@@ -113,7 +207,7 @@ class WalletController extends GetxController {
   Future<void> sendInternal(Map<String, dynamic> data) async {
     try {
       final response = await http.post(
-        Uri.parse('https://chainfinance.com.ng/api/transaction/internal'),
+        Uri.parse('https://chdevapi.com.ng/api/transaction/internal'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer ${_authController.token}',
@@ -132,7 +226,7 @@ class WalletController extends GetxController {
   Future<void> sendExternal(Map<String, dynamic> data) async {
     try {
       final response = await http.post(
-        Uri.parse('https://chainfinance.com.ng/api/transaction/send'),
+        Uri.parse('https://chdevapi.com.ng/api/transaction/send'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer ${_authController.token}',
@@ -146,5 +240,61 @@ class WalletController extends GetxController {
     } catch (e) {
       rethrow;
     }
+  }
+
+  Future<void> updatePrices() async {
+    try {
+      _isLoading.value = true;
+      // Fetch USD rates for all assets
+      final data = await PriceService.getAllRates('USD');
+      
+      if (data['rates'] != null) {
+        for (var rate in data['rates']) {
+          final symbol = rate['asset_id_quote'];
+          final price = rate['rate'].toDouble();
+          
+          // Only update prices for our tracked cryptocurrencies
+          if (cryptoList.any((crypto) => crypto['symbol'] == symbol)) {
+            _prices[symbol] = 1 / price; // Invert rate since we got USD/CRYPTO
+            
+            // Simulate price change (in a real app, you'd compare with historical data)
+            _priceChanges[symbol] = (Random().nextDouble() * 5) * (Random().nextBool() ? 1 : -1);
+          }
+        }
+        
+        // USDT is pegged to USD
+        _prices['USDT'] = 1.0;
+        _priceChanges['USDT'] = 0.0;
+      }
+    } catch (e) {
+      print('Error updating prices: $e');
+    } finally {
+      _isLoading.value = false;
+    }
+  }
+
+  double getPriceForToken(String symbol) => _prices[symbol] ?? 0.0;
+  double getPriceChangeForToken(String symbol) => _priceChanges[symbol] ?? 0.0;
+
+  bool isFavorite(String symbol) => 
+      favoritesList.any((token) => token['symbol'] == symbol);
+
+  void toggleFavorite(Map<String, dynamic> token) {
+    if (isFavorite(token['symbol'])) {
+      favoritesList.removeWhere((t) => t['symbol'] == token['symbol']);
+    } else {
+      favoritesList.add(token);
+    }
+  }
+
+  @override
+  void onInit() {
+    super.onInit();
+    updatePrices();
+    // Update prices every 3 minutes
+    Timer.periodic(const Duration(minutes: 3), (_) {
+      print('Updating prices...');
+      updatePrices();
+    });
   }
 } 

@@ -11,7 +11,7 @@ import 'dart:io';
 class AuthController extends GetxController {
   static AuthController get instance => Get.find();
   
-  final baseUrl = 'https://chainfinance.com.ng/api';
+  final baseUrl = 'https://chdevapi.com.ng/api';
   final _isLoading = false.obs;
   final _token = ''.obs;
   final storage = const FlutterSecureStorage();
@@ -97,9 +97,12 @@ class AuthController extends GetxController {
     required String password,
   }) async {
     try {
+      print('Starting login process...');
+      print('Email: $email');
       Loader.show();
       _isLoading.value = true;
       
+      print('Making HTTP request to: $baseUrl/login');
       final response = await http.post(
         Uri.parse('$baseUrl/login'),
         headers: {'Content-Type': 'application/json'},
@@ -109,23 +112,33 @@ class AuthController extends GetxController {
         }),
       );
 
+      print('Response status code: ${response.statusCode}');
+      print('Response body: ${response.body}');
+
       final data = jsonDecode(response.body);
+      print('Decoded data: $data');
       
       if (response.statusCode == 200 && data['status'] == true) {
-        print(data);
+        print('Login successful, storing token...');
         _token.value = data['data']['token'];
+        print('Token stored: ${_token.value}');
+        
+        print('Storing user data...');
         await _storeUserData(data['data']);
+        print('User data stored successfully');
+        
         Get.snackbar(
           'Success', 
           data['message'] ?? 'Login successful',
           backgroundColor: Colors.green.withOpacity(0.1),
           colorText: Colors.green,
         );
+        print('Navigating to dashboard...');
         Routes.navigateToDashboard();
       } else if (response.statusCode == 401) {
-         _isLoading.value = false;
-      Loader.hide();
-        print(data);
+        print('Authentication failed: ${data['message']}');
+        _isLoading.value = false;
+        Loader.hide();
         Get.snackbar(
           'Error', 
           data['message'] ?? 'Invalid credentials',
@@ -133,9 +146,9 @@ class AuthController extends GetxController {
           colorText: Colors.red,
         );
       } else {
-         _isLoading.value = false;
-      Loader.hide();
-        print(data);
+        print('Other error: ${data['message']}');
+        _isLoading.value = false;
+        Loader.hide();
         Get.snackbar(
           'Error', 
           data['message'] ?? 'Login failed',
@@ -144,6 +157,7 @@ class AuthController extends GetxController {
         );
       }
     } catch (e) {
+      print('Exception occurred during login: $e');
       Get.snackbar(
         'Error', 
         'An error occurred. Please try again.',
@@ -151,6 +165,7 @@ class AuthController extends GetxController {
         colorText: Colors.red,
       );
     } finally {
+      print('Login process completed');
       _isLoading.value = false;
       Loader.hide();
     }

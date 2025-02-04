@@ -7,6 +7,10 @@ import 'package:chain_finance/views/home/send_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
+import 'dart:math';
+import 'package:chain_finance/views/home/token_info_screen.dart';
+import 'package:chain_finance/views/home/all_tokens_screen.dart';
+import 'package:chain_finance/views/home/edit_favorites_screen.dart';
 
 class WalletScreen extends StatefulWidget {
   const WalletScreen({super.key});
@@ -50,37 +54,6 @@ class _WalletScreenState extends State<WalletScreen> with SingleTickerProviderSt
       'price': '\$3,676.76',
       'change': '+0.45%',
       'icon': 'assets/icons/Cryptocurrency (3).png',
-    },
-  ];
-
-  final List<Map<String, dynamic>> cryptoList = [
-    {
-      'name': 'Bitcoin',
-      'symbol': 'BTC',
-      'price': '\$3,676.76',
-      'change': '+0.45%',
-      'icon': 'assets/icons/Cryptocurrency (2).png',
-    },
-    {
-      'name': 'United States Dollar',
-      'symbol': 'USDT',
-      'price': '\$3,676.76',
-      'change': '+0.45%',
-      'icon': 'assets/icons/Cryptocurrency (3).png',
-    },
-    {
-      'name': 'Tron',
-      'symbol': 'TRX',
-      'price': '\$3,676.76',
-      'change': '+0.45%',
-      'icon': 'assets/icons/Cryptocurrency.png',
-    },
-    {
-      'name': 'Litecoin',
-      'symbol': 'LTC',
-      'price': '\$3,676.76',
-      'change': '+0.45%',
-      'icon': 'assets/icons/Cryptocurrency (4).png',
     },
   ];
 
@@ -414,82 +387,97 @@ class _WalletScreenState extends State<WalletScreen> with SingleTickerProviderSt
               const SizedBox(height: 20),
 
               // Favorites Section
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Favorites',
-                    style: TextStyle(
-                      color: AppColors.text,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: () {},
-                    child: const Text('Edit'),
-                  ),
-                ],
-              ),
-
-              // Updated Favorites ListView
-              Container(
-                height: 100, // Increased height
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: favorites.length,
-                  itemBuilder: (context, index) {
-                    return Container(
-                      width: 150, // Fixed width for each card
-                      margin: const EdgeInsets.only(right: 12),
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: AppColors.surface,
-                        borderRadius: BorderRadius.circular(12),
+              if (walletController.favoritesList.isNotEmpty) ...[
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Favorites',
+                      style: TextStyle(
+                        color: AppColors.text,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Row(
+                    ),
+                    TextButton(
+                      onPressed: () => Get.to(() => const EditFavoritesScreen()),
+                      child: const Text('Edit'),
+                    ),
+                  ],
+                ),
+                
+                SizedBox(
+                  height: 120,
+                  child: Obx(() => ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: walletController.favoritesList.length,
+                    itemBuilder: (context, index) {
+                      final token = walletController.favoritesList[index];
+                      final price = walletController.getPriceForToken(token['symbol']);
+                      final priceChange = walletController.getPriceChangeForToken(token['symbol']);
+                      
+                      return GestureDetector(
+                        onTap: () => Get.to(() => TokenInfoScreen(
+                          token: token,
+                          currentPrice: price,
+                          priceChange: priceChange,
+                        )),
+                        child: Container(
+                          width: 150,
+                          margin: EdgeInsets.only(
+                            right: 12,
+                            left: index == 0 ? 0 : 0,
+                          ),
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: AppColors.surface,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Image.asset(
-                                favorites[index]['icon'],
-                                width: 24,
-                                height: 24,
+                              Row(
+                                children: [
+                                  Image.asset(
+                                    token['icon'],
+                                    width: 24,
+                                    height: 24,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    token['symbol'],
+                                    style: const TextStyle(
+                                      color: AppColors.text,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
                               ),
-                              const SizedBox(width: 8),
+                              const Spacer(),
                               Text(
-                                favorites[index]['symbol'],
+                                '\$${price.toStringAsFixed(2)}',
                                 style: const TextStyle(
-                                  color: AppColors.textSecondary,
-                                  fontSize: 14,
+                                  color: AppColors.text,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                '${priceChange >= 0 ? '+' : ''}${priceChange.toStringAsFixed(2)}%',
+                                style: TextStyle(
+                                  color: priceChange >= 0 ? Colors.green : Colors.red,
+                                  fontSize: 12,
                                 ),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 8),
-                          Text(
-                            favorites[index]['amount'] ?? favorites[index]['price'],
-                            style: const TextStyle(
-                              color: AppColors.text,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                          Text(
-                            favorites[index]['change'],
-                            style: const TextStyle(
-                              color: Colors.green,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
+                        ),
+                      );
+                    },
+                  )),
                 ),
-              ),
+                const SizedBox(height: 20),
+              ],
 
               const SizedBox(height: 20),
 
@@ -506,7 +494,7 @@ class _WalletScreenState extends State<WalletScreen> with SingleTickerProviderSt
                     ),
                   ),
                   TextButton(
-                    onPressed: () {},
+                    onPressed: () => Get.to(() => const AllTokensScreen()),
                     child: const Text('See All'),
                   ),
                 ],
@@ -554,21 +542,30 @@ class _WalletScreenState extends State<WalletScreen> with SingleTickerProviderSt
 
               // Crypto List
               Expanded(
-                child: ListView.builder(
-                  itemCount: cryptoList.length,
+                child: Obx(() => ListView.builder(
+                  itemCount: walletController.cryptoList.length,
                   itemBuilder: (context, index) {
+                    final token = walletController.cryptoList[index];
+                    final price = walletController.getPriceForToken(token['symbol']);
+                    final priceChange = walletController.getPriceChangeForToken(token['symbol']);
+                    
                     return ListTile(
+                      onTap: () => Get.to(() => TokenInfoScreen(
+                        token: token,
+                        currentPrice: price,
+                        priceChange: priceChange,
+                      )),
                       leading: Image.asset(
-                        cryptoList[index]['icon'],
+                        token['icon'],
                         width: 40,
                         height: 40,
                       ),
                       title: Text(
-                        cryptoList[index]['name'],
+                        token['name'],
                         style: const TextStyle(color: AppColors.text),
                       ),
                       subtitle: Text(
-                        cryptoList[index]['symbol'],
+                        token['symbol'],
                         style: const TextStyle(color: AppColors.textSecondary),
                       ),
                       trailing: Column(
@@ -576,16 +573,16 @@ class _WalletScreenState extends State<WalletScreen> with SingleTickerProviderSt
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           Text(
-                            cryptoList[index]['price'],
+                            '\$${price.toStringAsFixed(2)}',
                             style: const TextStyle(
                               color: AppColors.text,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                           Text(
-                            cryptoList[index]['change'],
-                            style: const TextStyle(
-                              color: Colors.green,
+                            '${priceChange >= 0 ? '+' : ''}${priceChange.toStringAsFixed(2)}%',
+                            style: TextStyle(
+                              color: priceChange >= 0 ? Colors.green : Colors.red,
                               fontSize: 12,
                             ),
                           ),
@@ -593,7 +590,7 @@ class _WalletScreenState extends State<WalletScreen> with SingleTickerProviderSt
                       ),
                     );
                   },
-                ),
+                )),
               ),
             ],
           ),

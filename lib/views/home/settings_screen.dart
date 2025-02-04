@@ -4,6 +4,8 @@ import 'package:chain_finance/utils/colors.dart';
 import 'package:chain_finance/utils/text_styles.dart';
 import 'package:chain_finance/routes/routes.dart';
 import 'package:chain_finance/views/home/edit_profile_screen.dart';
+import 'package:chain_finance/views/home/backup_wallet_screen.dart';
+import 'package:chain_finance/views/home/change_password_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -114,7 +116,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                 const SizedBox(height: 16),
 
-                // Profile Settings
+               
                 _buildSettingTile(
                   title: 'Edit Profile',
                   icon: Icons.person_outline,
@@ -124,7 +126,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 _buildSettingTile(
                   title: 'Backup Wallet',
                   icon: Icons.backup_outlined,
-                  onTap: () {},
+                  onTap: () => Get.to(() => BackupWalletScreen()),
                 ),
 
                 const SizedBox(height: 24),
@@ -185,7 +187,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 _buildSettingTile(
                   title: 'Change Password',
                   icon: Icons.lock_outline,
-                  onTap: () {},
+                  onTap: () => Get.to(() => const ChangePasswordScreen()),
                 ),
 
                 _buildSettingTile(
