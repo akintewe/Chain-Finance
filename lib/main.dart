@@ -1,6 +1,6 @@
-import 'package:chain_finance/controllers/wallet_controller.dart';
-import 'package:chain_finance/routes/routes.dart';
-import 'package:chain_finance/utils/colors.dart';
+import 'package:nexa_prime/controllers/wallet_controller.dart';
+import 'package:nexa_prime/routes/routes.dart';
+import 'package:nexa_prime/utils/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'views/onboarding/onboarding.dart';
@@ -21,7 +21,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Chain Finance',
+      title: 'Nexa Prime',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: AppColors.primary),
         useMaterial3: true,

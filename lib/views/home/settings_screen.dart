@@ -1,11 +1,11 @@
-import 'package:chain_finance/controllers/wallet_controller.dart';
-import 'package:chain_finance/controllers/auth_controller.dart';
-import 'package:chain_finance/utils/colors.dart';
-import 'package:chain_finance/utils/text_styles.dart';
-import 'package:chain_finance/routes/routes.dart';
-import 'package:chain_finance/views/home/edit_profile_screen.dart';
-import 'package:chain_finance/views/home/backup_wallet_screen.dart';
-import 'package:chain_finance/views/home/change_password_screen.dart';
+import 'package:nexa_prime/controllers/wallet_controller.dart';
+import 'package:nexa_prime/controllers/auth_controller.dart';
+import 'package:nexa_prime/utils/colors.dart';
+import 'package:nexa_prime/utils/text_styles.dart';
+import 'package:nexa_prime/routes/routes.dart';
+import 'package:nexa_prime/views/home/edit_profile_screen.dart';
+import 'package:nexa_prime/views/home/backup_wallet_screen.dart';
+import 'package:nexa_prime/views/home/change_password_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -43,22 +43,48 @@ class _SettingsScreenState extends State<SettingsScreen> {
     Widget? trailing,
     VoidCallback? onTap,
     Color iconColor = AppColors.textSecondary,
+    bool showDivider = true,
   }) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: ListTile(
-        leading: Icon(icon, color: iconColor),
-        title: Text(title, style: AppTextStyles.body2),
-        trailing: trailing ?? const Icon(
-          Icons.arrow_forward_ios,
-          size: 16,
-          color: AppColors.textSecondary,
+    return Column(
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: ListTile(
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, color: AppColors.primary, size: 20),
+            ),
+            title: Text(title, style: AppTextStyles.body2),
+            trailing: trailing ?? const Icon(
+              Icons.arrow_forward_ios,
+              size: 16,
+              color: AppColors.textSecondary,
+            ),
+            onTap: onTap,
+          ),
         ),
-        onTap: onTap,
+        if (showDivider) const SizedBox(height: 8),
+      ],
+    );
+  }
+
+  Widget _buildSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      child: Text(
+        title,
+        style: AppTextStyles.body2.copyWith(
+          color: AppColors.textSecondary,
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }
@@ -75,143 +101,117 @@ class _SettingsScreenState extends State<SettingsScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Profile Section
-                Row(
-                  children: [
-                    const CircleAvatar(
-                      radius: 40,
-                      backgroundImage: AssetImage('assets/icons/Photo by Brooke Cagle.png'),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Obx(() => Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            userName.value,
-                            style: AppTextStyles.heading.copyWith(fontSize: 24),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          Text(
-                            userEmail.value,
-                            style: AppTextStyles.body.copyWith(
-                              color: AppColors.textSecondary,
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(2),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: AppColors.primaryGradient,
+                        ),
+                        child: const CircleAvatar(
+                          radius: 35,
+                          backgroundImage: AssetImage('assets/icons/Photo by Brooke Cagle.png'),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Obx(() => Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              userName.value,
+                              style: AppTextStyles.heading.copyWith(fontSize: 24),
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      )),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 32),
-
-                Text(
-                  'Account Settings',
-                  style: AppTextStyles.body2.copyWith(
-                    color: AppColors.textSecondary,
-                    fontSize: 14,
+                            Text(
+                              userEmail.value,
+                              style: AppTextStyles.body.copyWith(
+                                color: AppColors.textSecondary,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        )),
+                      ),
+                    ],
                   ),
                 ),
 
-                const SizedBox(height: 16),
-
-               
+                _buildSectionHeader('Account Settings'),
                 _buildSettingTile(
                   title: 'Edit Profile',
                   icon: Icons.person_outline,
                   onTap: () => Get.to(() => const EditProfileScreen()),
                 ),
-
                 _buildSettingTile(
                   title: 'Backup Wallet',
                   icon: Icons.backup_outlined,
                   onTap: () => Get.to(() => BackupWalletScreen()),
                 ),
 
-                const SizedBox(height: 24),
-
-                Text(
-                  'Notifications',
-                  style: AppTextStyles.body2.copyWith(
-                    color: AppColors.textSecondary,
-                    fontSize: 14,
-                  ),
-                ),
-
-                const SizedBox(height: 16),
-
-                // Notification Settings
+                _buildSectionHeader('Notifications'),
                 Obx(() => _buildSettingTile(
                   title: 'Push Notifications',
                   icon: Icons.notifications_none,
                   trailing: Switch(
                     value: _pushNotifications.value,
                     onChanged: (value) => _pushNotifications.value = value,
-                    activeColor: AppColors.secondary,
+                    activeColor: AppColors.primary,
                   ),
                 )),
-
                 Obx(() => _buildSettingTile(
                   title: 'Email Notifications',
                   icon: Icons.email_outlined,
                   trailing: Switch(
                     value: _emailNotifications.value,
                     onChanged: (value) => _emailNotifications.value = value,
-                    activeColor: AppColors.secondary,
+                    activeColor: AppColors.primary,
                   ),
                 )),
-
                 Obx(() => _buildSettingTile(
                   title: 'Transaction Alerts',
                   icon: Icons.account_balance_wallet_outlined,
                   trailing: Switch(
                     value: _transactionAlerts.value,
                     onChanged: (value) => _transactionAlerts.value = value,
-                    activeColor: AppColors.secondary,
+                    activeColor: AppColors.primary,
                   ),
                 )),
 
-                const SizedBox(height: 24),
-
-                Text(
-                  'Security',
-                  style: AppTextStyles.body2.copyWith(
-                    color: AppColors.textSecondary,
-                    fontSize: 14,
-                  ),
-                ),
-
-                const SizedBox(height: 16),
-
+                _buildSectionHeader('Security'),
                 _buildSettingTile(
                   title: 'Change Password',
                   icon: Icons.lock_outline,
                   onTap: () => Get.to(() => const ChangePasswordScreen()),
                 ),
-
                 _buildSettingTile(
                   title: 'Two-Factor Authentication',
                   icon: Icons.security,
                   onTap: () {},
                 ),
 
-                const SizedBox(height: 24),
+                const SizedBox(height: 32),
 
                 // Logout Button
                 Container(
                   width: double.infinity,
                   height: 50,
-                  margin: const EdgeInsets.only(top: 8),
+                  margin: const EdgeInsets.only(bottom: 20),
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.surface,
+                      backgroundColor: Colors.red.withOpacity(0.1),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
                     onPressed: () {
-                      // Implement logout functionality
                       Get.offAllNamed(Routes.signin);
                     },
                     child: Row(

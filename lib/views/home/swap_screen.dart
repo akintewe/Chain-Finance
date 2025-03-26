@@ -1,7 +1,7 @@
-import 'package:chain_finance/controllers/wallet_controller.dart';
-import 'package:chain_finance/utils/colors.dart';
-import 'package:chain_finance/utils/text_styles.dart';
-import 'package:chain_finance/utils/button_style.dart';
+import 'package:nexa_prime/controllers/wallet_controller.dart';
+import 'package:nexa_prime/utils/colors.dart';
+import 'package:nexa_prime/utils/text_styles.dart';
+import 'package:nexa_prime/utils/button_style.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -19,6 +19,8 @@ class _SwapScreenState extends State<SwapScreen> {
   
   String? selectedFromToken;
   String? selectedToToken;
+  final RxDouble conversionRate = 0.0.obs;
+  final RxBool isCalculating = false.obs;
 
   // Dummy conversion rates (you would fetch these from an API in production)
   final Map<String, double> conversionRates = {
@@ -31,18 +33,24 @@ class _SwapScreenState extends State<SwapScreen> {
   void calculateToAmount(String fromAmount) {
     if (fromAmount.isEmpty || selectedFromToken == null || selectedToToken == null) {
       toAmountController.text = '';
+      conversionRate.value = 0.0;
       return;
     }
 
     try {
+      isCalculating.value = true;
       double amount = double.parse(fromAmount);
       double fromRate = conversionRates[selectedFromToken]!;
       double toRate = conversionRates[selectedToToken]!;
       
       double convertedAmount = (amount * fromRate) / toRate;
+      conversionRate.value = convertedAmount / amount;
       toAmountController.text = convertedAmount.toStringAsFixed(8);
     } catch (e) {
       toAmountController.text = '';
+      conversionRate.value = 0.0;
+    } finally {
+      isCalculating.value = false;
     }
   }
 
@@ -61,18 +69,25 @@ class _SwapScreenState extends State<SwapScreen> {
         Container(
           decoration: BoxDecoration(
             color: AppColors.surface,
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: AppColors.primary.withOpacity(0.1),
+            ),
           ),
           child: Column(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 child: Row(
                   children: [
                     Expanded(
                       child: TextField(
                         controller: controller,
-                        style: AppTextStyles.body.copyWith(color: AppColors.text),
+                        style: AppTextStyles.body.copyWith(
+                          color: AppColors.text,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
                         keyboardType: TextInputType.number,
                         readOnly: readOnly,
                         onChanged: (value) => calculateToAmount(value),
@@ -80,6 +95,8 @@ class _SwapScreenState extends State<SwapScreen> {
                           hintText: '0.00',
                           hintStyle: AppTextStyles.body.copyWith(
                             color: AppColors.textSecondary,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
                           ),
                           border: InputBorder.none,
                         ),
@@ -89,7 +106,10 @@ class _SwapScreenState extends State<SwapScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 12),
                       decoration: BoxDecoration(
                         color: AppColors.background,
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: AppColors.primary.withOpacity(0.1),
+                        ),
                       ),
                       child: Obx(() => DropdownButton<String>(
                         value: selectedToken,
@@ -124,7 +144,7 @@ class _SwapScreenState extends State<SwapScreen> {
               ),
               if (selectedToken != null) ...[
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   decoration: BoxDecoration(
                     border: Border(
                       top: BorderSide(
@@ -174,7 +194,7 @@ class _SwapScreenState extends State<SwapScreen> {
             children: [
               Text(
                 'Swap',
-                style: AppTextStyles.heading.copyWith(fontSize: 30),
+                style: AppTextStyles.heading.copyWith(fontSize: 32),
               ),
               const SizedBox(height: 24),
               
@@ -198,6 +218,9 @@ class _SwapScreenState extends State<SwapScreen> {
                   decoration: BoxDecoration(
                     color: AppColors.surface,
                     shape: BoxShape.circle,
+                    border: Border.all(
+                      color: AppColors.primary.withOpacity(0.1),
+                    ),
                   ),
                   child: IconButton(
                     icon: const Icon(
@@ -231,14 +254,65 @@ class _SwapScreenState extends State<SwapScreen> {
                 readOnly: true,
               ),
               
+              if (conversionRate.value > 0) ...[
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: AppColors.primary.withOpacity(0.1),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Exchange Rate',
+                        style: AppTextStyles.body.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      Text(
+                        '1 ${selectedFromToken} = ${conversionRate.value.toStringAsFixed(8)} ${selectedToToken}',
+                        style: AppTextStyles.body2,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+              
               const Spacer(),
               
               // Swap button
               Container(
                 width: double.infinity,
+                height: 56,
                 decoration: BoxDecoration(
-                  gradient: AppColors.primaryGradient,
-                  borderRadius: BorderRadius.circular(10),
+                  gradient: selectedFromToken != null && 
+                           selectedToToken != null && 
+                           fromAmountController.text.isNotEmpty
+                      ? AppColors.primaryGradient
+                      : LinearGradient(
+                          colors: AppColors.primaryGradient.colors
+                              .map((color) => color.withOpacity(0.5))
+                              .toList(),
+                          begin: AppColors.primaryGradient.begin,
+                          end: AppColors.primaryGradient.end,
+                        ),
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: selectedFromToken != null && 
+                           selectedToToken != null && 
+                           fromAmountController.text.isNotEmpty
+                      ? [
+                          BoxShadow(
+                            color: AppColors.primary.withOpacity(0.3),
+                            blurRadius: 12,
+                            offset: const Offset(0, 6),
+                          ),
+                        ]
+                      : null,
                 ),
                 child: ElevatedButton(
                   style: AppButtonStyles.primaryButton,
@@ -255,7 +329,17 @@ class _SwapScreenState extends State<SwapScreen> {
                           );
                         }
                       : null,
-                  child: Text('Swap', style: AppTextStyles.button),
+                  child: Obx(() => isCalculating.value
+                    ? const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      )
+                    : Text('Swap', style: AppTextStyles.button),
+                  ),
                 ),
               ),
             ],

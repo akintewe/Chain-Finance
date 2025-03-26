@@ -1,8 +1,8 @@
-import 'package:chain_finance/routes/routes.dart';
-import 'package:chain_finance/utils/colors.dart';
-import 'package:chain_finance/utils/custom_textfield.dart';
-import 'package:chain_finance/utils/text_styles.dart';
-import 'package:chain_finance/utils/button_style.dart';
+import 'package:nexa_prime/routes/routes.dart';
+import 'package:nexa_prime/utils/colors.dart';
+import 'package:nexa_prime/utils/custom_textfield.dart';
+import 'package:nexa_prime/utils/text_styles.dart';
+import 'package:nexa_prime/utils/button_style.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 

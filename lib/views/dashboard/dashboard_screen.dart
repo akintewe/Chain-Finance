@@ -1,7 +1,7 @@
-import 'package:chain_finance/views/home/settings_screen.dart';
-import 'package:chain_finance/views/home/swap_screen.dart';
-import 'package:chain_finance/views/home/transaction_screen.dart';
-import 'package:chain_finance/views/home/wallet_screen.dart';
+import 'package:nexa_prime/views/home/settings_screen.dart';
+import 'package:nexa_prime/views/home/swap_screen.dart';
+import 'package:nexa_prime/views/home/transaction_screen.dart';
+import 'package:nexa_prime/views/home/wallet_screen.dart';
 import 'package:flutter/material.dart';
 import '../../utils/colors.dart';
 
@@ -31,8 +31,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
       bottomNavigationBar: Container(
         margin: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: const Color(0xFF1E1E1E),
+          color: AppColors.bottomNavBackground,
           borderRadius: BorderRadius.circular(40),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.2),
+              blurRadius: 10,
+              offset: const Offset(0, 5),
+            ),
+          ],
         ),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
@@ -58,17 +65,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
         decoration: BoxDecoration(
-        border: Border.all(
-          color:isSelected ? Color.fromRGBO(62, 198, 235, 1) : Color(0xFF1E1E1E),
-        ),
-        
+          color: isSelected ? AppColors.primary.withOpacity(0.1) : Colors.transparent,
+          border: Border.all(
+            color: isSelected ? AppColors.primary : Colors.transparent,
+            width: 1,
+          ),
           borderRadius: BorderRadius.circular(15),
         ),
         child: Row(
           children: [
             Image.asset(
               icon,
-              color: isSelected ? Color.fromRGBO(62, 198, 235, 1) : AppColors.white,
+              color: isSelected ? AppColors.primary : AppColors.bottomNavUnselected,
               height: 22,
             ),
             if (isSelected) ...[
@@ -76,7 +84,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Text(
                 label,
                 style: TextStyle(
-                  color: Colors.white,
+                  color: AppColors.primary,
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                 ),

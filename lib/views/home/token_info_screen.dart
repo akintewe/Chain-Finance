@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:chain_finance/utils/colors.dart';
-import 'package:chain_finance/utils/text_styles.dart';
-import 'package:chain_finance/services/price_service.dart';
+import 'package:nexa_prime/utils/colors.dart';
+import 'package:nexa_prime/utils/text_styles.dart';
+import 'package:nexa_prime/services/price_service.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'dart:math' show min, max;
 

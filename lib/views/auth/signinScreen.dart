@@ -1,7 +1,7 @@
-import 'package:chain_finance/routes/routes.dart';
-import 'package:chain_finance/utils/custom_textfield.dart';
-import 'package:chain_finance/views/auth/forgot_password_screen.dart';
-import 'package:chain_finance/views/dashboard/dashboard_screen.dart';
+import 'package:nexa_prime/routes/routes.dart';
+import 'package:nexa_prime/utils/custom_textfield.dart';
+import 'package:nexa_prime/views/auth/forgot_password_screen.dart';
+import 'package:nexa_prime/views/dashboard/dashboard_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../utils/colors.dart';
@@ -45,34 +45,44 @@ class SignInScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Sign in', style: AppTextStyles.heading2),
-                const SizedBox(height: 8),
-                GestureDetector(
-                  onTap: () => Routes.navigateToSignup(),
-                  child: RichText(
-                    text: TextSpan(
-                      style: AppTextStyles.body,
-                      children: [
-                        const TextSpan(
-                          text: "If you don't have an account created, you can \n",
-                        ),
-                        TextSpan(
-                          text: 'Sign Up here!',
-                          style: AppTextStyles.body.copyWith(
-                            color: AppColors.secondary,
-                            decoration: TextDecoration.underline,
-                          ),
-                        ),
-                      ],
+                // Logo
+                Center(
+                  child: Container(
+                    width: 80,
+                    height: 80,
+                    margin: const EdgeInsets.only(bottom: 32),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: AppColors.primaryGradient,
                     ),
+                    child: Image.asset(
+                      'assets/images/WhatsApp Image 2025-03-25 at 10.07.55 AM.jpeg',
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+                
+                Text('Welcome Back!', 
+                  style: AppTextStyles.heading.copyWith(fontSize: 32),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Sign in to continue to Nexa Prime',
+                  style: AppTextStyles.body.copyWith(
+                    color: AppColors.textSecondary,
+                    fontSize: 16,
                   ),
                 ),
                 const SizedBox(height: 32),
                 
                 CustomTextField(
-                  label: 'Email',
+                  label: 'Email Address',
                   controller: emailController,
-                  hintText: 'johngray@gmail.com',
+                  hintText: 'Enter your registered email',
+                  prefixIcon: const Icon(
+                    Icons.email_outlined,
+                    color: AppColors.textSecondary,
+                  ),
                   onChanged: (val) => validateForm(),
                 ),
                 const SizedBox(height: 16),
@@ -82,7 +92,11 @@ class SignInScreen extends StatelessWidget {
                   controller: passwordController,
                   isPassword: true,
                   hasIcon: true,
-                  hintText: '**************',
+                  hintText: 'Enter your password',
+                  prefixIcon: const Icon(
+                    Icons.lock_outline,
+                    color: AppColors.textSecondary,
+                  ),
                   onChanged: (val) => validateForm(),
                 ),
                 const SizedBox(height: 16),
@@ -100,7 +114,7 @@ class SignInScreen extends StatelessWidget {
                             (states) => AppColors.secondary,
                           ),
                         )),
-                        Text('Remember me?', 
+                        Text('Remember me', 
                           style: AppTextStyles.body.copyWith(color: AppColors.text),
                         ),
                       ],
@@ -108,9 +122,10 @@ class SignInScreen extends StatelessWidget {
                     TextButton(
                       onPressed: () => Get.to(() => ForgotPasswordScreen()),
                       child: Text(
-                        'Forgot password?',
+                        'Forgot Password?',
                         style: AppTextStyles.body.copyWith(
                           color: AppColors.secondary,
+                          decoration: TextDecoration.underline,
                         ),
                       ),
                     ),
@@ -122,6 +137,7 @@ class SignInScreen extends StatelessWidget {
                 // Sign in button
                 Obx(() => Container(
                   width: double.infinity,
+                  height: 56,
                   decoration: BoxDecoration(
                     gradient: _isFormValid.value 
                       ? AppColors.primaryGradient
@@ -132,7 +148,14 @@ class SignInScreen extends StatelessWidget {
                           begin: AppColors.primaryGradient.begin,
                           end: AppColors.primaryGradient.end,
                         ),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: _isFormValid.value ? [
+                      BoxShadow(
+                        color: AppColors.primary.withOpacity(0.3),
+                        blurRadius: 12,
+                        offset: const Offset(0, 6),
+                      ),
+                    ] : null,
                   ),
                   child: ElevatedButton(
                     style: AppButtonStyles.primaryButton,
@@ -145,6 +168,33 @@ class SignInScreen extends StatelessWidget {
                     child: Text('Sign In', style: AppTextStyles.button),
                   ),
                 )),
+                
+                const SizedBox(height: 24),
+                
+                // Sign up link
+                Center(
+                  child: GestureDetector(
+                    onTap: () => Routes.navigateToSignup(),
+                    child: RichText(
+                      text: TextSpan(
+                        style: AppTextStyles.body,
+                        children: [
+                          const TextSpan(
+                            text: "Don't have an account? ",
+                          ),
+                          TextSpan(
+                            text: 'Sign Up',
+                            style: AppTextStyles.body.copyWith(
+                              color: AppColors.secondary,
+                              decoration: TextDecoration.underline,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),

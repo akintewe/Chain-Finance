@@ -1,12 +1,12 @@
-import 'package:chain_finance/utils/colors.dart';
-import 'package:chain_finance/utils/custom_textfield.dart';
-import 'package:chain_finance/utils/text_styles.dart';
-import 'package:chain_finance/utils/button_style.dart';
+import 'package:nexa_prime/utils/colors.dart';
+import 'package:nexa_prime/utils/custom_textfield.dart';
+import 'package:nexa_prime/utils/text_styles.dart';
+import 'package:nexa_prime/utils/button_style.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
-import 'package:chain_finance/views/auth/new_password_screen.dart';
-import 'package:chain_finance/controllers/auth_controller.dart';
+import 'package:nexa_prime/views/auth/new_password_screen.dart';
+import 'package:nexa_prime/controllers/auth_controller.dart';
 
 class OTPVerificationScreen extends StatelessWidget {
   OTPVerificationScreen({super.key});

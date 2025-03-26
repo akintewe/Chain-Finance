@@ -2,7 +2,7 @@ import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../controllers/auth_controller.dart';
-import 'package:chain_finance/services/price_service.dart';
+import 'package:nexa_prime/services/price_service.dart';
 import 'dart:async';
 import 'dart:math';
 

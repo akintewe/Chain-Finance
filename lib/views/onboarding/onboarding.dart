@@ -1,7 +1,7 @@
-import 'package:chain_finance/controllers/onboardingcontent.dart';
-import 'package:chain_finance/routes/routes.dart';
-import 'package:chain_finance/utils/button_style.dart';
-import 'package:chain_finance/views/auth/signupScreen.dart';
+import 'package:nexa_prime/controllers/onboardingcontent.dart';
+import 'package:nexa_prime/routes/routes.dart';
+import 'package:nexa_prime/utils/button_style.dart';
+import 'package:nexa_prime/views/auth/signupScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../utils/text_styles.dart';
@@ -19,19 +19,19 @@ class OnboardingScreen extends StatefulWidget {
 class _OnboardingScreenState extends State<OnboardingScreen> {
   final List<OnboardingContent> contents = [
     OnboardingContent(
-      image: 'assets/icons/49.png',
-      mainText: 'Safeguard your\nfinances the best way\nwith ',
-      gradientText: 'Chain Finance.',
+      image: 'assets/images/WhatsApp Image 2025-03-25 at 10.07.55 AM.jpeg',
+      mainText: 'Cryptocurrency\n always at\nyour fingertips\n in its  ',
+      gradientText: 'Finest',
     ),
     OnboardingContent(
-      image: 'assets/icons/Property 1=2.png', 
+      image: 'assets/images/WhatsApp Image 2025-03-25 at 10.07.55 AM.jpeg', 
       mainText: 'Send and receive\nmoney in real-time\nwith ',
-      gradientText: 'Chain Finance.',
+      gradientText: 'Nexa Prime.',
     ),
     OnboardingContent(
-      image: 'assets/icons/Property 1=50.png',
+      image: 'assets/images/WhatsApp Image 2025-03-25 at 10.07.55 AM.jpeg',
       mainText: 'Trade securely\nanywhere, anytime\nwith ',
-      gradientText: 'Chain Finance.',
+      gradientText: 'Nexa Prime.',
     ),
   ];
 
@@ -85,7 +85,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   SizedBox(
                     height: constraints.maxHeight * 0.06,
                     width: constraints.maxHeight * 0.06,
-                    child: Image.asset('assets/images/WhatsApp_Image_2024-10-27_at_3.41.28_PM-removebg-preview.png'),
+                    child: Image.asset('assets/images/WhatsApp Image 2025-03-25 at 10.07.55 AM.jpeg'),
                   ),
                   
                   SizedBox(height: constraints.maxHeight * 0.02),

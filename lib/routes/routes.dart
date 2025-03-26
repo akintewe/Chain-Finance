@@ -1,9 +1,9 @@
-import 'package:chain_finance/utils/custom_page_route.dart';
-import 'package:chain_finance/views/auth/signinScreen.dart';
-import 'package:chain_finance/views/auth/signupScreen.dart';
-import 'package:chain_finance/views/dashboard/dashboard_screen.dart';
-import 'package:chain_finance/views/auth/email_verification_screen.dart';
-import 'package:chain_finance/views/auth/create_passcode_screen.dart';
+import 'package:nexa_prime/utils/custom_page_route.dart';
+import 'package:nexa_prime/views/auth/signinScreen.dart';
+import 'package:nexa_prime/views/auth/signupScreen.dart';
+import 'package:nexa_prime/views/dashboard/dashboard_screen.dart';
+import 'package:nexa_prime/views/auth/email_verification_screen.dart';
+import 'package:nexa_prime/views/auth/create_passcode_screen.dart';
 
 import 'package:get/get.dart';
 

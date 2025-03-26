@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:chain_finance/utils/colors.dart';
-import 'package:chain_finance/utils/text_styles.dart';
-import 'package:chain_finance/controllers/wallet_controller.dart';
+import 'package:nexa_prime/utils/colors.dart';
+import 'package:nexa_prime/utils/text_styles.dart';
+import 'package:nexa_prime/controllers/wallet_controller.dart';
 
 class EditFavoritesScreen extends StatefulWidget {
   const EditFavoritesScreen({Key? key}) : super(key: key);

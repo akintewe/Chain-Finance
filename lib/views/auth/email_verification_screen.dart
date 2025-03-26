@@ -1,11 +1,11 @@
 import 'dart:async';
-import 'package:chain_finance/utils/colors.dart';
-import 'package:chain_finance/utils/text_styles.dart';
-import 'package:chain_finance/utils/button_style.dart';
+import 'package:nexa_prime/utils/colors.dart';
+import 'package:nexa_prime/utils/text_styles.dart';
+import 'package:nexa_prime/utils/button_style.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
-import 'package:chain_finance/controllers/auth_controller.dart';
+import 'package:nexa_prime/controllers/auth_controller.dart';
 
 class EmailVerificationScreen extends StatefulWidget {
   final String email;

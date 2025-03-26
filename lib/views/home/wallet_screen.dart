@@ -1,16 +1,16 @@
-import 'package:chain_finance/controllers/auth_controller.dart';
-import 'package:chain_finance/controllers/wallet_controller.dart';
-import 'package:chain_finance/utils/colors.dart';
-import 'package:chain_finance/utils/text_styles.dart';
-import 'package:chain_finance/views/home/receive_screen.dart';
-import 'package:chain_finance/views/home/send_screen.dart';
+import 'package:nexa_prime/controllers/auth_controller.dart';
+import 'package:nexa_prime/controllers/wallet_controller.dart';
+import 'package:nexa_prime/utils/colors.dart';
+import 'package:nexa_prime/utils/text_styles.dart';
+import 'package:nexa_prime/views/home/receive_screen.dart';
+import 'package:nexa_prime/views/home/send_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'dart:math';
-import 'package:chain_finance/views/home/token_info_screen.dart';
-import 'package:chain_finance/views/home/all_tokens_screen.dart';
-import 'package:chain_finance/views/home/edit_favorites_screen.dart';
+import 'package:nexa_prime/views/home/token_info_screen.dart';
+import 'package:nexa_prime/views/home/all_tokens_screen.dart';
+import 'package:nexa_prime/views/home/edit_favorites_screen.dart';
 
 class WalletScreen extends StatefulWidget {
   const WalletScreen({super.key});
@@ -57,7 +57,6 @@ class _WalletScreenState extends State<WalletScreen> with SingleTickerProviderSt
     },
   ];
 
-  // Add state variables for filter selections
   final Map<String, bool> _filterSelections = {
     'All Crypto': true,
     'Winners': false,
@@ -102,9 +101,16 @@ class _WalletScreenState extends State<WalletScreen> with SingleTickerProviderSt
     Get.bottomSheet(
       Container(
         padding: const EdgeInsets.all(24),
-        decoration: const BoxDecoration(
-          color: AppColors.background,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.2),
+              blurRadius: 10,
+              offset: const Offset(0, -5),
+            ),
+          ],
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -116,7 +122,7 @@ class _WalletScreenState extends State<WalletScreen> with SingleTickerProviderSt
             ),
             const SizedBox(height: 24),
             
-            // Chain Finance User Option
+            // Nexa Prime User Option
             InkWell(
               onTap: () {
                 Get.back();
@@ -125,9 +131,9 @@ class _WalletScreenState extends State<WalletScreen> with SingleTickerProviderSt
               child: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: AppColors.surface,
+                  color: AppColors.background,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+                  border: Border.all(color: AppColors.primary.withOpacity(0.2)),
                 ),
                 child: Row(
                   children: [
@@ -145,12 +151,12 @@ class _WalletScreenState extends State<WalletScreen> with SingleTickerProviderSt
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Chain Finance User',
+                            'Nexa Prime User',
                             style: AppTextStyles.body2.copyWith(fontSize: 16),
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'Send to another Chain Finance user',
+                            'Send to another Nexa Prime user',
                             style: AppTextStyles.body.copyWith(
                               color: AppColors.textSecondary,
                               fontSize: 14,
@@ -176,9 +182,9 @@ class _WalletScreenState extends State<WalletScreen> with SingleTickerProviderSt
               child: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: AppColors.surface,
+                  color: AppColors.background,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.secondary.withOpacity(0.1)),
+                  border: Border.all(color: AppColors.secondary.withOpacity(0.2)),
                 ),
                 child: Row(
                   children: [
@@ -242,13 +248,34 @@ class _WalletScreenState extends State<WalletScreen> with SingleTickerProviderSt
                   ),
                   Row(
                     children: [
-                     SvgPicture.asset('assets/icons/Search.svg', color: AppColors.text,),
-                     SizedBox(width: 10,),
-                     Image.asset('assets/icons/ion_notifications.png', color: AppColors.text,),
-                     SizedBox(width: 10,),
-                      const CircleAvatar(
-                        radius: 20,
-                        backgroundImage: AssetImage('assets/icons/Photo by Brooke Cagle.png'),
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: SvgPicture.asset('assets/icons/Search.svg', color: AppColors.text),
+                      ),
+                      const SizedBox(width: 10),
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Image.asset('assets/icons/ion_notifications.png', color: AppColors.text),
+                      ),
+                      const SizedBox(width: 10),
+                      Container(
+                        padding: const EdgeInsets.all(2),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: AppColors.primaryGradient,
+                        ),
+                        child: const CircleAvatar(
+                          radius: 20,
+                          backgroundImage: AssetImage('assets/icons/Photo by Brooke Cagle.png'),
+                        ),
                       ),
                     ],
                   ),
@@ -257,64 +284,80 @@ class _WalletScreenState extends State<WalletScreen> with SingleTickerProviderSt
 
               const SizedBox(height: 20),
 
-              // Balance Card
+              // Total Balance Card
               Container(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF2E4E6B), Color(0xFF3D2A54)],
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      AppColors.surface,
+                      AppColors.surface.withOpacity(0.8),
+                    ],
                   ),
-                  borderRadius: BorderRadius.circular(15),
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(
+                    color: AppColors.primary.withOpacity(0.1),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withOpacity(0.05),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Text(
+                      'Total Balance',
+                      style: AppTextStyles.body.copyWith(
+                        color: AppColors.textSecondary,
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Text(
+                          '\$',
+                          style: AppTextStyles.heading.copyWith(
+                            color: AppColors.textSecondary,
+                            fontSize: 24,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Obx(() => Text(
+                          walletController.getTotalBalance(),
+                          style: AppTextStyles.heading.copyWith(
+                            fontSize: 32,
+                          ),
+                        )),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
-                          'Total Balance',
-                          style: TextStyle(color: AppColors.textSecondary),
+                        _buildStatItem(
+                          '24h Change',
+                          '+2.5%',
+                          Colors.green,
                         ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Colors.green.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: const Text(
-                            '↑ 23.5%',
-                            style: TextStyle(color: Colors.green),
-                          ),
+                        _buildStatItem(
+                          '24h High',
+                          '\$12,500',
+                          AppColors.text,
                         ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: AppColors.surface,
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Row(
-                            children: const [
-                              Text(
-                                'USD',
-                                style: TextStyle(color: AppColors.text),
-                              ),
-                              Icon(Icons.keyboard_arrow_down, color: AppColors.text),
-                            ],
-                          ),
+                        _buildStatItem(
+                          '24h Low',
+                          '\$11,800',
+                          AppColors.text,
                         ),
                       ],
                     ),
-                    const SizedBox(height: 10),
-                    Obx(() => Text(
-                      '\$${walletController.getTotalBalance()}',
-                      style: AppTextStyles.heading.copyWith(
-                        color: AppColors.text,
-                        fontSize: 24,
-                      ),
-                    )),
                   ],
                 ),
               ),
@@ -328,27 +371,30 @@ class _WalletScreenState extends State<WalletScreen> with SingleTickerProviderSt
                     child: Container(
                       height: 50,
                       decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Colors.blue, Colors.purple],
-                          begin: Alignment.centerLeft,
-                          end: Alignment.centerRight,
-                        ),
+                        gradient: AppColors.primaryGradient,
                         borderRadius: BorderRadius.circular(15),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.primary.withOpacity(0.3),
+                            blurRadius: 10,
+                            offset: const Offset(0, 5),
+                          ),
+                        ],
                       ),
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.transparent,
                           shadowColor: Colors.transparent,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(15),
                           ),
                         ),
                         onPressed: _showSendOptions,
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text('Send', style: AppTextStyles.body2,),
-                            const Icon(Icons.arrow_upward, size: 16, color: AppColors.white,),
+                            Text('Send', style: AppTextStyles.body2.copyWith(color: Colors.white)),
+                            const Icon(Icons.arrow_upward, size: 16, color: Colors.white),
                           ],
                         ),
                       ),
@@ -359,8 +405,9 @@ class _WalletScreenState extends State<WalletScreen> with SingleTickerProviderSt
                     child: Container(
                       height: 50,
                       decoration: BoxDecoration(
-                        border: Border.all(color: Colors.blue.withOpacity(0.5)),
+                        color: AppColors.surface,
                         borderRadius: BorderRadius.circular(15),
+                        border: Border.all(color: AppColors.primary.withOpacity(0.2)),
                       ),
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
@@ -370,12 +417,12 @@ class _WalletScreenState extends State<WalletScreen> with SingleTickerProviderSt
                             borderRadius: BorderRadius.circular(15),
                           ),
                         ),
-                       onPressed: () => Get.to(() => const ReceiveScreen()),
+                        onPressed: () => Get.to(() => const ReceiveScreen()),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
-                          children:  [
-                            Text('Receive',style: AppTextStyles.body2,),
-                            Icon(Icons.arrow_downward, size: 16, color: AppColors.white,),
+                          children: [
+                            Text('Receive', style: AppTextStyles.body2),
+                            const Icon(Icons.arrow_downward, size: 16, color: AppColors.text),
                           ],
                         ),
                       ),
@@ -432,6 +479,7 @@ class _WalletScreenState extends State<WalletScreen> with SingleTickerProviderSt
                           decoration: BoxDecoration(
                             color: AppColors.surface,
                             borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: AppColors.primary.withOpacity(0.1)),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -501,38 +549,67 @@ class _WalletScreenState extends State<WalletScreen> with SingleTickerProviderSt
               ),
 
               // Updated Filter Chips
-              SizedBox(
-                height: 40,
+              Container(
+                height: 48,
+                margin: const EdgeInsets.symmetric(vertical: 16),
                 child: ListView(
                   scrollDirection: Axis.horizontal,
                   children: _filterSelections.entries.map((entry) {
                     return Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: FilterChip(
-                        label: Text(entry.key),
-                        selected: entry.value,
-                        onSelected: (bool selected) {
-                          if (selected) { // Only handle selection, not deselection
-                            setState(() {
-                              // First set all to false
-                              _filterSelections.forEach((key, value) {
-                                _filterSelections[key] = false;
-                              });
-                              // Then set the selected one to true
-                              _filterSelections[entry.key] = true;
+                      padding: const EdgeInsets.only(right: 12),
+                      child: InkWell(
+                        onTap: () {
+                          setState(() {
+                            _filterSelections.forEach((key, value) {
+                              _filterSelections[key] = false;
                             });
-                          }
+                            _filterSelections[entry.key] = true;
+                          });
                         },
-                        backgroundColor: AppColors.surface,
-                        selectedColor: AppColors.primary.withOpacity(0.2),
-                        checkmarkColor: Colors.black,
-                        showCheckmark: true,
-                        labelStyle: TextStyle(
-                          color: entry.value ? Colors.black : AppColors.textSecondary,
-                        ),
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: entry.value 
+                              ? AppColors.primary.withOpacity(0.1)
+                              : AppColors.surface,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: entry.value 
+                                ? AppColors.primary
+                                : AppColors.primary.withOpacity(0.1),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (entry.value) ...[
+                                Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primary,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.check,
+                                    size: 12,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                              ],
+                              Text(
+                                entry.key,
+                                style: AppTextStyles.body2.copyWith(
+                                  color: entry.value 
+                                    ? AppColors.primary
+                                    : AppColors.textSecondary,
+                                  fontWeight: entry.value 
+                                    ? FontWeight.w600
+                                    : FontWeight.normal,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     );
@@ -549,44 +626,59 @@ class _WalletScreenState extends State<WalletScreen> with SingleTickerProviderSt
                     final price = walletController.getPriceForToken(token['symbol']);
                     final priceChange = walletController.getPriceChangeForToken(token['symbol']);
                     
-                    return ListTile(
-                      onTap: () => Get.to(() => TokenInfoScreen(
-                        token: token,
-                        currentPrice: price,
-                        priceChange: priceChange,
-                      )),
-                      leading: Image.asset(
-                        token['icon'],
-                        width: 40,
-                        height: 40,
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppColors.primary.withOpacity(0.1)),
                       ),
-                      title: Text(
-                        token['name'],
-                        style: const TextStyle(color: AppColors.text),
-                      ),
-                      subtitle: Text(
-                        token['symbol'],
-                        style: const TextStyle(color: AppColors.textSecondary),
-                      ),
-                      trailing: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text(
-                            '\$${price.toStringAsFixed(2)}',
-                            style: const TextStyle(
-                              color: AppColors.text,
-                              fontWeight: FontWeight.bold,
-                            ),
+                      child: ListTile(
+                        onTap: () => Get.to(() => TokenInfoScreen(
+                          token: token,
+                          currentPrice: price,
+                          priceChange: priceChange,
+                        )),
+                        leading: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
                           ),
-                          Text(
-                            '${priceChange >= 0 ? '+' : ''}${priceChange.toStringAsFixed(2)}%',
-                            style: TextStyle(
-                              color: priceChange >= 0 ? Colors.green : Colors.red,
-                              fontSize: 12,
-                            ),
+                          child: Image.asset(
+                            token['icon'],
+                            width: 24,
+                            height: 24,
                           ),
-                        ],
+                        ),
+                        title: Text(
+                          token['name'],
+                          style: const TextStyle(color: AppColors.text),
+                        ),
+                        subtitle: Text(
+                          token['symbol'],
+                          style: const TextStyle(color: AppColors.textSecondary),
+                        ),
+                        trailing: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                              '\$${price.toStringAsFixed(2)}',
+                              style: const TextStyle(
+                                color: AppColors.text,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Text(
+                              '${priceChange >= 0 ? '+' : ''}${priceChange.toStringAsFixed(2)}%',
+                              style: TextStyle(
+                                color: priceChange >= 0 ? Colors.green : Colors.red,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     );
                   },
@@ -596,6 +688,29 @@ class _WalletScreenState extends State<WalletScreen> with SingleTickerProviderSt
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildStatItem(String label, String value, Color valueColor) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: AppTextStyles.body.copyWith(
+            color: AppColors.textSecondary,
+            fontSize: 12,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: AppTextStyles.body2.copyWith(
+            color: valueColor,
+            fontSize: 14,
+          ),
+        ),
+      ],
     );
   }
 }

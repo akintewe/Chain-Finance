@@ -1,4 +1,4 @@
-import 'package:chain_finance/views/auth/otp_verification_screen.dart';
+import 'package:nexa_prime/views/auth/otp_verification_screen.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
