@@ -70,7 +70,7 @@ class SignUpScreen extends StatelessWidget {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       gradient: AppColors.primaryGradient,
-                    ),
+                        ),
                     child: Image.asset(
                       'assets/images/WhatsApp Image 2025-03-25 at 10.07.55 AM.jpeg',
                       fit: BoxFit.cover,

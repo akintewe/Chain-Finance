@@ -29,6 +29,7 @@ class _TokenInfoScreenState extends State<TokenInfoScreen> {
   final timeframes = ['1H', '1D', '1W', '1M', '1Y'];
   Map<String, dynamic>? tokenMetrics;
   Map<String, dynamic>? orderBookData;
+  bool _disposed = false;
 
   @override
   void initState() {
@@ -37,10 +38,18 @@ class _TokenInfoScreenState extends State<TokenInfoScreen> {
     fetchTokenMetrics();
     fetchOrderBook();
   }
+  
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
 
   Future<void> fetchChartData() async {
+    if (_disposed) return;
+    
     try {
-      setState(() => isLoading = true);
+      if (mounted) setState(() => isLoading = true);
       
       final timeEnd = DateTime.now();
       final timeStart = getTimeframeStartDate(timeEnd);
@@ -71,25 +80,29 @@ class _TokenInfoScreenState extends State<TokenInfoScreen> {
 
     } catch (e) {
       print('Error fetching chart data: $e');
-      Get.snackbar('Error', 'Failed to load chart data: $e');
+      if (mounted) Get.snackbar('Error', 'Failed to load chart data: $e');
     } finally {
-      setState(() => isLoading = false);
+      if (mounted) setState(() => isLoading = false);
     }
   }
 
   Future<void> fetchTokenMetrics() async {
+    if (_disposed) return;
+    
     try {
       final metrics = await PriceService.getAssetMetrics(widget.token['symbol']);
-      setState(() => tokenMetrics = metrics);
+      if (mounted) setState(() => tokenMetrics = metrics);
     } catch (e) {
       print('Error fetching metrics: $e');
     }
   }
 
   Future<void> fetchOrderBook() async {
+    if (_disposed) return;
+    
     try {
       final data = await PriceService.getOrderBook(widget.token['symbol'], widget.currentPrice);
-      setState(() => orderBookData = data);
+      if (mounted) setState(() => orderBookData = data);
     } catch (e) {
       print('Error fetching order book: $e');
     }
@@ -246,8 +259,10 @@ class _TokenInfoScreenState extends State<TokenInfoScreen> {
   Widget _buildTimeframeButton(String timeframe, bool isSelected) {
     return GestureDetector(
       onTap: () {
-        setState(() => selectedTimeframe = timeframe);
-        fetchChartData();
+        if (mounted) {
+          setState(() => selectedTimeframe = timeframe);
+          fetchChartData();
+        }
       },
       child: Container(
         margin: const EdgeInsets.only(right: 8),

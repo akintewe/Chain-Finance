@@ -18,6 +18,27 @@ class AuthController extends GetxController {
   
   bool get isLoading => _isLoading.value;
   String get token => _token.value;
+  
+  @override
+  void onInit() async {
+    super.onInit();
+    // Initialize token from storage when controller is created
+    await _initializeToken();
+    print('AuthController initialized');
+  }
+  
+  Future<void> _initializeToken() async {
+    final storedToken = await storage.read(key: 'token');
+    if (storedToken != null) {
+      _token.value = storedToken;
+      print('Token loaded from storage');
+    }
+  }
+  
+  Future<bool> isUserLoggedIn() async {
+    final token = await getStoredToken();
+    return token != null && token.isNotEmpty;
+  }
 
   // Register User
   Future<void> registerUser({
@@ -28,8 +49,13 @@ class AuthController extends GetxController {
     required String passwordConfirmation,
   }) async {
     try {
+      print('Starting registration process...');
+      print('Email: $email');
+      print('Username: $username');
+      
       Loader.show();
       _isLoading.value = true;
+      print('Loader shown, making API request...');
       
       final response = await http.post(
         Uri.parse('$baseUrl/register'),
@@ -43,20 +69,42 @@ class AuthController extends GetxController {
         }),
       );
 
-      if (response.statusCode == 200) {
-        print(response.body);
-        final data = jsonDecode(response.body);
+      print('Response status code: ${response.statusCode}');
+      print('Response body: ${response.body}');
+      
+      final data = jsonDecode(response.body);
+      print('Decoded data: $data');
+      
+      if (response.statusCode == 200 && data['status'] == true) {
+        print('Registration successful!');
         Get.snackbar('Success', 'Registration successful');
+        print('Navigating to email verification...');
         Routes.navigateToEmailVerification(email);
       } else {
-        print(response.body);
-        throw jsonDecode(response.body)['message'] ?? 'Registration failed';
+        print('Registration failed with status: ${data['status']}');
+        print('Error message: ${data['message']}');
+        // Handle error response
+        _isLoading.value = false;
+        Loader.hide();
+        print('Loader dismissed due to error');
+        Get.snackbar(
+          'Error',
+          data['message'] ?? 'Registration failed',
+          backgroundColor: Colors.red.withOpacity(0.1),
+          colorText: Colors.red,
+        );
       }
     } catch (e) {
-      Get.snackbar('Error', e.toString());
-    } finally {
+      print('Exception occurred during registration: $e');
       _isLoading.value = false;
       Loader.hide();
+      print('Loader dismissed due to exception');
+      Get.snackbar(
+        'Error',
+        'An error occurred. Please try again.',
+        backgroundColor: Colors.red.withOpacity(0.1),
+        colorText: Colors.red,
+      );
     }
   }
 

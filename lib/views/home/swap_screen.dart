@@ -1,7 +1,6 @@
 import 'package:nexa_prime/controllers/wallet_controller.dart';
 import 'package:nexa_prime/utils/colors.dart';
 import 'package:nexa_prime/utils/text_styles.dart';
-import 'package:nexa_prime/utils/button_style.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -12,339 +11,442 @@ class SwapScreen extends StatefulWidget {
   State<SwapScreen> createState() => _SwapScreenState();
 }
 
-class _SwapScreenState extends State<SwapScreen> {
+class _SwapScreenState extends State<SwapScreen> with SingleTickerProviderStateMixin {
+  final WalletController walletController = Get.put(WalletController());
+  late AnimationController _controller;
+  late Animation<double> _fadeAnimation;
+  late Animation<double> _scaleAnimation;
+  Map<String, dynamic>? fromToken;
+  Map<String, dynamic>? toToken;
   final TextEditingController fromAmountController = TextEditingController();
   final TextEditingController toAmountController = TextEditingController();
-  final WalletController walletController = Get.put(WalletController());
-  
-  String? selectedFromToken;
-  String? selectedToToken;
-  final RxDouble conversionRate = 0.0.obs;
-  final RxBool isCalculating = false.obs;
-
-  // Dummy conversion rates (you would fetch these from an API in production)
-  final Map<String, double> conversionRates = {
-    'BTC': 35000.0,
-    'ETH': 2200.0,
-    'TRX': 0.08,
-    'USDT': 1.0,
-  };
-
-  void calculateToAmount(String fromAmount) {
-    if (fromAmount.isEmpty || selectedFromToken == null || selectedToToken == null) {
-      toAmountController.text = '';
-      conversionRate.value = 0.0;
-      return;
-    }
-
-    try {
-      isCalculating.value = true;
-      double amount = double.parse(fromAmount);
-      double fromRate = conversionRates[selectedFromToken]!;
-      double toRate = conversionRates[selectedToToken]!;
-      
-      double convertedAmount = (amount * fromRate) / toRate;
-      conversionRate.value = convertedAmount / amount;
-      toAmountController.text = convertedAmount.toStringAsFixed(8);
-    } catch (e) {
-      toAmountController.text = '';
-      conversionRate.value = 0.0;
-    } finally {
-      isCalculating.value = false;
-    }
-  }
-
-  Widget _buildTokenSelector({
-    required String label,
-    required String? selectedToken,
-    required Function(String?) onChanged,
-    TextEditingController? controller,
-    bool readOnly = false,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: AppTextStyles.body2),
-        const SizedBox(height: 8),
-        Container(
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: AppColors.primary.withOpacity(0.1),
-            ),
-          ),
-          child: Column(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: controller,
-                        style: AppTextStyles.body.copyWith(
-                          color: AppColors.text,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        keyboardType: TextInputType.number,
-                        readOnly: readOnly,
-                        onChanged: (value) => calculateToAmount(value),
-                        decoration: InputDecoration(
-                          hintText: '0.00',
-                          hintStyle: AppTextStyles.body.copyWith(
-                            color: AppColors.textSecondary,
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          border: InputBorder.none,
-                        ),
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      decoration: BoxDecoration(
-                        color: AppColors.background,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: AppColors.primary.withOpacity(0.1),
-                        ),
-                      ),
-                      child: Obx(() => DropdownButton<String>(
-                        value: selectedToken,
-                        hint: Text('Select', style: AppTextStyles.body2),
-                        underline: const SizedBox(),
-                        dropdownColor: AppColors.surface,
-                        items: walletController.tokens.map((token) {
-                          return DropdownMenuItem<String>(
-                            value: token['symbol'],
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Image.asset(
-                                  token['icon'],
-                                  width: 24,
-                                  height: 24,
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  token['symbol'],
-                                  style: AppTextStyles.body2,
-                                ),
-                              ],
-                            ),
-                          );
-                        }).toList(),
-                        onChanged: onChanged,
-                      )),
-                    ),
-                  ],
-                ),
-              ),
-              if (selectedToken != null) ...[
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  decoration: BoxDecoration(
-                    border: Border(
-                      top: BorderSide(
-                        color: AppColors.textSecondary.withOpacity(0.1),
-                      ),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Available Balance',
-                        style: AppTextStyles.body.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                      Obx(() => Text(
-                        walletController.getBalanceForToken(selectedToken),
-                        style: AppTextStyles.body2,
-                      )),
-                    ],
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
-      ],
-    );
-  }
 
   @override
   void initState() {
     super.initState();
     walletController.fetchWalletDetails();
+    
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Curves.easeIn,
+      ),
+    );
+
+    _scaleAnimation = Tween<double>(
+      begin: 0.8,
+      end: 1.0,
+    ).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Curves.easeOutBack,
+      ),
+    );
+
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    fromAmountController.dispose();
+    toAmountController.dispose();
+    super.dispose();
+  }
+
+  void _showTokenSelector(bool isFrom) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+            Text(
+              isFrom ? 'Select Token to Swap From' : 'Select Token to Swap To',
+              style: AppTextStyles.heading2,
+            ),
+            const SizedBox(height: 16),
+                    Expanded(
+              child: ListView.builder(
+                itemCount: walletController.tokens.length,
+                itemBuilder: (context, index) {
+                  final token = walletController.tokens[index];
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        if (isFrom) {
+                          fromToken = token;
+                        } else {
+                          toToken = token;
+                        }
+                      });
+                      Get.back();
+                    },
+                    child: Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppColors.background,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+                      ),
+                            child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Image.asset(
+                              token['icon'],
+                              width: 32,
+                              height: 32,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  token['name'],
+                                  style: AppTextStyles.body2.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  '${token['balance']} ${token['symbol']}',
+                                  style: AppTextStyles.body.copyWith(
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+                  ),
+                ),
+              ],
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: AppColors.text),
+          onPressed: () => Get.back(),
+        ),
+        title: Text('Swap', style: AppTextStyles.heading2),
+      ),
+      body: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, child) {
+          return Transform.scale(
+            scale: _scaleAnimation.value,
+            child: FadeTransition(
+              opacity: _fadeAnimation,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Quick Info Card
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            AppColors.primary.withOpacity(0.1),
+                            AppColors.secondary.withOpacity(0.1),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+                      ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Icon(
+                                  Icons.info_outline,
+                                  color: AppColors.primary,
+                                  size: 20,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                'Quick Info',
+                                style: AppTextStyles.body2.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
               Text(
-                'Swap',
-                style: AppTextStyles.heading.copyWith(fontSize: 32),
+                            '• Best rates guaranteed\n• No hidden fees\n• Instant swaps\n• Secure transactions',
+                            style: AppTextStyles.body.copyWith(
+                              color: AppColors.textSecondary,
+                              height: 1.5,
+                            ),
+                          ),
+                        ],
+                      ),
               ),
               const SizedBox(height: 24),
               
-              _buildTokenSelector(
-                label: 'From',
-                selectedToken: selectedFromToken,
-                onChanged: (value) {
-                  setState(() {
-                    selectedFromToken = value;
-                    calculateToAmount(fromAmountController.text);
-                  });
-                },
+                    // From Token
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'From',
+                            style: AppTextStyles.body.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: TextField(
                 controller: fromAmountController,
-              ),
-              
+                                  keyboardType: TextInputType.number,
+                                  style: AppTextStyles.heading2.copyWith(
+                                    color: AppColors.text,
+                                  ),
+                                  decoration: InputDecoration(
+                                    hintText: '0.0',
+                                    hintStyle: AppTextStyles.heading2.copyWith(
+                                      color: AppColors.textSecondary,
+                                    ),
+                                    border: InputBorder.none,
+                                    contentPadding: EdgeInsets.zero,
+                                  ),
+                                ),
+                              ),
+                              GestureDetector(
+                                onTap: () => _showTokenSelector(true),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 8,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.background,
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      if (fromToken != null) ...[
+                                        Image.asset(
+                                          fromToken!['icon'],
+                                          width: 24,
+                                          height: 24,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          fromToken!['symbol'],
+                                          style: AppTextStyles.body2.copyWith(
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ] else
+                                        Text(
+                                          'Select',
+                                          style: AppTextStyles.body2.copyWith(
+                                            color: AppColors.textSecondary,
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
               const SizedBox(height: 16),
               
-              // Swap direction button
+                    // Swap Button
               Center(
                 child: Container(
+                        padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
                     color: AppColors.surface,
                     shape: BoxShape.circle,
-                    border: Border.all(
-                      color: AppColors.primary.withOpacity(0.1),
-                    ),
+                          border: Border.all(color: AppColors.primary.withOpacity(0.1)),
                   ),
-                  child: IconButton(
-                    icon: const Icon(
+                        child: Icon(
                       Icons.swap_vert,
-                      color: AppColors.secondary,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        final tempToken = selectedFromToken;
-                        selectedFromToken = selectedToToken;
-                        selectedToToken = tempToken;
-                        calculateToAmount(fromAmountController.text);
-                      });
-                    },
-                  ),
-                ),
-              ),
-              
-              const SizedBox(height: 16),
-              
-              _buildTokenSelector(
-                label: 'To',
-                selectedToken: selectedToToken,
-                onChanged: (value) {
-                  setState(() {
-                    selectedToToken = value;
-                    calculateToAmount(fromAmountController.text);
-                  });
-                },
-                controller: toAmountController,
-                readOnly: true,
-              ),
-              
-              if (conversionRate.value > 0) ...[
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: AppColors.primary.withOpacity(0.1),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Exchange Rate',
-                        style: AppTextStyles.body.copyWith(
-                          color: AppColors.textSecondary,
+                          color: AppColors.primary,
+                          size: 24,
                         ),
                       ),
-                      Text(
-                        '1 ${selectedFromToken} = ${conversionRate.value.toStringAsFixed(8)} ${selectedToToken}',
-                        style: AppTextStyles.body2,
+                    ),
+                    const SizedBox(height: 16),
+
+                    // To Token
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: AppColors.primary.withOpacity(0.1)),
                       ),
-                    ],
-                  ),
-                ),
-              ],
-              
-              const Spacer(),
-              
-              // Swap button
-              Container(
-                width: double.infinity,
-                height: 56,
-                decoration: BoxDecoration(
-                  gradient: selectedFromToken != null && 
-                           selectedToToken != null && 
-                           fromAmountController.text.isNotEmpty
-                      ? AppColors.primaryGradient
-                      : LinearGradient(
-                          colors: AppColors.primaryGradient.colors
-                              .map((color) => color.withOpacity(0.5))
-                              .toList(),
-                          begin: AppColors.primaryGradient.begin,
-                          end: AppColors.primaryGradient.end,
-                        ),
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: selectedFromToken != null && 
-                           selectedToToken != null && 
-                           fromAmountController.text.isNotEmpty
-                      ? [
-                          BoxShadow(
-                            color: AppColors.primary.withOpacity(0.3),
-                            blurRadius: 12,
-                            offset: const Offset(0, 6),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'To',
+                            style: AppTextStyles.body.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
                           ),
-                        ]
-                      : null,
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: TextField(
+                                  controller: toAmountController,
+                                  keyboardType: TextInputType.number,
+                                  style: AppTextStyles.heading2.copyWith(
+                                    color: AppColors.text,
+                                  ),
+                                  decoration: InputDecoration(
+                                    hintText: '0.0',
+                                    hintStyle: AppTextStyles.heading2.copyWith(
+                                      color: AppColors.textSecondary,
+                                    ),
+                                    border: InputBorder.none,
+                                    contentPadding: EdgeInsets.zero,
+                                  ),
+                                ),
+                              ),
+                              GestureDetector(
+                                onTap: () => _showTokenSelector(false),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 8,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.background,
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      if (toToken != null) ...[
+                                        Image.asset(
+                                          toToken!['icon'],
+                                          width: 24,
+                                          height: 24,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          toToken!['symbol'],
+                                          style: AppTextStyles.body2.copyWith(
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ] else
+                                        Text(
+                                          'Select',
+                                          style: AppTextStyles.body2.copyWith(
+                                            color: AppColors.textSecondary,
+                                          ),
+                                        ),
+                                    ],
+                  ),
                 ),
+              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Swap Button
+                    SizedBox(
+                width: double.infinity,
                 child: ElevatedButton(
-                  style: AppButtonStyles.primaryButton,
-                  onPressed: selectedFromToken != null && 
-                           selectedToToken != null && 
-                           fromAmountController.text.isNotEmpty
+                        onPressed: fromToken != null && toToken != null
                       ? () {
                           // Implement swap functionality
-                          Get.snackbar(
-                            'Success',
-                            'Swap executed successfully',
-                            backgroundColor: AppColors.surface,
-                            colorText: AppColors.text,
-                          );
                         }
                       : null,
-                  child: Obx(() => isCalculating.value
-                    ? const SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: AppColors.surface,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
                         ),
-                      )
-                    : Text('Swap', style: AppTextStyles.button),
-                  ),
+                        child: Text(
+                          'Swap',
+                          style: AppTextStyles.button.copyWith(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                 ),
               ),
             ],
           ),
         ),
+            ),
+          );
+        },
       ),
     );
   }

@@ -6,8 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../utils/text_styles.dart';
 import '../../utils/colors.dart';
-
-
+import 'dart:math' as math;
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -16,7 +15,7 @@ class OnboardingScreen extends StatefulWidget {
   State<OnboardingScreen> createState() => _OnboardingScreenState();
 }
 
-class _OnboardingScreenState extends State<OnboardingScreen> {
+class _OnboardingScreenState extends State<OnboardingScreen> with SingleTickerProviderStateMixin {
   final List<OnboardingContent> contents = [
     OnboardingContent(
       image: 'assets/images/WhatsApp Image 2025-03-25 at 10.07.55 AM.jpeg',
@@ -37,11 +36,35 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   int currentIndex = 0;
   late final PageController _pageController;
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+  late Animation<double> _scaleAnimation;
 
   @override
   void initState() {
     super.initState();
     _pageController = PageController();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeIn,
+    ));
+
+    _scaleAnimation = Tween<double>(
+      begin: 0.8,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeOutBack,
+    ));
+
     _startAutoPlay();
   }
 
@@ -66,6 +89,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   void dispose() {
     _pageController.dispose();
+    _animationController.dispose();
     super.dispose();
   }
 
@@ -76,16 +100,80 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
-            return Padding(
-              padding: EdgeInsets.all(constraints.maxWidth * 0.05), // Responsive padding
+            return Stack(
+              children: [
+                // Background gradient
+                Positioned.fill(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          AppColors.background,
+                          AppColors.background.withOpacity(0.8),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                
+                // Animated background circles
+                ...List.generate(3, (index) {
+                  return Positioned(
+                    left: constraints.maxWidth * (0.2 + index * 0.3),
+                    top: constraints.maxHeight * (0.1 + index * 0.2),
+                    child: Container(
+                      width: constraints.maxWidth * 0.4,
+                      height: constraints.maxWidth * 0.4,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: LinearGradient(
+                          colors: [
+                            AppColors.primary.withOpacity(0.1),
+                            AppColors.secondary.withOpacity(0.05),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                }),
+
+                // Main content
+                Padding(
+                  padding: EdgeInsets.all(constraints.maxWidth * 0.05),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Logo
-                  SizedBox(
+                      // Logo with animation
+                      AnimatedBuilder(
+                        animation: _animationController,
+                        builder: (context, child) {
+                          return Transform.scale(
+                            scale: _scaleAnimation.value,
+                            child: Container(
                     height: constraints.maxHeight * 0.06,
                     width: constraints.maxHeight * 0.06,
-                    child: Image.asset('assets/images/WhatsApp Image 2025-03-25 at 10.07.55 AM.jpeg'),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                gradient: AppColors.primaryGradient,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppColors.primary.withOpacity(0.3),
+                                    blurRadius: 20,
+                                    offset: const Offset(0, 10),
+                                  ),
+                                ],
+                              ),
+                              child: ClipOval(
+                                child: Image.asset(
+                                  'assets/images/WhatsApp Image 2025-03-25 at 10.07.55 AM.jpeg',
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            ),
+                          );
+                        },
                   ),
                   
                   SizedBox(height: constraints.maxHeight * 0.02),
@@ -98,6 +186,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       onPageChanged: (index) {
                         setState(() {
                           currentIndex = index;
+                              _animationController.reset();
+                              _animationController.forward();
                         });
                       },
                       itemCount: contents.length,
@@ -108,19 +198,47 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: [
-                              // Image
-                              SizedBox(
+                                  // Image with animation
+                                  AnimatedBuilder(
+                                    animation: _animationController,
+                                    builder: (context, child) {
+                                      return Transform.scale(
+                                        scale: _scaleAnimation.value,
+                                        child: Container(
                                 height: constraints.maxHeight * 0.5,
+                                          decoration: BoxDecoration(
+                                            borderRadius: BorderRadius.circular(30),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: AppColors.primary.withOpacity(0.2),
+                                                blurRadius: 30,
+                                                offset: const Offset(0, 20),
+                                              ),
+                                            ],
+                                          ),
+                                          child: ClipRRect(
+                                            borderRadius: BorderRadius.circular(30),
                                 child: Image.asset(
                                   contents[index].image,
-                                  fit: BoxFit.contain,
+                                              fit: BoxFit.cover,
+                                            ),
                                 ),
+                                        ),
+                                      );
+                                    },
                               ),
                               
                               SizedBox(height: constraints.maxHeight * 0.02),
                               
-                              // Text
-                              Container(
+                                  // Text with animation
+                                  AnimatedBuilder(
+                                    animation: _animationController,
+                                    builder: (context, child) {
+                                      return Transform.translate(
+                                        offset: Offset(0, 20 * (1 - _fadeAnimation.value)),
+                                        child: Opacity(
+                                          opacity: _fadeAnimation.value,
+                                          child: Container(
                                 alignment: Alignment.centerLeft,
                                 child: RichText(
                                   textAlign: TextAlign.left,
@@ -142,6 +260,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                     ],
                                   ),
                                 ),
+                                          ),
+                                        ),
+                                      );
+                                    },
                               ),
                             ],
                           ),
@@ -149,19 +271,22 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       },
                     ),
                   ),
+                      
                    SizedBox(height: constraints.maxHeight * 0.02),
-                  // Page indicators
+                      
+                      // Page indicators with animation
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: List.generate(
                       contents.length,
-                      (index) => Container(
+                          (index) => AnimatedContainer(
+                            duration: const Duration(milliseconds: 300),
                         margin: EdgeInsets.symmetric(horizontal: constraints.maxWidth * 0.01),
                         height: constraints.maxHeight * 0.01,
                         width: currentIndex == index ? constraints.maxWidth * 0.06 : constraints.maxWidth * 0.02,
                         decoration: BoxDecoration(
                           gradient: currentIndex == index ? AppColors.primaryGradient : null,
-                          color: currentIndex == index ? null : AppColors.textSecondary,
+                              color: currentIndex == index ? null : AppColors.textSecondary.withOpacity(0.3),
                           borderRadius: BorderRadius.circular(4),
                         ),
                       ),
@@ -170,33 +295,62 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   
                   SizedBox(height: constraints.maxHeight * 0.03),
                   
-                  // Buttons row
-                  Row(
+                      // Buttons row with animation
+                      AnimatedBuilder(
+                        animation: _animationController,
+                        builder: (context, child) {
+                          return Transform.translate(
+                            offset: Offset(0, 20 * (1 - _fadeAnimation.value)),
+                            child: Opacity(
+                              opacity: _fadeAnimation.value,
+                              child: Row(
                     children: [
                       Expanded(
-                        child: SizedBox(
+                                    child: Container(
                           height: constraints.maxHeight * 0.06,
-                          child: Container(
                             decoration: BoxDecoration(
                               gradient: AppColors.primaryGradient,
-                              borderRadius: BorderRadius.circular(10),
+                                        borderRadius: BorderRadius.circular(15),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: AppColors.primary.withOpacity(0.3),
+                                            blurRadius: 15,
+                                            offset: const Offset(0, 5),
+                                          ),
+                                        ],
                             ),
                             child: ElevatedButton(
-                              style: AppButtonStyles.primaryButton,
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.transparent,
+                                          shadowColor: Colors.transparent,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(15),
+                                          ),
+                                        ),
                               onPressed: () => Routes.navigateToSignup(),
                               child: Text('Sign Up', style: AppTextStyles.button),
-                            ),
                           ),
                         ),
                       ),
                       SizedBox(width: constraints.maxWidth * 0.04),
                       Expanded(
-                        child: SizedBox(
+                                    child: Container(
                           height: constraints.maxHeight * 0.06,
-                          child: Container(
-                            decoration: AppButtonStyles.outlinedButtonDecoration,
-                            child: OutlinedButton(
-                              style: AppButtonStyles.outlinedButton,
+                                      decoration: BoxDecoration(
+                                        color: AppColors.surface,
+                                        borderRadius: BorderRadius.circular(15),
+                                        border: Border.all(
+                                          color: AppColors.primary.withOpacity(0.2),
+                                        ),
+                                      ),
+                                      child: ElevatedButton(
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.transparent,
+                                          shadowColor: Colors.transparent,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(15),
+                                          ),
+                                        ),
                               onPressed: () => Routes.navigateToSignin(),
                               child: ShaderMask(
                                 shaderCallback: (Rect bounds) => AppColors.primaryGradient.createShader(bounds),
@@ -210,14 +364,24 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             ),
                           ),
                         ),
+                                ],
+                        ),
                       ),
-                    ],
+                          );
+                        },
                   ),
                   
                   SizedBox(height: constraints.maxHeight * 0.02),
                   
-                  // Login text
-                  Center(
+                      // Login text with animation
+                      AnimatedBuilder(
+                        animation: _animationController,
+                        builder: (context, child) {
+                          return Transform.translate(
+                            offset: Offset(0, 20 * (1 - _fadeAnimation.value)),
+                            child: Opacity(
+                              opacity: _fadeAnimation.value,
+                              child: Center(
                     child: GestureDetector(
                       onTap: () => Routes.navigateToSignin(),
                       child: RichText(
@@ -241,11 +405,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         ),
                       ),
                     ),
+                              ),
+                            ),
+                          );
+                        },
                   ),
                   
                   SizedBox(height: constraints.maxHeight * 0.02),
                 ],
               ),
+                ),
+              ],
             );
           },
         ),

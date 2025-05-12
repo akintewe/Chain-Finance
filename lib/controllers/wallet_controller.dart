@@ -287,6 +287,16 @@ class WalletController extends GetxController {
     }
   }
 
+  double get totalPortfolioValue {
+    double total = 0;
+    for (var token in tokens) {
+      final balance = double.tryParse(token['balance'].toString()) ?? 0;
+      final price = double.tryParse(token['price'].toString()) ?? 0;
+      total += balance * price;
+    }
+    return total;
+  }
+
   @override
   void onInit() {
     super.onInit();

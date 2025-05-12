@@ -164,13 +164,13 @@ class _TransactionScreenState extends State<TransactionScreen> {
                         ),
                       ),
                       const SizedBox(height: 4),
-                      Text(
-                        subtitle,
-                        style: AppTextStyles.body.copyWith(
-                          color: AppColors.textSecondary,
-                          fontSize: 12,
-                        ),
-                      ),
+            Text(
+              subtitle,
+              style: AppTextStyles.body.copyWith(
+                color: AppColors.textSecondary,
+                fontSize: 12,
+              ),
+            ),
                     ],
                   ),
                 ),
@@ -185,15 +185,15 @@ class _TransactionScreenState extends State<TransactionScreen> {
                       ),
                     ),
                     const SizedBox(height: 4),
-                    Text(
+            Text(
                       DateFormat('MMM dd, HH:mm').format(tx['date']),
-                      style: AppTextStyles.body.copyWith(
-                        color: AppColors.textSecondary,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
+              style: AppTextStyles.body.copyWith(
+                color: AppColors.textSecondary,
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ),
               ],
             ),
             if (tx['type'] == 'Swapped') ...[
@@ -270,67 +270,73 @@ class _TransactionScreenState extends State<TransactionScreen> {
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Transactions',
+            children: [
+              Text(
+                'Transactions',
                     style: AppTextStyles.heading.copyWith(fontSize: 32),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: AppColors.primary.withOpacity(0.1),
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: AppColors.primary.withOpacity(0.1),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.calendar_today,
+                      color: AppColors.textSecondary,
+                      size: 16,
+                    ),
+                    const SizedBox(width: 6),
+                    TextButton(
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      onPressed: () async {
+                        final date = await showDatePicker(
+                          context: context,
+                          initialDate: selectedDate ?? DateTime.now(),
+                          firstDate: DateTime(2020),
+                          lastDate: DateTime.now(),
+                        );
+                        if (date != null) {
+                          setState(() {
+                            selectedDate = date;
+                          });
+                        }
+                      },
+                      child: Text(
+                        selectedDate != null
+                            ? DateFormat('MMM dd').format(selectedDate!)
+                            : 'Select Date',
+                        style: AppTextStyles.body2.copyWith(fontSize: 13),
                       ),
                     ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.calendar_today,
+                    if (selectedDate != null) ...[
+                      const SizedBox(width: 6),
+                      GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            selectedDate = null;
+                          });
+                        },
+                        child: Icon(
+                          Icons.close,
+                          size: 14,
                           color: AppColors.textSecondary,
-                          size: 20,
                         ),
-                        const SizedBox(width: 8),
-                        TextButton(
-                          onPressed: () async {
-                            final date = await showDatePicker(
-                              context: context,
-                              initialDate: selectedDate ?? DateTime.now(),
-                              firstDate: DateTime(2020),
-                              lastDate: DateTime.now(),
-                            );
-                            if (date != null) {
-                              setState(() {
-                                selectedDate = date;
-                              });
-                            }
-                          },
-                          child: Text(
-                            selectedDate != null
-                                ? DateFormat('MMM dd').format(selectedDate!)
-                                : 'Select Date',
-                            style: AppTextStyles.body2,
-                          ),
-                        ),
-                        if (selectedDate != null) ...[
-                          const SizedBox(width: 8),
-                          GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                selectedDate = null;
-                              });
-                            },
-                            child: Icon(
-                              Icons.close,
-                              size: 16,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
                 ],
               ),
               const SizedBox(height: 24),
@@ -377,10 +383,10 @@ class _TransactionScreenState extends State<TransactionScreen> {
                             ),
                             const SizedBox(height: 16),
                             Text(
-                              'No transactions found',
-                              style: AppTextStyles.body.copyWith(
-                                color: AppColors.textSecondary,
-                              ),
+                          'No transactions found',
+                          style: AppTextStyles.body.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
                             ),
                           ],
                         ),

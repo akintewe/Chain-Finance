@@ -2,12 +2,10 @@ import 'dart:async';
 
 import 'package:nexa_prime/controllers/wallet_controller.dart';
 import 'package:nexa_prime/utils/colors.dart';
-import 'package:nexa_prime/utils/custom_textfield.dart';
 import 'package:nexa_prime/utils/text_styles.dart';
 import 'package:nexa_prime/utils/button_style.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
 
 class SendScreen extends StatefulWidget {
   final bool isSendingToExternal;
@@ -21,7 +19,7 @@ class SendScreen extends StatefulWidget {
   State<SendScreen> createState() => _SendScreenState();
 }
 
-class _SendScreenState extends State<SendScreen> {
+class _SendScreenState extends State<SendScreen> with SingleTickerProviderStateMixin {
   final TextEditingController amountController = TextEditingController();
   final TextEditingController uuidController = TextEditingController();
   final TextEditingController addressController = TextEditingController();
@@ -31,12 +29,52 @@ class _SendScreenState extends State<SendScreen> {
   final RxMap<String, dynamic> receiverData = <String, dynamic>{}.obs;
   final RxBool isLoadingUser = false.obs;
   Timer? _debounceTimer;
+  late AnimationController _controller;
+  late Animation<double> _fadeAnimation;
+  late Animation<double> _scaleAnimation;
 
   @override
   void initState() {
     super.initState();
-    // Fetch wallet details when screen initializes
     walletController.fetchWalletDetails();
+    
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Curves.easeIn,
+      ),
+    );
+
+    _scaleAnimation = Tween<double>(
+      begin: 0.8,
+      end: 1.0,
+    ).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Curves.easeOutBack,
+      ),
+    );
+
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _debounceTimer?.cancel();
+    amountController.dispose();
+    uuidController.dispose();
+    addressController.dispose();
+    noteController.dispose();
+    super.dispose();
   }
 
   void _onUUIDChanged(String uuid) {
@@ -55,55 +93,89 @@ class _SendScreenState extends State<SendScreen> {
     });
   }
 
-  Widget _buildTokenDropdown() {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(10),
+  void _showTokenSelector() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      child: Obx(() => DropdownButtonFormField<String>(
-        value: selectedToken,
-        decoration: InputDecoration(
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide.none,
-          ),
-          filled: true,
-          fillColor: AppColors.surface,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 16,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Select Token',
+              style: AppTextStyles.heading2,
+            ),
+            const SizedBox(height: 16),
+            Expanded(
+              child: ListView.builder(
+                itemCount: walletController.tokens.length,
+                itemBuilder: (context, index) {
+                  final token = walletController.tokens[index];
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        selectedToken = token['symbol'];
+                      });
+                      Get.back();
+                    },
+                    child: Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppColors.background,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Image.asset(
+                              token['icon'],
+                              width: 32,
+                              height: 32,
           ),
         ),
-        dropdownColor: AppColors.surface,
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  token['name'],
+                                  style: AppTextStyles.body2.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  '${token['balance']} ${token['symbol']}',
         style: AppTextStyles.body.copyWith(
-          color: AppColors.text,
-        ),
-        hint: Text('Select Token', style: AppTextStyles.body.copyWith(
-          color: AppColors.textSecondary,
-        )),
-        items: walletController.tokens.map((token) {
-          return DropdownMenuItem<String>(
-            value: token['symbol'],
-            child: Row(
-              children: [
-                Image.asset(
-                  token['icon'],
-                  width: 24,
-                  height: 24,
-                ),
-                const SizedBox(width: 12),
-                Text(token['name']),
-              ],
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
             ),
           );
-        }).toList(),
-        onChanged: (value) {
-          setState(() {
-            selectedToken = value;
-          });
-        },
-      )),
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -120,70 +192,239 @@ class _SendScreenState extends State<SendScreen> {
         ),
         title: Text(
           widget.isSendingToExternal ? 'Send to External Wallet' : 'Send to Nexa Prime User',
-          style: AppTextStyles.button
+          style: AppTextStyles.heading2,
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
+      body: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, child) {
+          return Transform.scale(
+            scale: _scaleAnimation.value,
+            child: FadeTransition(
+              opacity: _fadeAnimation,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (widget.isSendingToExternal) ...[
-              // Add alert message for external transfers
+                    // Quick Info Card
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: AppColors.secondary.withOpacity(0.5),
+                        gradient: LinearGradient(
+                          colors: [
+                            AppColors.primary.withOpacity(0.1),
+                            AppColors.secondary.withOpacity(0.1),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: AppColors.primary.withOpacity(0.2)),
                   ),
-                ),
-                child: Row(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
                   children: [
-                    const Icon(
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Icon(
                       Icons.info_outline,
-                      color: AppColors.secondary,
+                                  color: AppColors.primary,
+                                  size: 20,
+                                ),
                     ),
                     const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        'Only send tokens through Binance Smart Chain Network',
+                              Text(
+                                'Quick Info',
+                                style: AppTextStyles.body2.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            widget.isSendingToExternal
+                                ? '• Only send tokens through Binance Smart Chain Network\n• Double-check the wallet address\n• Transaction cannot be reversed'
+                                : '• Instant transfers to Nexa Prime users\n• No network fees\n• Secure and reliable',
                         style: AppTextStyles.body.copyWith(
-                          color: AppColors.text,
+                              color: AppColors.textSecondary,
+                              height: 1.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Token Selection
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Select Token',
+                            style: AppTextStyles.body.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          GestureDetector(
+                            onTap: _showTokenSelector,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 12,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.background,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  if (selectedToken != null) ...[
+                                    Row(
+                                      children: [
+                                        Image.asset(
+                                          walletController.tokens
+                                              .firstWhere((t) => t['symbol'] == selectedToken)['icon'],
+                                          width: 24,
+                                          height: 24,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          selectedToken!,
+                                          style: AppTextStyles.body2.copyWith(
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ] else
+                                    Text(
+                                      'Select Token',
+                                      style: AppTextStyles.body2.copyWith(
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    ),
+                                  Icon(
+                                    Icons.arrow_forward_ios,
+                                    color: AppColors.textSecondary,
+                                    size: 16,
+                                  ),
+                                ],
                         ),
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 24),
-            ],
-            // Token Selection
-            Text('Select Token', style: AppTextStyles.body.copyWith(
-              color: AppColors.text,
-              fontSize: 16,
-            )),
-            const SizedBox(height: 8),
-            _buildTokenDropdown(),
             const SizedBox(height: 24),
 
             if (widget.isSendingToExternal) ...[
               // Wallet Address Input
-              CustomTextField(
-                label: 'Wallet Address',
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Wallet Address',
+                              style: AppTextStyles.body.copyWith(
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            TextField(
                 controller: addressController,
+                              style: AppTextStyles.body.copyWith(
+                                color: AppColors.text,
+                              ),
+                              decoration: InputDecoration(
                 hintText: 'Enter wallet address',
+                                hintStyle: AppTextStyles.body.copyWith(
+                                  color: AppColors.textSecondary,
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide.none,
+                                ),
+                                filled: true,
+                                fillColor: AppColors.background,
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 16,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
               ),
             ] else ...[
               // UUID Input with User Info
-              CustomTextField(
-                label: 'Recipient ID',
-                controller: uuidController,
-                hintText: 'Enter recipient\'s ID',
-                onChanged: _onUUIDChanged,
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Recipient ID',
+                              style: AppTextStyles.body.copyWith(
+                                color: AppColors.textSecondary,
+                              ),
               ),
               const SizedBox(height: 8),
+                            TextField(
+                              controller: uuidController,
+                              style: AppTextStyles.body.copyWith(
+                                color: AppColors.text,
+                              ),
+                              onChanged: _onUUIDChanged,
+                              decoration: InputDecoration(
+                                hintText: 'Enter recipient\'s ID',
+                                hintStyle: AppTextStyles.body.copyWith(
+                                  color: AppColors.textSecondary,
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide.none,
+                                ),
+                                filled: true,
+                                fillColor: AppColors.background,
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 16,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
               
               // User Info Section
               Obx(() => AnimatedSwitcher(
@@ -195,24 +436,33 @@ class _SendScreenState extends State<SendScreen> {
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
                           color: AppColors.surface,
-                          borderRadius: BorderRadius.circular(12),
+                                  borderRadius: BorderRadius.circular(16),
                           border: Border.all(color: AppColors.primary.withOpacity(0.1)),
                         ),
                         child: Row(
                           children: [
-                            const CircleAvatar(
-                              radius: 20,
-                              backgroundColor: AppColors.primary,
-                              child: Icon(Icons.person, color: Colors.white),
+                                    Container(
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.primary.withOpacity(0.1),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: Icon(
+                                        Icons.person,
+                                        color: AppColors.primary,
+                                        size: 24,
+                                      ),
                             ),
-                            const SizedBox(width: 12),
+                                    const SizedBox(width: 16),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
                                     receiverData['name'] ?? '',
-                                    style: AppTextStyles.body2,
+                                            style: AppTextStyles.body2.copyWith(
+                                              fontWeight: FontWeight.w600,
+                                            ),
                                   ),
                                   Text(
                                     receiverData['email'] ?? '',
@@ -232,36 +482,140 @@ class _SendScreenState extends State<SendScreen> {
               
               const SizedBox(height: 24),
               
-              // Note Input (only for internal transfers)
-              CustomTextField(
-                label: 'Note (Optional)',
+                      // Note Input
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Note (Optional)',
+                              style: AppTextStyles.body.copyWith(
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            TextField(
                 controller: noteController,
+                              style: AppTextStyles.body.copyWith(
+                                color: AppColors.text,
+                              ),
+                              maxLines: 2,
+                              decoration: InputDecoration(
                 hintText: 'Add a note to this transfer',
-                maxLines: 2,
+                                hintStyle: AppTextStyles.body.copyWith(
+                                  color: AppColors.textSecondary,
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide.none,
+                                ),
+                                filled: true,
+                                fillColor: AppColors.background,
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 16,
+                                ),
+                              ),
               ),
             ],
-
+                        ),
+                      ),
+                    ],
             const SizedBox(height: 24),
             
             // Amount Input
-            _buildAmountField(),
-            const SizedBox(height: 32),
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Amount',
+                            style: AppTextStyles.body.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          TextField(
+                            controller: amountController,
+                            style: AppTextStyles.heading2.copyWith(
+                              color: AppColors.text,
+                            ),
+                            keyboardType: TextInputType.number,
+                            decoration: InputDecoration(
+                              hintText: '0.00',
+                              hintStyle: AppTextStyles.heading2.copyWith(
+                                color: AppColors.textSecondary,
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide.none,
+                              ),
+                              filled: true,
+                              fillColor: AppColors.background,
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 16,
+                              ),
+                            ),
+                          ),
+                          if (selectedToken != null) ...[
+                            const SizedBox(height: 8),
+                            Obx(() {
+                              final balance = walletController.getBalanceForToken(selectedToken!);
+                              return Text(
+                                'Available Balance: $balance $selectedToken',
+                                style: AppTextStyles.body.copyWith(
+                                  color: AppColors.textSecondary,
+                                  fontSize: 12,
+                                ),
+                              );
+                            }),
+                          ],
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
 
             // Send Button
-            Container(
+                    SizedBox(
               width: double.infinity,
-              decoration: BoxDecoration(
-                gradient: AppColors.primaryGradient,
-                borderRadius: BorderRadius.circular(10),
-              ),
               child: ElevatedButton(
-                style: AppButtonStyles.primaryButton,
                 onPressed: () => _handleSend(),
-                child: Text('Send', style: AppTextStyles.button),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: AppColors.surface,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                        child: Text(
+                          'Send',
+                          style: AppTextStyles.button.copyWith(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
               ),
             ),
           ],
         ),
+              ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -291,31 +645,5 @@ class _SendScreenState extends State<SendScreen> {
     } catch (e) {
       Get.snackbar('Error', e.toString());
     }
-  }
-
-  Widget _buildAmountField() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        CustomTextField(
-          label: 'Amount',
-          controller: amountController,
-          hintText: '0.00',
-        ),
-        if (selectedToken != null) ...[
-          const SizedBox(height: 8),
-          Obx(() {
-            final balance = walletController.getBalanceForToken(selectedToken!);
-            return Text(
-              'Available Balance: $balance $selectedToken',
-              style: AppTextStyles.body.copyWith(
-                color: AppColors.textSecondary,
-                fontSize: 12,
-              ),
-            );
-          }),
-        ],
-      ],
-    );
   }
 } 

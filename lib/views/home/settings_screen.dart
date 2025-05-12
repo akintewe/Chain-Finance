@@ -48,11 +48,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Column(
       children: [
         Container(
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: ListTile(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: ListTile(
             leading: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
@@ -61,13 +61,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               child: Icon(icon, color: AppColors.primary, size: 20),
             ),
-            title: Text(title, style: AppTextStyles.body2),
-            trailing: trailing ?? const Icon(
-              Icons.arrow_forward_ios,
-              size: 16,
-              color: AppColors.textSecondary,
-            ),
-            onTap: onTap,
+        title: Text(title, style: AppTextStyles.body2),
+        trailing: trailing ?? const Icon(
+          Icons.arrow_forward_ios,
+          size: 16,
+          color: AppColors.textSecondary,
+        ),
+        onTap: onTap,
           ),
         ),
         if (showDivider) const SizedBox(height: 8),
@@ -108,39 +108,61 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Row(
-                    children: [
+                  children: [
+                      // Profile Picture
                       Container(
+                        width: 80,
+                        height: 80,
                         padding: const EdgeInsets.all(2),
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           gradient: AppColors.primaryGradient,
-                        ),
-                        child: const CircleAvatar(
-                          radius: 35,
-                          backgroundImage: AssetImage('assets/icons/Photo by Brooke Cagle.png'),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Obx(() => Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              userName.value,
-                              style: AppTextStyles.heading.copyWith(fontSize: 24),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            Text(
-                              userEmail.value,
-                              style: AppTextStyles.body.copyWith(
-                                color: AppColors.textSecondary,
-                              ),
-                              overflow: TextOverflow.ellipsis,
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.primary.withOpacity(0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4),
                             ),
                           ],
-                        )),
-                      ),
-                    ],
+                        ),
+                        child: Container(
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white,
+                          ),
+                          child: Center(
+                            child: Text(
+                              'N',
+                              style: AppTextStyles.heading.copyWith(
+                                color: AppColors.primary,
+                                fontSize: 32,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Obx(() => Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            userName.value,
+                            style: AppTextStyles.heading.copyWith(fontSize: 24),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          Text(
+                            userEmail.value,
+                            style: AppTextStyles.body.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      )),
+                    ),
+                  ],
                   ),
                 ),
 
@@ -167,15 +189,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 )),
                 Obx(() => _buildSettingTile(
-                  title: 'Email Notifications',
-                  icon: Icons.email_outlined,
-                  trailing: Switch(
-                    value: _emailNotifications.value,
-                    onChanged: (value) => _emailNotifications.value = value,
-                    activeColor: AppColors.primary,
-                  ),
-                )),
-                Obx(() => _buildSettingTile(
                   title: 'Transaction Alerts',
                   icon: Icons.account_balance_wallet_outlined,
                   trailing: Switch(
@@ -190,11 +203,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   title: 'Change Password',
                   icon: Icons.lock_outline,
                   onTap: () => Get.to(() => const ChangePasswordScreen()),
-                ),
-                _buildSettingTile(
-                  title: 'Two-Factor Authentication',
-                  icon: Icons.security,
-                  onTap: () {},
                 ),
 
                 const SizedBox(height: 32),

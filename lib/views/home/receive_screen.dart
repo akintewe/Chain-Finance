@@ -12,16 +12,39 @@ class ReceiveScreen extends StatefulWidget {
   State<ReceiveScreen> createState() => _ReceiveScreenState();
 }
 
-class _ReceiveScreenState extends State<ReceiveScreen> {
+class _ReceiveScreenState extends State<ReceiveScreen> with SingleTickerProviderStateMixin {
   final TextEditingController searchController = TextEditingController();
   final WalletController walletController = Get.put(WalletController());
   List<Map<String, dynamic>> filteredTokens = [];
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
 
   @override
   void initState() {
     super.initState();
     walletController.fetchWalletDetails();
     filteredTokens = walletController.tokens;
+    
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 200),
+      vsync: this,
+    );
+    
+    _scaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: 0.95,
+    ).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Curves.easeInOut,
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 
   void filterTokens(String query) {
@@ -45,101 +68,139 @@ class _ReceiveScreenState extends State<ReceiveScreen> {
           icon: const Icon(Icons.arrow_back, color: AppColors.text),
           onPressed: () => Get.back(),
         ),
-        title: Text('Receive', style: AppTextStyles.button),
+        title: Text('Receive', style: AppTextStyles.heading2),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          children: [
-            // Search Bar
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: TextField(
-                controller: searchController,
-                onChanged: filterTokens,
-                style: const TextStyle(color: AppColors.text),
-                decoration: InputDecoration(
-                  hintText: 'Search tokens',
-                  hintStyle: AppTextStyles.body.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-                  border: InputBorder.none,
-                  prefixIcon: const Icon(
+      body: Column(
+        children: [
+          // Search Bar
+          Container(
+            margin: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+            ),
+            child: TextField(
+              controller: searchController,
+              onChanged: filterTokens,
+              style: AppTextStyles.body.copyWith(color: AppColors.text),
+              decoration: InputDecoration(
+                hintText: 'Search tokens',
+                hintStyle: AppTextStyles.body.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+                border: InputBorder.none,
+                prefixIcon: Container(
+                  padding: const EdgeInsets.all(12),
+                  child: Icon(
                     Icons.search,
                     color: AppColors.textSecondary,
                   ),
                 ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 16,
+                ),
               ),
             ),
-            const SizedBox(height: 20),
+          ),
 
-            // Token List
-            Expanded(
-              child: Obx(() => walletController.isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : ListView.builder(
-                      itemCount: filteredTokens.length,
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      itemBuilder: (context, index) {
-                        final token = filteredTokens[index];
-                        return Container(
-                          margin: const EdgeInsets.only(bottom: 8),
-                          decoration: BoxDecoration(
-                            color: AppColors.surface,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: ListTile(
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 8,
-                            ),
-                            onTap: () {
-                              final tokenWithAddress = {
-                                ...token,
-                                'address': walletController.walletAddress,
-                              };
-                              Get.to(() => ReceiveQRScreen(token: tokenWithAddress));
-                            },
-                            leading: Image.asset(
-                              token['icon'],
-                              width: 40,
-                              height: 40,
-                            ),
-                            title: Text(
-                              token['name'],
-                              style: AppTextStyles.body2.copyWith(
-                                fontSize: 16,
-                                color: AppColors.text,
-                              ),
-                            ),
-                            subtitle: Padding(
-                              padding: const EdgeInsets.only(top: 4),
-                              child: Text(
-                                token['symbol'],
-                                style: AppTextStyles.body.copyWith(
-                                  color: AppColors.textSecondary,
+          // Token List
+          Expanded(
+            child: Obx(() => walletController.isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    itemCount: filteredTokens.length,
+                    itemBuilder: (context, index) {
+                      final token = filteredTokens[index];
+                      return AnimatedBuilder(
+                        animation: _controller,
+                        builder: (context, child) {
+                          return Transform.scale(
+                            scale: _scaleAnimation.value,
+                            child: GestureDetector(
+                              onTap: () {
+                                _controller.forward().then((_) {
+                                  _controller.reverse();
+                                  final tokenWithAddress = {
+                                    ...token,
+                                    'address': walletController.walletAddress,
+                                  };
+                                  Get.to(() => ReceiveQRScreen(token: tokenWithAddress));
+                                });
+                              },
+                              child: Container(
+                                margin: const EdgeInsets.only(bottom: 12),
+                                decoration: BoxDecoration(
+                                  color: AppColors.surface,
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: AppColors.primary.withOpacity(0.05),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
+                                ),
+                                child: ListTile(
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 20,
+                                    vertical: 12,
+                                  ),
+                                  leading: Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.primary.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Image.asset(
+                                      token['icon'],
+                                      width: 32,
+                                      height: 32,
+                                    ),
+                                  ),
+                                  title: Text(
+                                    token['name'],
+                                    style: AppTextStyles.body2.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                  subtitle: Padding(
+                                    padding: const EdgeInsets.only(top: 4),
+                                    child: Text(
+                                      token['symbol'],
+                                      style: AppTextStyles.body.copyWith(
+                                        color: AppColors.textSecondary,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ),
+                                  trailing: Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.surface,
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+                                    ),
+                                    child: Icon(
+                                      Icons.arrow_forward_ios,
+                                      color: AppColors.textSecondary,
+                                      size: 16,
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
-                            trailing: Container(
-                              padding: const EdgeInsets.only(left: 16),
-                              child: const Icon(
-                                Icons.arrow_forward_ios,
-                                color: AppColors.textSecondary,
-                                size: 16,
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                    )),
-            ),
-          ],
-        ),
+                          );
+                        },
+                      );
+                    },
+                  )),
+          ),
+        ],
       ),
     );
   }

@@ -11,10 +11,12 @@ class EditFavoritesScreen extends StatefulWidget {
   State<EditFavoritesScreen> createState() => _EditFavoritesScreenState();
 }
 
-class _EditFavoritesScreenState extends State<EditFavoritesScreen> {
+class _EditFavoritesScreenState extends State<EditFavoritesScreen> with SingleTickerProviderStateMixin {
   final WalletController walletController = Get.find();
   final List<Map<String, dynamic>> selectedTokens = [];
   final List<Map<String, dynamic>> availableTokens = [];
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
 
   @override
   void initState() {
@@ -25,6 +27,27 @@ class _EditFavoritesScreenState extends State<EditFavoritesScreen> {
         (token) => !walletController.isFavorite(token['symbol'])
       ).toList()
     );
+    
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 200),
+      vsync: this,
+    );
+    
+    _scaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: 0.95,
+    ).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Curves.easeInOut,
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 
   void _onReorder(int oldIndex, int newIndex) {
@@ -42,27 +65,70 @@ class _EditFavoritesScreenState extends State<EditFavoritesScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: AppColors.text),
+          onPressed: () => Get.back(),
+        ),
         title: Text('Edit Favorites', style: AppTextStyles.heading2),
         actions: [
-          TextButton(
+          Container(
+            margin: const EdgeInsets.only(right: 16),
+            decoration: BoxDecoration(
+              gradient: AppColors.primaryGradient,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: TextButton(
             onPressed: () {
               walletController.favoritesList.clear();
               walletController.favoritesList.addAll(selectedTokens);
               Get.back();
             },
-            child: const Text('Save'),
+              child: Text(
+                'Save',
+                style: AppTextStyles.button.copyWith(color: Colors.white),
+              ),
+            ),
           ),
         ],
       ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
+          Container(
+            margin: const EdgeInsets.all(16),
             padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    Icons.drag_indicator,
+                    color: AppColors.primary,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
             child: Text(
               'Drag to reorder favorites',
-              style: AppTextStyles.body.copyWith(color: AppColors.textSecondary),
+                    style: AppTextStyles.body.copyWith(
+                      color: AppColors.textSecondary,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
           Expanded(
@@ -74,10 +140,17 @@ class _EditFavoritesScreenState extends State<EditFavoritesScreen> {
                 return Dismissible(
                   key: Key(token['symbol']),
                   background: Container(
-                    color: Colors.red,
+                    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.red.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                     alignment: Alignment.centerRight,
-                    padding: const EdgeInsets.only(right: 16),
-                    child: const Icon(Icons.delete, color: Colors.white),
+                    padding: const EdgeInsets.only(right: 24),
+                    child: Icon(
+                      Icons.delete_outline,
+                      color: Colors.red.shade300,
+                    ),
                   ),
                   direction: DismissDirection.endToStart,
                   onDismissed: (_) {
@@ -87,19 +160,52 @@ class _EditFavoritesScreenState extends State<EditFavoritesScreen> {
                     });
                   },
                   child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
                       color: AppColors.surface,
-                      border: Border(
-                        bottom: BorderSide(
-                          color: AppColors.textSecondary.withOpacity(0.1),
-                        ),
-                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: AppColors.primary.withOpacity(0.1)),
                     ),
                     child: ListTile(
-                      leading: Image.asset(token['icon'], width: 32, height: 32),
-                      title: Text(token['name'], style: AppTextStyles.body2),
-                      subtitle: Text(token['symbol']),
-                      trailing: const Icon(Icons.drag_handle),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                      leading: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Image.asset(
+                          token['icon'],
+                          width: 24,
+                          height: 24,
+                        ),
+                      ),
+                      title: Text(
+                        token['name'],
+                        style: AppTextStyles.body2.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      subtitle: Text(
+                        token['symbol'],
+                        style: AppTextStyles.body.copyWith(
+                          color: AppColors.textSecondary,
+                          fontSize: 12,
+                        ),
+                      ),
+                      trailing: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+                        ),
+                        child: const Icon(
+                          Icons.drag_handle,
+                          color: AppColors.textSecondary,
+                          size: 20,
+                        ),
+                      ),
                     ),
                   ),
                 );
@@ -108,30 +214,84 @@ class _EditFavoritesScreenState extends State<EditFavoritesScreen> {
           ),
           if (availableTokens.isNotEmpty) ...[
             Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(16, 24, 16, 16),
               child: Text(
                 'Available Tokens',
-                style: AppTextStyles.body2,
+                style: AppTextStyles.heading2.copyWith(fontSize: 18),
               ),
             ),
             Expanded(
               child: ListView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 itemCount: availableTokens.length,
                 itemBuilder: (context, index) {
                   final token = availableTokens[index];
-                  return ListTile(
-                    leading: Image.asset(token['icon'], width: 32, height: 32),
-                    title: Text(token['name'], style: AppTextStyles.body2),
-                    subtitle: Text(token['symbol']),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.add_circle_outline),
-                      onPressed: () {
+                  return AnimatedBuilder(
+                    animation: _controller,
+                    builder: (context, child) {
+                      return Transform.scale(
+                        scale: _scaleAnimation.value,
+                        child: Container(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          decoration: BoxDecoration(
+                            color: AppColors.surface,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+                          ),
+                          child: ListTile(
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                            leading: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: AppColors.primary.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Image.asset(
+                                token['icon'],
+                                width: 24,
+                                height: 24,
+                              ),
+                            ),
+                            title: Text(
+                              token['name'],
+                              style: AppTextStyles.body2.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            subtitle: Text(
+                              token['symbol'],
+                              style: AppTextStyles.body.copyWith(
+                                color: AppColors.textSecondary,
+                                fontSize: 12,
+                              ),
+                            ),
+                            trailing: GestureDetector(
+                              onTap: () {
+                                _controller.forward().then((_) {
+                                  _controller.reverse();
                         setState(() {
                           selectedTokens.add(token);
                           availableTokens.removeAt(index);
+                                  });
                         });
                       },
-                    ),
+                              child: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  gradient: AppColors.primaryGradient,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Icon(
+                                  Icons.add,
+                                  color: Colors.white,
+                                  size: 20,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
                   );
                 },
               ),
