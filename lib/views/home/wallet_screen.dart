@@ -4,6 +4,8 @@ import 'package:nexa_prime/utils/colors.dart';
 import 'package:nexa_prime/utils/text_styles.dart';
 import 'package:nexa_prime/views/home/receive_screen.dart';
 import 'package:nexa_prime/views/home/send_screen.dart';
+import 'package:nexa_prime/views/home/search_screen.dart';
+import 'package:nexa_prime/views/home/notification_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
@@ -11,9 +13,9 @@ import 'dart:math';
 import 'package:nexa_prime/views/home/token_info_screen.dart';
 import 'package:nexa_prime/views/home/all_tokens_screen.dart';
 import 'package:nexa_prime/views/home/edit_favorites_screen.dart';
-import 'package:pie_chart/pie_chart.dart' as pc;
 import 'package:fl_chart/fl_chart.dart' as fl;
 import 'dart:async';
+import 'package:get/get.dart';
 
 class WalletScreen extends StatefulWidget {
   const WalletScreen({super.key});
@@ -123,11 +125,36 @@ class _WalletScreenState extends State<WalletScreen> with TickerProviderStateMix
       });
     });
 
-    // Initialize pie chart data
+    // Ensure wallet controller starts loading prices
+    if (!walletController.isLoading) {
+      // Check if we need to update prices by seeing if any price is 0
+      bool needsPriceUpdate = walletController.cryptoList.any((token) => 
+        walletController.getPriceForToken(token['symbol'] ?? '') == 0.0);
+      
+      if (needsPriceUpdate) {
+        walletController.updatePrices().then((_) {
+          if (mounted) {
+            Timer(const Duration(milliseconds: 500), () {
+              if (mounted) _updatePieChartData();
+            });
+          }
+        });
+      }
+    }
+
+    // Initialize pie chart data immediately
     _updatePieChartData();
     
-    // Set up timer for periodic updates
-    _pieChartTimer = Timer.periodic(const Duration(minutes: 5), (timer) {
+    // Also check after a short delay to catch any quick price updates
+    Timer(const Duration(seconds: 2), () {
+      if (mounted) _updatePieChartData();
+    });
+    Timer(const Duration(seconds: 5), () {
+      if (mounted) _updatePieChartData();
+    });
+    
+    // Set up timer for periodic updates - reduced frequency
+    _pieChartTimer = Timer.periodic(const Duration(minutes: 15), (timer) {
       _updatePieChartData();
     });
   }
@@ -158,6 +185,12 @@ class _WalletScreenState extends State<WalletScreen> with TickerProviderStateMix
     final cryptoData = walletController.cryptoList;
     Map<String, double> newData = {};
     
+    // Check if wallet controller is still loading prices
+    if (walletController.isLoading) {
+      print('Wallet controller is still loading, skipping pie chart update');
+      return;
+    }
+    
     for (var token in cryptoData) {
       final price = walletController.getPriceForToken(token['symbol'] ?? '');
       if (price > 0) {
@@ -165,12 +198,22 @@ class _WalletScreenState extends State<WalletScreen> with TickerProviderStateMix
       }
     }
     
-    setState(() {
-      _pieChartData = newData;
-    });
+    // Only update if we have actual data or if data changed to prevent unnecessary rebuilds
+    if (newData.isNotEmpty && (newData.length != _pieChartData.length || 
+        !newData.keys.every((key) => _pieChartData.containsKey(key) && _pieChartData[key] == newData[key]))) {
+      setState(() {
+        _pieChartData = newData;
+      });
+      print('Pie chart data updated with ${_pieChartData.length} items');
+    } else if (newData.isEmpty && _pieChartData.isEmpty) {
+      print('No price data available yet, retrying in 5 seconds...');
+      // Retry after a short delay if no data is available
+      Timer(const Duration(seconds: 5), () {
+        if (mounted) _updatePieChartData();
+      });
+    }
     
-    print('Pie chart data updated with ${_pieChartData.length} items');
-    print('Next update will be at ${DateTime.now().add(const Duration(minutes: 5))}');
+    print('Next scheduled update will be at ${DateTime.now().add(const Duration(minutes: 1))}');
   }
 
   Future<void> _loadUserData() async {
@@ -371,59 +414,65 @@ class _WalletScreenState extends State<WalletScreen> with TickerProviderStateMix
                   ),
                   Row(
                     children: [
-                              Container(
-                                padding: const EdgeInsets.all(10),
-                                decoration: BoxDecoration(
-                                  color: AppColors.surface,
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                    color: AppColors.primary.withOpacity(0.1),
-                                  ),
-                                ),
-                                child: SvgPicture.asset(
-                                  'assets/icons/Search.svg',
-                                  color: AppColors.textSecondary,
-                                  width: 20,
-                                  height: 20,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-              Container(
-                                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                                  color: AppColors.surface,
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                    color: AppColors.primary.withOpacity(0.1),
-                                  ),
-                                ),
-                                child: Stack(
-                  children: [
-                                    Image.asset(
-                                      'assets/icons/ion_notifications.png',
-                                      color: AppColors.textSecondary,
-                                      width: 20,
-                                      height: 20,
-                                    ),
-                                    Positioned(
-                                      right: 0,
-                                      top: 0,
-                                      child: Container(
-                                        width: 8,
-                                        height: 8,
-                          decoration: BoxDecoration(
-                                          color: AppColors.secondary,
-                                          shape: BoxShape.circle,
+                              GestureDetector(
+                                onTap: () => Get.to(() => const SearchScreen()),
+                                child: Container(
+                                        padding: const EdgeInsets.all(10),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.surface,
+                                          borderRadius: BorderRadius.circular(12),
                                           border: Border.all(
-                                            color: AppColors.surface,
-                                            width: 2,
+                                            color: AppColors.primary.withOpacity(0.1),
                                           ),
                                         ),
+                                        child: SvgPicture.asset(
+                                          'assets/icons/Search.svg',
+                                          color: AppColors.textSecondary,
+                                          width: 20,
+                                          height: 20,
+                                        ),
                                       ),
-                                    ),
-                                  ],
-                                ),
                               ),
+                              const SizedBox(width: 12),
+              GestureDetector(
+                onTap: () => Get.to(() => const NotificationScreen()),
+                child: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: AppColors.primary.withOpacity(0.1),
+                    ),
+                  ),
+                  child: Stack(
+                    children: [
+                      Image.asset(
+                        'assets/icons/ion_notifications.png',
+                        color: AppColors.textSecondary,
+                        width: 20,
+                        height: 20,
+                      ),
+                      Positioned(
+                        right: 0,
+                        top: 0,
+                        child: Container(
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            color: AppColors.secondary,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: AppColors.surface,
+                              width: 2,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
                               const SizedBox(width: 12),
                         Container(
                                 padding: const EdgeInsets.all(2),
@@ -741,9 +790,32 @@ class _WalletScreenState extends State<WalletScreen> with TickerProviderStateMix
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Price Chart',
-                      style: AppTextStyles.heading2.copyWith(fontSize: 18),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Price Chart',
+                          style: AppTextStyles.heading2.copyWith(fontSize: 18),
+                        ),
+                        GestureDetector(
+                          onTap: () {
+                            _updatePieChartData();
+                            setState(() {}); // Force refresh
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(
+                              Icons.refresh,
+                              color: AppColors.primary,
+                              size: 20,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
               const SizedBox(height: 20),
                     SizedBox(
@@ -1147,14 +1219,24 @@ class PieChartWidget extends StatefulWidget {
 class _PieChartWidgetState extends State<PieChartWidget> {
   late fl.PieChartData _cachedChartData;
   bool _hasBuiltChart = false;
+  Map<String, double> _lastDataSnapshot = {};
 
   @override
   void didUpdateWidget(PieChartWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Only rebuild the chart data if the actual data changes
-    if (oldWidget.pieChartData != widget.pieChartData) {
+    // Only rebuild the chart data if the actual data changes significantly
+    if (!_mapsEqual(oldWidget.pieChartData, widget.pieChartData)) {
       _hasBuiltChart = false;
+      _lastDataSnapshot = Map.from(widget.pieChartData);
     }
+  }
+
+  bool _mapsEqual(Map<String, double> map1, Map<String, double> map2) {
+    if (map1.length != map2.length) return false;
+    for (var key in map1.keys) {
+      if (!map2.containsKey(key) || map1[key] != map2[key]) return false;
+    }
+    return true;
   }
 
   fl.PieChartData _buildChartData() {
@@ -1184,31 +1266,11 @@ class _PieChartWidgetState extends State<PieChartWidget> {
         startDegreeOffset: -90,
         pieTouchData: fl.PieTouchData(
           touchCallback: (fl.FlTouchEvent event, fl.PieTouchResponse? pieTouchResponse) {
+            // Removed the snackbar popup that was causing Bitcoin price to appear at bottom
+            // Instead, just handle the touch event silently or add other feedback if needed
             if (event is! fl.FlPointerHoverEvent && pieTouchResponse?.touchedSection != null) {
-              final sectionIndex = pieTouchResponse!.touchedSection!.touchedSectionIndex;
-              final token = Get.find<WalletController>().cryptoList.firstWhere(
-                (t) => t['symbol'] == widget.pieChartData.keys.elementAt(sectionIndex),
-                orElse: () => {'name': 'Unknown Token', 'symbol': ''}
-              );
-              final price = Get.find<WalletController>().getPriceForToken(token['symbol'] ?? '');
-              
-              Get.snackbar(
-                token['name'] ?? 'Unknown Token',
-                '\$${price.toStringAsFixed(2)}',
-                backgroundColor: AppColors.surface,
-                colorText: AppColors.text,
-                snackPosition: SnackPosition.BOTTOM,
-                duration: const Duration(seconds: 2),
-                margin: const EdgeInsets.all(16),
-                borderRadius: 12,
-                boxShadows: [
-                  BoxShadow(
-                    color: AppColors.primary.withOpacity(0.1),
-                    blurRadius: 10,
-                    offset: const Offset(0, 5),
-                  ),
-                ],
-              );
+              // Chart section tapped - you can add other feedback here if needed
+              print('Chart section ${pieTouchResponse!.touchedSection!.touchedSectionIndex} tapped');
             }
           },
         ),

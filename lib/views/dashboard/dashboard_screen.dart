@@ -2,7 +2,9 @@ import 'package:nexa_prime/views/home/settings_screen.dart';
 import 'package:nexa_prime/views/home/swap_screen.dart';
 import 'package:nexa_prime/views/home/transaction_screen.dart';
 import 'package:nexa_prime/views/home/wallet_screen.dart';
+import 'package:nexa_prime/controllers/dashboard_controller.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import '../../utils/colors.dart';
 import 'dart:ui';
 
@@ -14,9 +16,9 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProviderStateMixin {
-  int _currentIndex = 0;
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
+  final DashboardController dashboardController = Get.put(DashboardController());
   
   final List<Widget> _screens = [
     const WalletScreen(),
@@ -47,7 +49,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: _screens[_currentIndex],
+      body: Obx(() => _screens[dashboardController.currentIndex]),
       extendBody: true,
       bottomNavigationBar: Container(
         margin: const EdgeInsets.all(16),
@@ -74,7 +76,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
             // Content
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
+              child: Obx(() => Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   _buildNavItem(0, 'Wallet', 'assets/icons/9035549_wallet_outline_icon.png'),
@@ -82,7 +84,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                   _buildNavItem(2, 'Transactions', 'assets/icons/7340522_e-commerce_online_shopping_ui_receipt_icon.png'),
                   _buildNavItem(3, 'Settings', 'assets/icons/8666615_settings_icon.png'),
                 ],
-              ),
+              )),
             ),
           ],
         ),
@@ -91,12 +93,12 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
   }
 
   Widget _buildNavItem(int index, String label, String icon) {
-    bool isSelected = _currentIndex == index;
+    bool isSelected = dashboardController.currentIndex == index;
     
     return GestureDetector(
       onTap: () {
-        if (_currentIndex != index) {
-          setState(() => _currentIndex = index);
+        if (dashboardController.currentIndex != index) {
+          dashboardController.updateIndex(index);
           _controller.forward().then((_) => _controller.reverse());
         }
       },

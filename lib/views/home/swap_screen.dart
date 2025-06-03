@@ -1,4 +1,5 @@
 import 'package:nexa_prime/controllers/wallet_controller.dart';
+import 'package:nexa_prime/controllers/dashboard_controller.dart';
 import 'package:nexa_prime/utils/colors.dart';
 import 'package:nexa_prime/utils/text_styles.dart';
 import 'package:flutter/material.dart';
@@ -12,7 +13,8 @@ class SwapScreen extends StatefulWidget {
 }
 
 class _SwapScreenState extends State<SwapScreen> with SingleTickerProviderStateMixin {
-  final WalletController walletController = Get.put(WalletController());
+  final WalletController walletController = Get.find<WalletController>();
+  final DashboardController dashboardController = Get.find<DashboardController>();
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
   late Animation<double> _scaleAnimation;
@@ -24,7 +26,6 @@ class _SwapScreenState extends State<SwapScreen> with SingleTickerProviderStateM
   @override
   void initState() {
     super.initState();
-    walletController.fetchWalletDetails();
     
     _controller = AnimationController(
       duration: const Duration(milliseconds: 300),
@@ -161,7 +162,10 @@ class _SwapScreenState extends State<SwapScreen> with SingleTickerProviderStateM
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: AppColors.text),
-          onPressed: () => Get.back(),
+          onPressed: () {
+            // Navigate back to wallet screen (first index in bottom nav)
+            dashboardController.goToWallet();
+          },
         ),
         title: Text('Swap', style: AppTextStyles.heading2),
       ),

@@ -5,10 +5,14 @@
     <uses-permission android:name="android.permission.INTERNET"/>
     <!-- Network State Permission -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <!-- Camera Permission -->
+    <uses-permission android:name="android.permission.CAMERA"/>
     <!-- Write External Storage Permission -->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     <!-- Read External Storage Permission -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <!-- For Android 13+ (API 33+) photo library access -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
 
     <application
         android:label="Nexa Prime"
