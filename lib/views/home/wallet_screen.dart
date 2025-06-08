@@ -510,14 +510,14 @@ class _WalletScreenState extends State<WalletScreen> with TickerProviderStateMix
                           ),
                         ],
                       ),
-                    ),
+              ),
 
-                    const SizedBox(height: 20),
+              const SizedBox(height: 20),
 
                     // Total Balance Card
-                    Container(
+              Container(
                       padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
+                decoration: BoxDecoration(
                         gradient: LinearGradient(
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
@@ -537,12 +537,12 @@ class _WalletScreenState extends State<WalletScreen> with TickerProviderStateMix
                             offset: const Offset(0, 10),
                           ),
                         ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                           Text(
-                            'Total Balance',
+                          'Total Balance',
                             style: AppTextStyles.body.copyWith(
                               color: AppColors.textSecondary,
                               fontSize: 14,

@@ -49,5 +49,23 @@
 	<string>This app needs access to photo library to update profile picture</string>
 	<key>NSCameraUsageDescription</key>
 	<string>This app needs access to camera to update profile picture</string>
+	
+	<!-- OneSignal Configuration -->
+	<key>OneSignal_APPID</key>
+	<string>a70b21d8-05d8-476c-8050-b72807a22e9d</string>
+	
+	<!-- Background App Refresh for Push Notifications -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+		<string>background-fetch</string>
+	</array>
+	
+	<!-- iOS 10+ Push Notification Support -->
+	<key>UNUserNotificationCenter</key>
+	<dict>
+		<key>UNAuthorizationStatus</key>
+		<string>Authorized</string>
+	</dict>
 </dict>
 </plist>

@@ -37,6 +37,208 @@ class _SettingsScreenState extends State<SettingsScreen> {
     userEmail.value = userData['email'] ?? '';
   }
 
+  void _showCustomerServiceOptions() {
+    Get.bottomSheet(
+      Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.2),
+              blurRadius: 10,
+              offset: const Offset(0, -5),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Customer Service',
+              style: AppTextStyles.heading2.copyWith(fontSize: 20),
+            ),
+            const SizedBox(height: 24),
+            
+            // Live Chat Option
+            _buildServiceOption(
+              icon: Icons.chat_bubble_outline,
+              title: 'Live Chat',
+              subtitle: 'Chat with our support team',
+              onTap: () {
+                Get.back();
+                _startLiveChat();
+              },
+            ),
+            
+            const SizedBox(height: 16),
+            
+            // Email Support Option
+            _buildServiceOption(
+              icon: Icons.email_outlined,
+              title: 'Email Support',
+              subtitle: 'Send us an email for assistance',
+              onTap: () {
+                Get.back();
+                _openEmailSupport();
+              },
+            ),
+            
+            const SizedBox(height: 16),
+            
+            // FAQ Option
+            _buildServiceOption(
+              icon: Icons.help_outline,
+              title: 'FAQ',
+              subtitle: 'Browse frequently asked questions',
+              onTap: () {
+                Get.back();
+                _openFAQ();
+              },
+            ),
+            
+            const SizedBox(height: 16),
+            
+            // Report Issue Option
+            _buildServiceOption(
+              icon: Icons.report_outlined,
+              title: 'Report an Issue',
+              subtitle: 'Report bugs or technical problems',
+              onTap: () {
+                Get.back();
+                _reportIssue();
+              },
+            ),
+          ],
+        ),
+      ),
+      isScrollControlled: true,
+    );
+  }
+
+  Widget _buildServiceOption({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.background,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: AppColors.primary.withOpacity(0.1),
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                icon,
+                color: AppColors.primary,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: AppTextStyles.body2.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: AppTextStyles.body.copyWith(
+                      color: AppColors.textSecondary,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.arrow_forward_ios,
+              size: 16,
+              color: AppColors.textSecondary,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _startLiveChat() {
+    // In a real app, this would open a chat widget or navigate to a chat screen
+    Get.snackbar(
+      'Live Chat',
+      'Connecting you to our support team...',
+      backgroundColor: AppColors.primary.withOpacity(0.1),
+      colorText: AppColors.primary,
+      snackPosition: SnackPosition.BOTTOM,
+      margin: const EdgeInsets.all(16),
+      borderRadius: 12,
+      duration: const Duration(seconds: 3),
+    );
+  }
+
+  void _openEmailSupport() {
+    // In a real app, this would open the email client or a contact form
+    Get.snackbar(
+      'Email Support',
+      'Opening email client to contact support@nexaprime.com',
+      backgroundColor: AppColors.primary.withOpacity(0.1),
+      colorText: AppColors.primary,
+      snackPosition: SnackPosition.BOTTOM,
+      margin: const EdgeInsets.all(16),
+      borderRadius: 12,
+      duration: const Duration(seconds: 3),
+    );
+  }
+
+  void _openFAQ() {
+    // In a real app, this would navigate to an FAQ screen or web page
+    Get.snackbar(
+      'FAQ',
+      'Opening frequently asked questions...',
+      backgroundColor: AppColors.primary.withOpacity(0.1),
+      colorText: AppColors.primary,
+      snackPosition: SnackPosition.BOTTOM,
+      margin: const EdgeInsets.all(16),
+      borderRadius: 12,
+      duration: const Duration(seconds: 3),
+    );
+  }
+
+  void _reportIssue() {
+    // In a real app, this would open a bug report form
+    Get.snackbar(
+      'Report Issue',
+      'Opening issue report form...',
+      backgroundColor: AppColors.primary.withOpacity(0.1),
+      colorText: AppColors.primary,
+      snackPosition: SnackPosition.BOTTOM,
+      margin: const EdgeInsets.all(16),
+      borderRadius: 12,
+      duration: const Duration(seconds: 3),
+    );
+  }
+
   Widget _buildSettingTile({
     required String title,
     required IconData icon,
@@ -163,7 +365,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       )),
                     ),
                   ],
-                  ),
+                ),
                 ),
 
                 _buildSectionHeader('Account Settings'),
@@ -177,8 +379,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   icon: Icons.backup_outlined,
                   onTap: () => Get.to(() => BackupWalletScreen()),
                 ),
+                _buildSettingTile(
+                  title: 'Customer Service',
+                  icon: Icons.support_agent_outlined,
+                  onTap: () => _showCustomerServiceOptions(),
+                ),
 
                 _buildSectionHeader('Notifications'),
+                _buildSettingTile(
+                  title: 'Notification Settings',
+                  icon: Icons.notifications_outlined,
+                  onTap: () => Get.toNamed(Routes.notificationSettings),
+                ),
                 Obx(() => _buildSettingTile(
                   title: 'Push Notifications',
                   icon: Icons.notifications_none,

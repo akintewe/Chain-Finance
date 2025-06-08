@@ -62,7 +62,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                 child: Container(
-                  decoration: BoxDecoration(
+        decoration: BoxDecoration(
                     color: AppColors.bottomNavBackground.withOpacity(0.8),
                     borderRadius: BorderRadius.circular(25),
                     border: Border.all(
@@ -72,20 +72,20 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                   ),
                 ),
               ),
-            ),
+        ),
             // Content
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Obx(() => Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  _buildNavItem(0, 'Wallet', 'assets/icons/9035549_wallet_outline_icon.png'),
-                  _buildNavItem(1, 'Swap', 'assets/icons/material-symbols_change-circle-outline.png'),
-                  _buildNavItem(2, 'Transactions', 'assets/icons/7340522_e-commerce_online_shopping_ui_receipt_icon.png'),
-                  _buildNavItem(3, 'Settings', 'assets/icons/8666615_settings_icon.png'),
-                ],
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _buildNavItem(0, 'Wallet', 'assets/icons/9035549_wallet_outline_icon.png'),
+              _buildNavItem(1, 'Swap', 'assets/icons/material-symbols_change-circle-outline.png'),
+              _buildNavItem(2, 'Transactions', 'assets/icons/7340522_e-commerce_online_shopping_ui_receipt_icon.png'),
+              _buildNavItem(3, 'Settings', 'assets/icons/8666615_settings_icon.png'),
+            ],
               )),
-            ),
+          ),
           ],
         ),
       ),
@@ -128,7 +128,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                 return Transform.scale(
                   scale: isSelected ? _scaleAnimation.value : 1.0,
                   child: Image.asset(
-                    icon,
+              icon,
                     color: isSelected ? Colors.white : AppColors.bottomNavUnselected,
                     height: 20,
                   ),
@@ -146,11 +146,11 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                 widthFactor: isSelected ? 1 : 0,
                 child: Row(
                   children: [
-                    Text(
-                      label,
-                      style: TextStyle(
+              Text(
+                label,
+                style: TextStyle(
                         color: isSelected ? Colors.white : AppColors.bottomNavUnselected,
-                        fontSize: 14,
+                  fontSize: 14,
                         fontWeight: FontWeight.w600,
                       ),
                     ),

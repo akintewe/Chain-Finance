@@ -13,12 +13,26 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
     <!-- For Android 13+ (API 33+) photo library access -->
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    
+    <!-- OneSignal Push Notification Permissions -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
 
     <application
         android:label="Nexa Prime"
         android:name="${applicationName}"
         android:icon="@mipmap/launcher_icon"
         android:usesCleartextTraffic="true">
+        
+        <!-- OneSignal App ID -->
+        <meta-data android:name="onesignal_app_id"
+                   android:value="a70b21d8-05d8-476c-8050-b72807a22e9d" />
+        <!-- Replace YOUR_GOOGLE_PROJECT_NUMBER with your Firebase Sender ID -->
+        <meta-data android:name="onesignal_google_project_number"
+                   android:value="str:YOUR_GOOGLE_PROJECT_NUMBER" />
+        
         <activity
             android:name=".MainActivity"
             android:exported="true"

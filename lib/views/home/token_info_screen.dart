@@ -260,8 +260,8 @@ class _TokenInfoScreenState extends State<TokenInfoScreen> {
     return GestureDetector(
       onTap: () {
         if (mounted) {
-          setState(() => selectedTimeframe = timeframe);
-          fetchChartData();
+        setState(() => selectedTimeframe = timeframe);
+        fetchChartData();
         }
       },
       child: Container(

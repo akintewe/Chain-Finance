@@ -72,7 +72,7 @@ class AuthController extends GetxController {
       print('Response status code: ${response.statusCode}');
       print('Response body: ${response.body}');
       
-      final data = jsonDecode(response.body);
+        final data = jsonDecode(response.body);
       print('Decoded data: $data');
       
       if (response.statusCode == 200 && data['status'] == true) {

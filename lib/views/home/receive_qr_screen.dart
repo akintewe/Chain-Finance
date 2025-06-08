@@ -102,15 +102,15 @@ class _ReceiveQRScreenState extends State<ReceiveQRScreen> with SingleTickerProv
         builder: (context, child) {
           return SingleChildScrollView(
             padding: const EdgeInsets.all(24),
-            child: Column(
+        child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+          children: [
                 // Quick Info Card
                 FadeTransition(
                   opacity: _fadeAnimation,
                   child: Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
                           AppColors.primary.withOpacity(0.1),
@@ -126,7 +126,7 @@ class _ReceiveQRScreenState extends State<ReceiveQRScreen> with SingleTickerProv
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
-                          children: [
+                children: [
                             Container(
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
@@ -134,12 +134,12 @@ class _ReceiveQRScreenState extends State<ReceiveQRScreen> with SingleTickerProv
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Icon(
-                                Icons.info_outline,
+                    Icons.info_outline,
                                 color: AppColors.primary,
                                 size: 20,
                               ),
-                            ),
-                            const SizedBox(width: 12),
+                  ),
+                  const SizedBox(width: 12),
                             Text(
                               'Quick Info',
                               style: AppTextStyles.body2.copyWith(
@@ -154,15 +154,15 @@ class _ReceiveQRScreenState extends State<ReceiveQRScreen> with SingleTickerProv
                           style: AppTextStyles.body.copyWith(
                             color: AppColors.textSecondary,
                             height: 1.5,
-                          ),
-                        ),
-                      ],
                     ),
                   ),
-                ),
-                const SizedBox(height: 32),
-
-                // Token Info
+                ],
+                    ),
+              ),
+            ),
+            const SizedBox(height: 32),
+            
+            // Token Info
                 FadeTransition(
                   opacity: _fadeAnimation,
                   child: Container(
@@ -190,14 +190,14 @@ class _ReceiveQRScreenState extends State<ReceiveQRScreen> with SingleTickerProv
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
+              children: [
                               Text(
                                 widget.token['name'],
                                 style: AppTextStyles.body2.copyWith(
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
-                              Text(
+                Text(
                                 widget.token['symbol'],
                                 style: AppTextStyles.body.copyWith(
                                   color: AppColors.textSecondary,
@@ -205,20 +205,20 @@ class _ReceiveQRScreenState extends State<ReceiveQRScreen> with SingleTickerProv
                               ),
                             ],
                           ),
-                        ),
-                      ],
-                    ),
+                ),
+              ],
+            ),
                   ),
                 ),
                 const SizedBox(height: 32),
-
-                // QR Code
+            
+            // QR Code
                 Transform.scale(
                   scale: _scaleAnimation.value,
                   child: Container(
                     padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      color: AppColors.surface,
+              decoration: BoxDecoration(
+                color: AppColors.surface,
                       borderRadius: BorderRadius.circular(24),
                       border: Border.all(color: AppColors.primary.withOpacity(0.1)),
                       boxShadow: [
@@ -232,29 +232,29 @@ class _ReceiveQRScreenState extends State<ReceiveQRScreen> with SingleTickerProv
                     child: Column(
                       children: [
                         ShaderMask(
-                          shaderCallback: (Rect bounds) {
-                            return LinearGradient(
-                              colors: [
-                                AppColors.secondary,
-                                AppColors.primary,
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ).createShader(bounds);
-                          },
-                          child: QrImageView(
+                shaderCallback: (Rect bounds) {
+                  return LinearGradient(
+                    colors: [
+                      AppColors.secondary,
+                      AppColors.primary,
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ).createShader(bounds);
+                },
+                child: QrImageView(
                             data: widget.token['address'],
-                            version: QrVersions.auto,
-                            size: 200,
-                            eyeStyle: const QrEyeStyle(
-                              eyeShape: QrEyeShape.square,
-                              color: Colors.white,
-                            ),
-                            dataModuleStyle: const QrDataModuleStyle(
-                              dataModuleShape: QrDataModuleShape.square,
-                              color: Colors.white,
-                            ),
-                            backgroundColor: AppColors.surface,
+                  version: QrVersions.auto,
+                  size: 200,
+                  eyeStyle: const QrEyeStyle(
+                    eyeShape: QrEyeShape.square,
+                    color: Colors.white,
+                  ),
+                  dataModuleStyle: const QrDataModuleStyle(
+                    dataModuleShape: QrDataModuleShape.square,
+                    color: Colors.white,
+                  ),
+                  backgroundColor: AppColors.surface,
                           ),
                         ),
                         const SizedBox(height: 16),
@@ -265,9 +265,9 @@ class _ReceiveQRScreenState extends State<ReceiveQRScreen> with SingleTickerProv
                           ),
                         ),
                       ],
-                    ),
-                  ),
                 ),
+              ),
+            ),
                 const SizedBox(height: 32),
 
                 // Address Section
@@ -285,25 +285,25 @@ class _ReceiveQRScreenState extends State<ReceiveQRScreen> with SingleTickerProv
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            'Wallet Address',
-                            style: AppTextStyles.body.copyWith(
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
+            Text(
+              'Wallet Address',
+              style: AppTextStyles.body.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 8),
                           Row(
-                            children: [
-                              Expanded(
-                                child: Text(
+                children: [
+                  Expanded(
+                    child: Text(
                                   widget.token['address'],
-                                  style: AppTextStyles.body.copyWith(
-                                    color: AppColors.text,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ),
-                              IconButton(
+                      style: AppTextStyles.body.copyWith(
+                        color: AppColors.text,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                  IconButton(
                                 icon: Container(
                                   padding: const EdgeInsets.all(8),
                                   decoration: BoxDecoration(
@@ -311,22 +311,22 @@ class _ReceiveQRScreenState extends State<ReceiveQRScreen> with SingleTickerProv
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: Icon(
-                                    Icons.copy,
+                      Icons.copy,
                                     color: AppColors.primary,
                                     size: 20,
                                   ),
-                                ),
-                                onPressed: () => _copyToClipboard(context),
-                              ),
-                            ],
+                    ),
+                    onPressed: () => _copyToClipboard(context),
+                  ),
+                ],
                           ),
                         ],
                       ),
                     ),
-                  ),
-                ),
-              ],
+              ),
             ),
+          ],
+        ),
           );
         },
       ),

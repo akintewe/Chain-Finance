@@ -4,6 +4,7 @@ import 'package:nexa_prime/views/auth/signupScreen.dart';
 import 'package:nexa_prime/views/dashboard/dashboard_screen.dart';
 import 'package:nexa_prime/views/auth/email_verification_screen.dart';
 import 'package:nexa_prime/views/auth/create_passcode_screen.dart';
+import 'package:nexa_prime/views/home/notification_settings_screen.dart';
 
 import 'package:get/get.dart';
 
@@ -14,6 +15,7 @@ class Routes {
   static const String dashboard = '/dashboard';
   static const String emailVerification = '/email-verification';
   static const String createPasscode = '/create-passcode';
+  static const String notificationSettings = '/notification-settings';
 
   static final routes = [
     GetPage(
@@ -45,6 +47,12 @@ class Routes {
       page: () => CreatePasscodeScreen(),
       customTransition: CustomPageRoute(),
       transitionDuration: const Duration(milliseconds: 400),
+    ),
+    GetPage(
+      name: notificationSettings,
+      page: () => const NotificationSettingsScreen(),
+      transition: Transition.rightToLeft,
+      transitionDuration: const Duration(milliseconds: 300),
     ),
   ];
 

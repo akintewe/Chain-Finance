@@ -6,11 +6,15 @@ import 'package:get/get.dart';
 import 'views/onboarding/onboarding.dart';
 import 'controllers/auth_controller.dart';
 import 'package:nexa_prime/utils/loader.dart';
+import 'package:nexa_prime/services/onesignal_service.dart';
 import 'dart:math';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
+  // Initialize OneSignal
+  await OneSignalService.initialize();
+
   // Initialize Get controllers
   Get.put(AuthController());
    Get.put(WalletController());

@@ -237,7 +237,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
                           style: AppTextStyles.body.copyWith(
                             color: AppColors.textSecondary,
                             fontSize: 12,
-                          ),
+          ),
                         ),
                         const SizedBox(height: 4),
                         Text(

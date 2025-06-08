@@ -339,10 +339,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> with SingleTicker
       body: FadeTransition(
         opacity: _fadeAnimation,
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
               // Profile Image Section - Now Blank by Default
               GestureDetector(
                 onTap: _showImagePickerOptions,
@@ -378,7 +378,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> with SingleTicker
                             )
                           : Column(
                               mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
+              children: [
                                 Icon(
                                   Icons.add_a_photo,
                                   size: 32,
@@ -400,11 +400,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> with SingleTicker
                     Positioned(
                       bottom: 0,
                       right: 0,
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
                           gradient: AppColors.primaryGradient,
-                          shape: BoxShape.circle,
+                      shape: BoxShape.circle,
                           border: Border.all(color: AppColors.background, width: 3),
                           boxShadow: [
                             BoxShadow(
@@ -416,38 +416,38 @@ class _EditProfileScreenState extends State<EditProfileScreen> with SingleTicker
                         ),
                         child: Icon(
                           _imageFile.value != null ? Icons.edit : Icons.camera_alt,
-                          color: Colors.white,
+                      color: Colors.white,
                           size: 18,
-                        ),
-                      ),
                     ),
-                  ],
+                  ),
                 ),
+              ],
+            ),
               ),
               
-              const SizedBox(height: 32),
+            const SizedBox(height: 32),
 
-              // Form Fields
-              CustomTextField(
-                label: 'Full Name',
-                controller: nameController,
-                hintText: 'Enter your full name',
-              ),
-              const SizedBox(height: 16),
+            // Form Fields
+            CustomTextField(
+              label: 'Full Name',
+              controller: nameController,
+              hintText: 'Enter your full name',
+            ),
+            const SizedBox(height: 16),
 
-              CustomTextField(
-                label: 'Email Address',
-                controller: emailController,
-                hintText: 'Enter your email address',
-              ),
-              const SizedBox(height: 32),
+            CustomTextField(
+              label: 'Email Address',
+              controller: emailController,
+              hintText: 'Enter your email address',
+            ),
+            const SizedBox(height: 32),
 
-              // Save Button
-              Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  gradient: AppColors.primaryGradient,
-                  borderRadius: BorderRadius.circular(10),
+            // Save Button
+            Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                gradient: AppColors.primaryGradient,
+                borderRadius: BorderRadius.circular(10),
                   boxShadow: [
                     BoxShadow(
                       color: AppColors.primary.withOpacity(0.3),
@@ -455,16 +455,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> with SingleTicker
                       offset: const Offset(0, 6),
                     ),
                   ],
-                ),
-                child: Obx(() => ElevatedButton(
-                  style: AppButtonStyles.primaryButton,
-                  onPressed: _isLoading.value ? null : () => _updateProfile(),
-                  child: _isLoading.value
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : Text('Save Changes', style: AppTextStyles.button),
-                )),
               ),
-            ],
+              child: Obx(() => ElevatedButton(
+                style: AppButtonStyles.primaryButton,
+                onPressed: _isLoading.value ? null : () => _updateProfile(),
+                child: _isLoading.value
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : Text('Save Changes', style: AppTextStyles.button),
+              )),
+            ),
+          ],
           ),
         ),
       ),
