@@ -29,9 +29,9 @@
         <!-- OneSignal App ID -->
         <meta-data android:name="onesignal_app_id"
                    android:value="a70b21d8-05d8-476c-8050-b72807a22e9d" />
-        <!-- Replace YOUR_GOOGLE_PROJECT_NUMBER with your Firebase Sender ID -->
+        <!-- Firebase Sender ID from google-services.json -->
         <meta-data android:name="onesignal_google_project_number"
-                   android:value="str:YOUR_GOOGLE_PROJECT_NUMBER" />
+                   android:value="str:411797626781" />
         
         <activity
             android:name=".MainActivity"

@@ -1,39 +1,29 @@
 {
   "project_info": {
-    "project_number": "YOUR_PROJECT_NUMBER",
-    "project_id": "your-firebase-project-id",
-    "storage_bucket": "your-firebase-project-id.appspot.com"
+    "project_number": "411797626781",
+    "project_id": "nexa-prime",
+    "storage_bucket": "nexa-prime.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:YOUR_PROJECT_NUMBER:android:YOUR_APP_ID",
+        "mobilesdk_app_id": "1:411797626781:android:e2a835935f45148b111974",
         "android_client_info": {
           "package_name": "com.chainfinance.app"
         }
       },
-      "oauth_client": [
-        {
-          "client_id": "YOUR_CLIENT_ID",
-          "client_type": 3
-        }
-      ],
+      "oauth_client": [],
       "api_key": [
         {
-          "current_key": "YOUR_API_KEY"
+          "current_key": "AIzaSyA9SgPviWeWvpjF2Fwja_DvbMKhp2iamlc"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "YOUR_CLIENT_ID",
-              "client_type": 3
-            }
-          ]
+          "other_platform_oauth_client": []
         }
       }
     }
   ],
   "configuration_version": "1"
-} 
+}
