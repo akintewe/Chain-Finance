@@ -7,6 +7,7 @@ import '../utils/loader.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'dart:io';
+import '../services/onesignal_service.dart';
 
 class AuthController extends GetxController {
   static AuthController get instance => Get.find();
@@ -183,6 +184,9 @@ class AuthController extends GetxController {
         );
         print('Navigating to dashboard...');
         Routes.navigateToDashboard();
+        
+        // Send OneSignal player ID to backend after successful login
+        OneSignalService.sendPlayerIdToBackend();
       } else if (response.statusCode == 401) {
         print('Authentication failed: ${data['message']}');
         _isLoading.value = false;

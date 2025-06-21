@@ -1,5 +1,6 @@
 import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'package:flutter/foundation.dart';
+import 'api_service.dart';
 
 class OneSignalService {
   static final OneSignalService _instance = OneSignalService._internal();
@@ -54,6 +55,9 @@ class OneSignalService {
 
     // Set external user ID (optional - use your user ID)
     // OneSignal.login("your_user_id");
+
+    // Note: Player ID will be sent to backend after user login
+    // to ensure proper authentication
   }
 
   // Handle notification clicks
@@ -124,5 +128,50 @@ class OneSignalService {
   // Check if user is subscribed to notifications
   static bool isSubscribed() {
     return OneSignal.User.pushSubscription.optedIn ?? false;
+  }
+
+  // Send player ID to backend
+  static Future<void> _sendPlayerIdToBackend() async {
+    try {
+      // Wait a bit to ensure player ID is available
+      await Future.delayed(const Duration(seconds: 2));
+      
+      final playerId = getPlayerId();
+      if (playerId != null && playerId.isNotEmpty) {
+        if (kDebugMode) {
+          print("Sending player ID to backend: $playerId");
+        }
+        
+        final success = await ApiService.updatePlayerID(playerId);
+        if (success) {
+          if (kDebugMode) {
+            print("Player ID successfully sent to backend");
+          }
+        } else {
+          if (kDebugMode) {
+            print("Failed to send player ID to backend");
+          }
+        }
+      } else {
+        if (kDebugMode) {
+          print("Player ID not available yet, will retry later");
+        }
+        // Retry after a longer delay if player ID is not available
+        await Future.delayed(const Duration(seconds: 5));
+        final retryPlayerId = getPlayerId();
+        if (retryPlayerId != null && retryPlayerId.isNotEmpty) {
+          await ApiService.updatePlayerID(retryPlayerId);
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error sending player ID to backend: $e");
+      }
+    }
+  }
+
+  // Public method to manually send player ID (useful for when user logs in)
+  static Future<void> sendPlayerIdToBackend() async {
+    await _sendPlayerIdToBackend();
   }
 } 

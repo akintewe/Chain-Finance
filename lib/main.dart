@@ -71,6 +71,9 @@ class MyApp extends StatelessWidget {
     if (isLoggedIn) {
       print('User is already logged in, redirecting to dashboard...');
       
+      // Send OneSignal player ID to backend for already logged in users
+      OneSignalService.sendPlayerIdToBackend();
+      
       // Add a small delay to ensure proper navigation
       await Future.delayed(const Duration(milliseconds: 100));
       Get.offAllNamed(Routes.dashboard);
