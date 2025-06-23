@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:nexa_prime/utils/colors.dart';
 import 'package:nexa_prime/utils/text_styles.dart';
+import '../../controllers/notification_controller.dart';
 
 class NotificationScreen extends StatefulWidget {
   const NotificationScreen({super.key});
@@ -13,101 +14,13 @@ class NotificationScreen extends StatefulWidget {
 class _NotificationScreenState extends State<NotificationScreen> with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
-
-  final List<Map<String, dynamic>> notifications = [
-    {
-      'id': '1',
-      'title': 'Price Alert',
-      'message': 'Bitcoin (BTC) has increased by 5.2% in the last hour',
-      'type': 'price_alert',
-      'time': '2 minutes ago',
-      'isRead': false,
-      'icon': Icons.trending_up,
-      'color': Colors.green,
-      'crypto': 'BTC',
-    },
-    {
-      'id': '2',
-      'title': 'Transaction Completed',
-      'message': 'You have successfully sent 0.5 ETH to external wallet',
-      'type': 'transaction',
-      'time': '15 minutes ago',
-      'isRead': false,
-      'icon': Icons.check_circle,
-      'color': AppColors.primary,
-      'crypto': 'ETH',
-    },
-    {
-      'id': '3',
-      'title': 'Price Alert',
-      'message': 'Ethereum (ETH) has dropped below \$2,000',
-      'type': 'price_alert',
-      'time': '1 hour ago',
-      'isRead': true,
-      'icon': Icons.trending_down,
-      'color': Colors.red,
-      'crypto': 'ETH',
-    },
-    {
-      'id': '4',
-      'title': 'New Feature',
-      'message': 'Staking is now available for your cryptocurrencies!',
-      'type': 'feature',
-      'time': '3 hours ago',
-      'isRead': true,
-      'icon': Icons.new_releases,
-      'color': AppColors.secondary,
-      'crypto': null,
-    },
-    {
-      'id': '5',
-      'title': 'Security Alert',
-      'message': 'New login detected from iOS device',
-      'type': 'security',
-      'time': '6 hours ago',
-      'isRead': true,
-      'icon': Icons.security,
-      'color': Colors.orange,
-      'crypto': null,
-    },
-    {
-      'id': '6',
-      'title': 'Weekly Report',
-      'message': 'Your portfolio gained +12.5% this week. View detailed report.',
-      'type': 'report',
-      'time': '1 day ago',
-      'isRead': true,
-      'icon': Icons.analytics,
-      'color': Colors.blue,
-      'crypto': null,
-    },
-    {
-      'id': '7',
-      'title': 'Price Alert',
-      'message': 'Solana (SOL) has reached your target price of \$150',
-      'type': 'price_alert',
-      'time': '2 days ago',
-      'isRead': true,
-      'icon': Icons.flag,
-      'color': Colors.green,
-      'crypto': 'SOL',
-    },
-    {
-      'id': '8',
-      'title': 'Market News',
-      'message': 'Bitcoin ETF approval boosts crypto market sentiment',
-      'type': 'news',
-      'time': '3 days ago',
-      'isRead': true,
-      'icon': Icons.article,
-      'color': Colors.purple,
-      'crypto': 'BTC',
-    },
-  ];
+  late NotificationController notificationController;
 
   @override
   void initState() {
     super.initState();
+    notificationController = Get.put(NotificationController());
+    
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 400),
       vsync: this,
@@ -128,23 +41,12 @@ class _NotificationScreenState extends State<NotificationScreen> with SingleTick
   }
 
   void _markAsRead(String notificationId) {
-    setState(() {
-      final index = notifications.indexWhere((n) => n['id'] == notificationId);
-      if (index != -1) {
-        notifications[index]['isRead'] = true;
-      }
-    });
+    notificationController.markAsRead(notificationId);
   }
 
   void _markAllAsRead() {
-    setState(() {
-      for (var notification in notifications) {
-        notification['isRead'] = true;
-      }
-    });
+    notificationController.markAllAsRead();
   }
-
-  int get unreadCount => notifications.where((n) => !n['isRead']).length;
 
   @override
   Widget build(BuildContext context) {
@@ -159,77 +61,93 @@ class _NotificationScreenState extends State<NotificationScreen> with SingleTick
         ),
         title: Text('Notifications', style: AppTextStyles.heading2),
         actions: [
-          if (unreadCount > 0)
-            TextButton(
-              onPressed: _markAllAsRead,
-              child: Text(
-                'Mark All Read',
-                style: AppTextStyles.body.copyWith(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
+          Obx(() => notificationController.unreadCount > 0
+              ? TextButton(
+                  onPressed: _markAllAsRead,
+                  child: Text(
+                    'Mark All Read',
+                    style: AppTextStyles.body.copyWith(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                )
+              : const SizedBox.shrink()),
         ],
       ),
       body: FadeTransition(
         opacity: _fadeAnimation,
-        child: Column(
-          children: [
-            // Notification Count
-            if (unreadCount > 0)
-              Container(
-                margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.primary.withOpacity(0.2)),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Text(
-                        unreadCount.toString(),
-                        style: AppTextStyles.body.copyWith(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      '$unreadCount unread notification${unreadCount != 1 ? 's' : ''}',
-                      style: AppTextStyles.body.copyWith(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
+        child: Obx(() {
+          if (notificationController.isLoading) {
+            return const Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
               ),
+            );
+          }
 
-            // Notifications List
-            Expanded(
-              child: notifications.isEmpty
-                  ? _buildEmptyState()
-                  : ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      itemCount: notifications.length,
-                      itemBuilder: (context, index) {
-                        final notification = notifications[index];
-                        return _buildNotificationItem(notification, index);
-                      },
+          return RefreshIndicator(
+            onRefresh: notificationController.refreshNotifications,
+            backgroundColor: AppColors.surface,
+            color: AppColors.primary,
+            child: Column(
+              children: [
+                // Notification Count
+                if (notificationController.unreadCount > 0)
+                  Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppColors.primary.withOpacity(0.2)),
                     ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Text(
+                            notificationController.unreadCount.toString(),
+                            style: AppTextStyles.body.copyWith(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          '${notificationController.unreadCount} unread notification${notificationController.unreadCount != 1 ? 's' : ''}',
+                          style: AppTextStyles.body.copyWith(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                // Notifications List
+                Expanded(
+                  child: notificationController.notifications.isEmpty
+                      ? _buildEmptyState()
+                      : ListView.builder(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          itemCount: notificationController.notifications.length,
+                          itemBuilder: (context, index) {
+                            final notification = notificationController.notifications[index];
+                            return _buildNotificationItem(notification, index);
+                          },
+                        ),
+                ),
+              ],
             ),
-          ],
-        ),
+          );
+        }),
       ),
     );
   }
@@ -420,6 +338,32 @@ class _NotificationScreenState extends State<NotificationScreen> with SingleTick
             style: AppTextStyles.body.copyWith(
               color: AppColors.textSecondary,
               height: 1.5,
+            ),
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton(
+            onPressed: () => notificationController.refreshNotifications(),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.refresh, size: 18),
+                const SizedBox(width: 8),
+                Text(
+                  'Refresh',
+                  style: AppTextStyles.body.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
             ),
           ),
         ],

@@ -1,5 +1,6 @@
 import 'package:nexa_prime/controllers/wallet_controller.dart';
 import 'package:nexa_prime/controllers/auth_controller.dart';
+import 'package:nexa_prime/controllers/price_alert_controller.dart';
 import 'package:nexa_prime/utils/colors.dart';
 import 'package:nexa_prime/utils/text_styles.dart';
 import 'package:nexa_prime/routes/routes.dart';
@@ -19,6 +20,7 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   final WalletController walletController = Get.find();
   final AuthController authController = Get.find();
+  final PriceAlertController priceAlertController = Get.find();
   final RxBool _pushNotifications = true.obs;
   final RxBool _emailNotifications = false.obs;
   final RxBool _transactionAlerts = true.obs;
@@ -406,6 +408,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   trailing: Switch(
                     value: _transactionAlerts.value,
                     onChanged: (value) => _transactionAlerts.value = value,
+                    activeColor: AppColors.primary,
+                  ),
+                )),
+
+                _buildSectionHeader('Price Alerts'),
+                Obx(() => _buildSettingTile(
+                  title: 'Auto Price Monitoring',
+                  icon: Icons.trending_up,
+                  trailing: Switch(
+                    value: priceAlertController.isMonitoring,
+                    onChanged: (value) => priceAlertController.togglePriceMonitoring(),
                     activeColor: AppColors.primary,
                   ),
                 )),

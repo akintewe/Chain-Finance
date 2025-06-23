@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'views/onboarding/onboarding.dart';
 import 'controllers/auth_controller.dart';
+import 'controllers/notification_controller.dart';
+import 'controllers/price_alert_controller.dart';
 import 'package:nexa_prime/utils/loader.dart';
 import 'package:nexa_prime/services/onesignal_service.dart';
 import 'dart:math';
@@ -17,7 +19,9 @@ void main() async {
 
   // Initialize Get controllers
   Get.put(AuthController());
-   Get.put(WalletController());
+  Get.put(WalletController());
+  Get.put(NotificationController());
+  Get.put(PriceAlertController());
   
   runApp(const MyApp());
 }
