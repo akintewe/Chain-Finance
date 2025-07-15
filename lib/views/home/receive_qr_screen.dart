@@ -93,7 +93,7 @@ class _ReceiveQRScreenState extends State<ReceiveQRScreen> with SingleTickerProv
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: AppColors.text),
-          onPressed: () => Get.back(),
+                      onPressed: () => Navigator.pop(context),
         ),
         title: Text('Receive ${widget.token['symbol']}', style: AppTextStyles.heading2),
       ),

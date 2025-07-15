@@ -95,7 +95,7 @@ class _SwapScreenState extends State<SwapScreen> with SingleTickerProviderStateM
                           toToken = token;
                         }
                       });
-                      Get.back();
+                      Navigator.pop(context);
                     },
                     child: Container(
                       margin: const EdgeInsets.only(bottom: 12),

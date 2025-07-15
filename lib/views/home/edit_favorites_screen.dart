@@ -69,7 +69,7 @@ class _EditFavoritesScreenState extends State<EditFavoritesScreen> with SingleTi
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: AppColors.text),
-          onPressed: () => Get.back(),
+          onPressed: () => Navigator.pop(context),
         ),
         title: Text('Edit Favorites', style: AppTextStyles.heading2),
         actions: [

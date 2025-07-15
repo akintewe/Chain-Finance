@@ -151,7 +151,7 @@ class _TokenInfoScreenState extends State<TokenInfoScreen> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: AppColors.text),
-          onPressed: () => Get.back(),
+                      onPressed: () => Navigator.pop(context),
         ),
         title: Text(widget.token['name'], style: AppTextStyles.body2),
       ),

@@ -41,7 +41,7 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
       appBar: AppBar(
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: AppColors.white,),
-          onPressed: () => Get.back(),
+                      onPressed: () => Navigator.pop(context),
         ),
         backgroundColor: AppColors.background,
         title: Text('All Tokens', style: AppTextStyles.body2),

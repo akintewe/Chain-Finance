@@ -59,7 +59,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: AppColors.text),
-          onPressed: () => Get.back(),
+                      onPressed: () => Navigator.pop(context),
         ),
       ),
       body: SafeArea(

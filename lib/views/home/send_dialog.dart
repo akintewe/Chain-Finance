@@ -88,7 +88,7 @@ class _SendDialogState extends State<SendDialog> with SingleTickerProviderStateM
                         ),
                         IconButton(
                           icon: const Icon(Icons.close, color: AppColors.textSecondary),
-                          onPressed: () => Get.back(),
+                          onPressed: () => Navigator.pop(context),
                         ),
                       ],
                     ),

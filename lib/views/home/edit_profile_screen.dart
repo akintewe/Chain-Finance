@@ -100,7 +100,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> with SingleTicker
               title: 'Take Photo',
               subtitle: 'Use camera to take a new picture',
               onTap: () {
-                Get.back();
+                Navigator.pop(context);
                 _pickImageFromCamera();
               },
             ),
@@ -113,7 +113,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> with SingleTicker
               title: 'Choose from Gallery',
               subtitle: 'Select from your photo library',
               onTap: () {
-                Get.back();
+                Navigator.pop(context);
                 _pickImageFromGallery();
               },
             ),
@@ -127,7 +127,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> with SingleTicker
                 title: 'Remove Photo',
                 subtitle: 'Remove current profile picture',
                 onTap: () {
-                  Get.back();
+                  Navigator.pop(context);
                   _removeImage();
                 },
                 isDestructive: true,

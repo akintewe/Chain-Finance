@@ -70,7 +70,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               title: 'Live Chat',
               subtitle: 'Chat with our support team',
               onTap: () {
-                Get.back();
+                Navigator.pop(context);
                 _startLiveChat();
               },
             ),
@@ -83,7 +83,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               title: 'Email Support',
               subtitle: 'Send us an email for assistance',
               onTap: () {
-                Get.back();
+                Navigator.pop(context);
                 _openEmailSupport();
               },
             ),
@@ -96,7 +96,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               title: 'FAQ',
               subtitle: 'Browse frequently asked questions',
               onTap: () {
-                Get.back();
+                Navigator.pop(context);
                 _openFAQ();
               },
             ),
@@ -109,7 +109,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               title: 'Report an Issue',
               subtitle: 'Report bugs or technical problems',
               onTap: () {
-                Get.back();
+                Navigator.pop(context);
                 _reportIssue();
               },
             ),

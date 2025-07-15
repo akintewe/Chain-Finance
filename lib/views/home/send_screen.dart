@@ -121,7 +121,7 @@ class _SendScreenState extends State<SendScreen> with SingleTickerProviderStateM
                       setState(() {
                         selectedToken = token['symbol'];
                       });
-                      Get.back();
+                      Navigator.pop(context);
                     },
                     child: Container(
                       margin: const EdgeInsets.only(bottom: 12),
@@ -188,7 +188,7 @@ class _SendScreenState extends State<SendScreen> with SingleTickerProviderStateM
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: AppColors.text),
-          onPressed: () => Get.back(),
+                      onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           widget.isSendingToExternal ? 'Send to External Wallet' : 'Send to Nexa Prime User',
@@ -640,7 +640,7 @@ class _SendScreenState extends State<SendScreen> with SingleTickerProviderStateM
           'note': noteController.text,
         });
       }
-      Get.back();
+              Navigator.pop(context);
       Get.snackbar('Success', 'Transaction sent successfully');
     } catch (e) {
       Get.snackbar('Error', e.toString());

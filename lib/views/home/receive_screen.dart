@@ -66,7 +66,7 @@ class _ReceiveScreenState extends State<ReceiveScreen> with SingleTickerProvider
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: AppColors.text),
-          onPressed: () => Get.back(),
+                      onPressed: () => Navigator.pop(context),
         ),
         title: Text('Receive', style: AppTextStyles.heading2),
       ),

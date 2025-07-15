@@ -47,7 +47,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       _isLoading.value = true;
       // TODO: Implement change password API call
       await Future.delayed(const Duration(seconds: 2)); // Simulate API call
-      Get.back();
+              Navigator.pop(context);
       Get.snackbar(
         'Success',
         'Password changed successfully',
