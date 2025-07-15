@@ -117,7 +117,7 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: AppColors.text),
-          onPressed: () => Get.back(),
+          onPressed: () => Navigator.pop(context),
         ),
         title: Text('Search Cryptocurrencies', style: AppTextStyles.body2),
       ),

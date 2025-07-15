@@ -398,7 +398,7 @@ class _WalletScreenState extends State<WalletScreen> with TickerProviderStateMix
                   Text(
                     'Hey ${username}!',
                                 style: AppTextStyles.heading.copyWith(
-                                  fontSize: 28,
+                                  fontSize: 25,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
