@@ -220,4 +220,11 @@ class NotificationController extends GetxController {
     }
     return null;
   }
+
+  // Reset notification controller state
+  void resetState() {
+    _isLoading.value = false;
+    _notifications.clear();
+    print('Notification controller state reset');
+  }
 } 

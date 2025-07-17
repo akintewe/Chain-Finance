@@ -6,8 +6,13 @@ import '../routes/routes.dart';
 import '../utils/loader.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io';
 import '../services/onesignal_service.dart';
+import 'kyc_controller.dart';
+import 'wallet_controller.dart';
+import 'notification_controller.dart';
+import 'price_alert_controller.dart';
 
 class AuthController extends GetxController {
   static AuthController get instance => Get.find();
@@ -15,30 +20,78 @@ class AuthController extends GetxController {
   final baseUrl = 'https://chdevapi.com.ng/api';
   final _isLoading = false.obs;
   final _token = ''.obs;
+  final _isLoggedOut = false.obs; // Track logout state
   final storage = const FlutterSecureStorage();
   
   bool get isLoading => _isLoading.value;
   String get token => _token.value;
+  bool get isLoggedOut => _isLoggedOut.value;
   
   @override
   void onInit() async {
     super.onInit();
     // Initialize token from storage when controller is created
-    await _initializeToken();
+    await initializeToken();
     print('AuthController initialized');
   }
   
-  Future<void> _initializeToken() async {
+  Future<void> initializeToken() async {
+    try {
+      // Check if user has logged out (check both reactive and persistent storage)
+      final isLoggedOutFromStorage = await storage.read(key: 'is_logged_out');
+      if (_isLoggedOut.value || isLoggedOutFromStorage == 'true') {
+        print('User has logged out, skipping token initialization');
+        _token.value = '';
+        _isLoggedOut.value = true; // Ensure reactive flag is also set
+        return;
+      }
+      
     final storedToken = await storage.read(key: 'token');
-    if (storedToken != null) {
+      print('Initializing token - Stored token: ${storedToken != null ? 'Present' : 'Missing'}');
+      
+      if (storedToken != null && storedToken.isNotEmpty) {
       _token.value = storedToken;
-      print('Token loaded from storage');
+        print('Token loaded from storage: ${storedToken.substring(0, 10)}...');
+      } else {
+        _token.value = '';
+        print('No token found in storage');
+      }
+    } catch (e) {
+      print('Error initializing token: $e');
+      _token.value = '';
     }
   }
   
   Future<bool> isUserLoggedIn() async {
-    final token = await getStoredToken();
-    return token != null && token.isNotEmpty;
+    // Check both reactive token and stored token
+    final storedToken = await getStoredToken();
+    final reactiveToken = _token.value;
+    
+    print('Auth check - Stored token: ${storedToken != null ? 'Present' : 'Missing'}');
+    print('Auth check - Reactive token: ${reactiveToken.isNotEmpty ? 'Present' : 'Missing'}');
+    
+    // Check if user has logged out
+    final isLoggedOutFromStorage = await storage.read(key: 'is_logged_out');
+    if (isLoggedOutFromStorage == 'true') {
+      print('User has logged out, not logged in');
+      return false;
+    }
+    
+    // If we have a stored token, consider user logged in (even if reactive token is empty during hot reload)
+    if (storedToken != null && storedToken.isNotEmpty) {
+      // If reactive token is empty but we have stored token, restore it
+      if (reactiveToken.isEmpty) {
+        print('Restoring token from storage during hot reload');
+        _token.value = storedToken;
+      }
+      
+      final isLoggedIn = _token.value.isNotEmpty;
+      print('Auth check - Is logged in: $isLoggedIn');
+      return isLoggedIn;
+    }
+    
+    print('No stored token found, user not logged in');
+    return false;
   }
 
   // Register User
@@ -172,6 +225,9 @@ class AuthController extends GetxController {
         _token.value = data['data']['token'];
         print('Token stored: ${_token.value}');
         
+        // Clear logout flag since user is logging in
+        await clearLogoutFlag();
+        
         print('Storing user data...');
         await _storeUserData(data['data']);
         print('User data stored successfully');
@@ -187,6 +243,9 @@ class AuthController extends GetxController {
         
         // Send OneSignal player ID to backend after successful login
         OneSignalService.sendPlayerIdToBackend();
+        
+        // Check KYC status after successful login
+        await _checkKYCStatus();
       } else if (response.statusCode == 401) {
         print('Authentication failed: ${data['message']}');
         _isLoading.value = false;
@@ -228,6 +287,7 @@ class AuthController extends GetxController {
     try {
       _isLoading.value = true;
       
+      // Call logout API
       final response = await http.post(
         Uri.parse('$baseUrl/logout'),
         headers: {
@@ -237,17 +297,147 @@ class AuthController extends GetxController {
       );
 
       if (response.statusCode == 200) {
-        await storage.deleteAll();
-        _token.value = '';
-        Get.snackbar('Success', 'Logout successful');
+        // Set logout flag
+        _isLoggedOut.value = true;
+        
+        // Clear all cached data
+        await _clearAllCachedData();
+        
+        // Force clear token to ensure it's completely removed
+        await forceClearToken();
+        
+        // Navigate first, then show snackbar to avoid context issues
         Get.offAllNamed(Routes.signin);
+        
+        // Show snackbar after navigation
+        Future.delayed(const Duration(milliseconds: 100), () {
+          if (Get.isSnackbarOpen) Get.back();
+          Get.snackbar('Success', 'Logout successful');
+        });
       } else {
         throw jsonDecode(response.body)['message'] ?? 'Logout failed';
       }
     } catch (e) {
-      Get.snackbar('Error', e.toString());
+      // Set logout flag even if API call fails
+      _isLoggedOut.value = true;
+      
+      // Even if API call fails, clear local data
+      await _clearAllCachedData();
+      
+      // Force clear token to ensure it's completely removed
+      await forceClearToken();
+      
+      // Navigate first, then show snackbar to avoid context issues
+      Get.offAllNamed(Routes.signin);
+      
+      // Show snackbar after navigation
+      Future.delayed(const Duration(milliseconds: 100), () {
+        if (Get.isSnackbarOpen) Get.back();
+        Get.snackbar('Error', e.toString());
+      });
     } finally {
       _isLoading.value = false;
+    }
+  }
+
+  // Clear all cached data
+  Future<void> _clearAllCachedData() async {
+    try {
+      print('Starting to clear all cached data...');
+      
+      // Clear secure storage
+      await storage.deleteAll();
+      print('Secure storage cleared');
+      
+      // Verify storage is cleared
+      final remainingToken = await storage.read(key: 'token');
+      print('Remaining token in storage: ${remainingToken != null ? 'Present' : 'None'}');
+      
+      // Clear shared preferences
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.clear();
+      print('Shared preferences cleared');
+      
+      // Clear HTTP cache (if any)
+      await _clearHttpCache();
+      
+      // Clear all GetX controllers
+      _clearAllControllers();
+      
+      // Clear OneSignal data
+      await _clearOneSignalData();
+      
+      // Reset auth controller state
+      resetState();
+      
+      // Force clear token from memory
+      _token.value = '';
+      print('Reactive token cleared: ${_token.value.isEmpty ? 'Empty' : 'Still has value'}');
+      
+      print('All cached data cleared successfully');
+    } catch (e) {
+      print('Error clearing cached data: $e');
+    }
+  }
+
+  // Clear HTTP cache
+  Future<void> _clearHttpCache() async {
+    try {
+      // Clear any HTTP client cache
+      // This is a placeholder for future HTTP cache clearing if needed
+      print('HTTP cache cleared');
+    } catch (e) {
+      print('Error clearing HTTP cache: $e');
+    }
+  }
+
+  // Clear all GetX controllers
+  void _clearAllControllers() {
+    try {
+      // Remove all registered controllers
+      if (Get.isRegistered<KYCController>()) {
+        Get.delete<KYCController>();
+      }
+      
+      // Reset main controllers state (don't delete them as they're needed for app functionality)
+      if (Get.isRegistered<WalletController>()) {
+        Get.find<WalletController>().resetState();
+      }
+      
+      if (Get.isRegistered<NotificationController>()) {
+        Get.find<NotificationController>().resetState();
+      }
+      
+      if (Get.isRegistered<PriceAlertController>()) {
+        Get.find<PriceAlertController>().resetState();
+      }
+      
+      print('All controllers cleared and reset');
+    } catch (e) {
+      print('Error clearing controllers: $e');
+    }
+  }
+
+  // Clear OneSignal data
+  Future<void> _clearOneSignalData() async {
+    try {
+      // Remove external user ID from OneSignal
+      await OneSignalService.removeExternalUserId();
+      
+      // Clear OneSignal tags
+      await OneSignalService.removeTags([
+        'user_type',
+        'app_version',
+        'preferred_currency',
+        'transaction_updates',
+        'price_alerts',
+        'security_alerts',
+        'news_updates',
+      ]);
+      
+      print('OneSignal data cleared');
+    } catch (e) {
+      print('Error clearing OneSignal data: $e');
     }
   }
 
@@ -352,6 +542,22 @@ class AuthController extends GetxController {
     }
   }
 
+  // Check KYC status after login
+  Future<void> _checkKYCStatus() async {
+    try {
+      // Initialize KYC controller if not already done
+      if (!Get.isRegistered<KYCController>()) {
+        Get.put(KYCController());
+      }
+      
+      // The KYC controller will automatically check status and show dialog if needed
+      final kycController = Get.find<KYCController>();
+      await kycController.checkKYCStatus();
+    } catch (e) {
+      print('Error checking KYC status: $e');
+    }
+  }
+
   Future<void> resendOTP(String email) async {
     print('Running resendOTP');
     print(email);
@@ -436,6 +642,64 @@ class AuthController extends GetxController {
       'username': await storage.read(key: 'username'),
       'uuid': await storage.read(key: 'uuid'),
     };
+  }
+
+  // Reset auth controller state
+  void resetState() {
+    _isLoading.value = false;
+    _token.value = '';
+    _isLoggedOut.value = false; // Reset logout flag
+    print('Auth controller state reset - Token cleared');
+  }
+  
+  // Clear logout flag from persistent storage
+  Future<void> clearLogoutFlag() async {
+    try {
+      await storage.delete(key: 'is_logged_out');
+      _isLoggedOut.value = false;
+      print('Logout flag cleared from persistent storage');
+    } catch (e) {
+      print('Error clearing logout flag: $e');
+    }
+  }
+  
+  // Force clear token from storage and memory
+  Future<void> forceClearToken() async {
+    try {
+      print('Force clearing token...');
+      
+      // Set logout flag in persistent storage
+      _isLoggedOut.value = true;
+      await storage.write(key: 'is_logged_out', value: 'true');
+      print('Logout flag set in persistent storage');
+      
+      // Clear token from secure storage
+      await storage.delete(key: 'token');
+      print('Token deleted from secure storage');
+      
+      // Clear reactive token
+      _token.value = '';
+      print('Reactive token cleared');
+      
+      // Also clear all user data
+      await storage.delete(key: 'user_id');
+      await storage.delete(key: 'name');
+      await storage.delete(key: 'email');
+      await storage.delete(key: 'username');
+      await storage.delete(key: 'uuid');
+      print('All user data cleared from storage');
+      
+      // Verify token is cleared
+      final remainingToken = await storage.read(key: 'token');
+      print('Force clear - Remaining token: ${remainingToken != null ? 'Present' : 'None'}');
+      print('Force clear - Reactive token: ${_token.value.isEmpty ? 'Empty' : 'Still has value'}');
+      
+      // Double-check by reading all keys
+      final allKeys = await storage.readAll();
+      print('Force clear - Remaining keys in storage: ${allKeys.keys}');
+    } catch (e) {
+      print('Error force clearing token: $e');
+    }
   }
 
   Future<void> forgotPassword(String email) async {

@@ -4,6 +4,7 @@ import 'package:nexa_prime/utils/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'views/onboarding/onboarding.dart';
+import 'views/dashboard/dashboard_screen.dart';
 import 'controllers/auth_controller.dart';
 import 'controllers/notification_controller.dart';
 import 'controllers/price_alert_controller.dart';
@@ -17,8 +18,11 @@ void main() async {
   // Initialize OneSignal
   await OneSignalService.initialize();
 
-  // Initialize Get controllers
-  Get.put(AuthController());
+  // Initialize AuthController first and wait for it to be ready
+  final authController = Get.put(AuthController());
+  await authController.initializeToken(); // Wait for token initialization
+  
+  // Initialize other controllers after AuthController is ready
   Get.put(WalletController());
   Get.put(NotificationController());
   Get.put(PriceAlertController());
@@ -46,7 +50,7 @@ class MyApp extends StatelessWidget {
         ),
       ),
       getPages: Routes.routes,
-      home: FutureBuilder(
+      home: FutureBuilder<bool>(
         future: _checkLoginStatus(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -62,7 +66,13 @@ class MyApp extends StatelessWidget {
           }
           
           // Navigate to the appropriate screen based on auth status
-          return const OnboardingScreen();
+          if (snapshot.hasData && snapshot.data == true) {
+            // User is logged in, show dashboard
+            return const DashboardScreen();
+          } else {
+            // User is not logged in, show onboarding
+            return const OnboardingScreen();
+          }
         },
       ),
     );
@@ -73,18 +83,15 @@ class MyApp extends StatelessWidget {
     final isLoggedIn = await authController.isUserLoggedIn();
     
     if (isLoggedIn) {
-      print('User is already logged in, redirecting to dashboard...');
+      print('User is already logged in, will show dashboard...');
       
       // Send OneSignal player ID to backend for already logged in users
       OneSignalService.sendPlayerIdToBackend();
       
-      // Add a small delay to ensure proper navigation
-      await Future.delayed(const Duration(milliseconds: 100));
-      Get.offAllNamed(Routes.dashboard);
       return true;
     }
     
-    print('No valid token found, showing onboarding screen');
+    print('No valid token found, will show onboarding screen');
     return false;
   }
 }

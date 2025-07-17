@@ -1,6 +1,7 @@
 import 'package:nexa_prime/controllers/wallet_controller.dart';
 import 'package:nexa_prime/controllers/auth_controller.dart';
 import 'package:nexa_prime/controllers/price_alert_controller.dart';
+import 'package:nexa_prime/controllers/kyc_controller.dart';
 import 'package:nexa_prime/utils/colors.dart';
 import 'package:nexa_prime/utils/text_styles.dart';
 import 'package:nexa_prime/routes/routes.dart';
@@ -9,6 +10,7 @@ import 'package:nexa_prime/views/home/backup_wallet_screen.dart';
 import 'package:nexa_prime/views/home/change_password_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -21,6 +23,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   final WalletController walletController = Get.find();
   final AuthController authController = Get.find();
   final PriceAlertController priceAlertController = Get.find();
+  final KYCController kycController = Get.put(KYCController());
   final RxBool _pushNotifications = true.obs;
   final RxBool _emailNotifications = false.obs;
   final RxBool _transactionAlerts = true.obs;
@@ -39,206 +42,86 @@ class _SettingsScreenState extends State<SettingsScreen> {
     userEmail.value = userData['email'] ?? '';
   }
 
-  void _showCustomerServiceOptions() {
-    Get.bottomSheet(
-      Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.2),
-              blurRadius: 10,
-              offset: const Offset(0, -5),
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Customer Service',
-              style: AppTextStyles.heading2.copyWith(fontSize: 20),
-            ),
-            const SizedBox(height: 24),
-            
-            // Live Chat Option
-            _buildServiceOption(
-              icon: Icons.chat_bubble_outline,
-              title: 'Live Chat',
-              subtitle: 'Chat with our support team',
-              onTap: () {
-                Navigator.pop(context);
-                _startLiveChat();
-              },
-            ),
-            
-            const SizedBox(height: 16),
-            
-            // Email Support Option
-            _buildServiceOption(
-              icon: Icons.email_outlined,
-              title: 'Email Support',
-              subtitle: 'Send us an email for assistance',
-              onTap: () {
-                Navigator.pop(context);
-                _openEmailSupport();
-              },
-            ),
-            
-            const SizedBox(height: 16),
-            
-            // FAQ Option
-            _buildServiceOption(
-              icon: Icons.help_outline,
-              title: 'FAQ',
-              subtitle: 'Browse frequently asked questions',
-              onTap: () {
-                Navigator.pop(context);
-                _openFAQ();
-              },
-            ),
-            
-            const SizedBox(height: 16),
-            
-            // Report Issue Option
-            _buildServiceOption(
-              icon: Icons.report_outlined,
-              title: 'Report an Issue',
-              subtitle: 'Report bugs or technical problems',
-              onTap: () {
-                Navigator.pop(context);
-                _reportIssue();
-              },
-            ),
-          ],
-        ),
+  void _openEmailSupport() async {
+    // Check if running on iOS simulator
+    bool isIOSSimulator = false;
+    try {
+      // This will throw an exception on iOS simulator
+      await canLaunchUrl(Uri.parse('mailto:test@test.com'));
+    } catch (e) {
+      if (e.toString().contains('channel-error') || e.toString().contains('Unable to establish connection')) {
+        isIOSSimulator = true;
+      }
+    }
+    
+    if (isIOSSimulator) {
+      // Show simulator-specific message
+      Get.snackbar(
+        'Email Support',
+        'Please send an email to support@nexaprime.org\n(Email client not available in simulator)',
+        backgroundColor: AppColors.primary.withOpacity(0.1),
+        colorText: AppColors.primary,
+        snackPosition: SnackPosition.BOTTOM,
+        margin: const EdgeInsets.all(16),
+        borderRadius: 12,
+        duration: const Duration(seconds: 5),
+      );
+      return;
+    }
+    
+    // Try different email URL schemes
+    final List<Uri> emailUris = [
+      Uri(
+        scheme: 'mailto',
+        path: 'support@nexaprime.org',
+        query: 'subject=Support Request - Nexa Prime App',
       ),
-      isScrollControlled: true,
-    );
-  }
-
-  Widget _buildServiceOption({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppColors.background,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: AppColors.primary.withOpacity(0.1),
-          ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                icon,
-                color: AppColors.primary,
-                size: 24,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: AppTextStyles.body2.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    subtitle,
-                    style: AppTextStyles.body.copyWith(
-                      color: AppColors.textSecondary,
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Icon(
-              Icons.arrow_forward_ios,
-              size: 16,
-              color: AppColors.textSecondary,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _startLiveChat() {
-    // In a real app, this would open a chat widget or navigate to a chat screen
-    Get.snackbar(
-      'Live Chat',
-      'Connecting you to our support team...',
-      backgroundColor: AppColors.primary.withOpacity(0.1),
-      colorText: AppColors.primary,
-      snackPosition: SnackPosition.BOTTOM,
-      margin: const EdgeInsets.all(16),
-      borderRadius: 12,
-      duration: const Duration(seconds: 3),
-    );
-  }
-
-  void _openEmailSupport() {
-    // In a real app, this would open the email client or a contact form
-    Get.snackbar(
-      'Email Support',
-      'Opening email client to contact support@nexaprime.com',
-      backgroundColor: AppColors.primary.withOpacity(0.1),
-      colorText: AppColors.primary,
-      snackPosition: SnackPosition.BOTTOM,
-      margin: const EdgeInsets.all(16),
-      borderRadius: 12,
-      duration: const Duration(seconds: 3),
-    );
-  }
-
-  void _openFAQ() {
-    // In a real app, this would navigate to an FAQ screen or web page
-    Get.snackbar(
-      'FAQ',
-      'Opening frequently asked questions...',
-      backgroundColor: AppColors.primary.withOpacity(0.1),
-      colorText: AppColors.primary,
-      snackPosition: SnackPosition.BOTTOM,
-      margin: const EdgeInsets.all(16),
-      borderRadius: 12,
-      duration: const Duration(seconds: 3),
-    );
-  }
-
-  void _reportIssue() {
-    // In a real app, this would open a bug report form
-    Get.snackbar(
-      'Report Issue',
-      'Opening issue report form...',
-      backgroundColor: AppColors.primary.withOpacity(0.1),
-      colorText: AppColors.primary,
-      snackPosition: SnackPosition.BOTTOM,
-      margin: const EdgeInsets.all(16),
-      borderRadius: 12,
-      duration: const Duration(seconds: 3),
-    );
+      Uri.parse('mailto:support@nexaprime.org?subject=Support Request - Nexa Prime App'),
+    ];
+    
+    bool launched = false;
+    
+    for (final emailUri in emailUris) {
+      try {
+        // Check if URL can be launched
+        final canLaunch = await canLaunchUrl(emailUri);
+        
+        if (canLaunch) {
+          // Launch email client
+          await launchUrl(emailUri, mode: LaunchMode.externalApplication);
+          launched = true;
+          
+          Get.snackbar(
+            'Email Support',
+            'Opening email client...',
+            backgroundColor: AppColors.primary.withOpacity(0.1),
+            colorText: AppColors.primary,
+            snackPosition: SnackPosition.BOTTOM,
+            margin: const EdgeInsets.all(16),
+            borderRadius: 12,
+            duration: const Duration(seconds: 3),
+          );
+          break;
+        }
+      } catch (e) {
+        print('Error launching email with URI $emailUri: $e');
+        continue;
+      }
+    }
+    
+    if (!launched) {
+      // Fallback if email client cannot be opened
+      Get.snackbar(
+        'Email Support',
+        'Please send an email to support@nexaprime.org',
+        backgroundColor: AppColors.primary.withOpacity(0.1),
+        colorText: AppColors.primary,
+        snackPosition: SnackPosition.BOTTOM,
+        margin: const EdgeInsets.all(16),
+        borderRadius: 12,
+        duration: const Duration(seconds: 5),
+      );
+    }
   }
 
   Widget _buildSettingTile({
@@ -290,6 +173,59 @@ class _SettingsScreenState extends State<SettingsScreen> {
           fontWeight: FontWeight.w600,
         ),
       ),
+    );
+  }
+
+  Widget _buildKYCStatusTile() {
+    final kycStatus = kycController.kycStatus.value;
+    final isVerified = kycStatus == 'verified';
+    final isPending = kycStatus == 'pending';
+    final isRejected = kycStatus == 'rejected';
+
+    IconData statusIcon;
+    Color statusColor;
+    String statusText;
+
+    if (isVerified) {
+      statusIcon = Icons.check_circle_outline;
+      statusColor = Colors.green;
+      statusText = 'Verified';
+    } else if (isPending) {
+      statusIcon = Icons.hourglass_empty;
+      statusColor = Colors.orange;
+      statusText = 'Pending';
+    } else if (isRejected) {
+      statusIcon = Icons.cancel_outlined;
+      statusColor = Colors.red;
+      statusText = 'Rejected';
+    } else {
+      statusIcon = Icons.pending_outlined;
+      statusColor = Colors.grey;
+      statusText = 'Not Submitted';
+    }
+
+    return _buildSettingTile(
+      title: 'KYC Status',
+      icon: Icons.verified_user_outlined,
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            statusIcon,
+            color: statusColor,
+            size: 20,
+          ),
+          const SizedBox(width: 8),
+          Text(
+            statusText,
+            style: AppTextStyles.body2.copyWith(
+              fontWeight: FontWeight.w600,
+              color: statusColor,
+            ),
+          ),
+        ],
+      ),
+      onTap: () => Get.toNamed(Routes.kycStatus),
     );
   }
 
@@ -384,7 +320,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 _buildSettingTile(
                   title: 'Customer Service',
                   icon: Icons.support_agent_outlined,
-                  onTap: () => _showCustomerServiceOptions(),
+                  onTap: () => _openEmailSupport(),
                 ),
 
                 _buildSectionHeader('Notifications'),
@@ -423,11 +359,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 )),
 
+                _buildSectionHeader('KYC Status'),
+                Obx(() => _buildKYCStatusTile()),
+
                 _buildSectionHeader('Security'),
                 _buildSettingTile(
                   title: 'Change Password',
                   icon: Icons.lock_outline,
                   onTap: () => Get.to(() => const ChangePasswordScreen()),
+                ),
+                _buildSettingTile(
+                  title: 'Privacy Policy',
+                  icon: Icons.privacy_tip_outlined,
+                  onTap: () => Get.toNamed(Routes.privacyPolicy),
                 ),
 
                 const SizedBox(height: 32),
@@ -444,8 +388,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    onPressed: () {
-                      Get.offAllNamed(Routes.signin);
+                    onPressed: () async {
+                      // Show confirmation dialog
+                      final shouldLogout = await Get.dialog<bool>(
+                        AlertDialog(
+                          title: const Text('Logout'),
+                          content: const Text('Are you sure you want to logout?'),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Get.back(result: false),
+                              child: const Text('Cancel'),
+                            ),
+                            TextButton(
+                              onPressed: () => Get.back(result: true),
+                              child: const Text('Logout'),
+                            ),
+                          ],
+                        ),
+                      );
+                      
+                      if (shouldLogout == true) {
+                        // Call the logout method from AuthController
+                        final authController = Get.find<AuthController>();
+                        await authController.logout();
+                      }
                     },
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,

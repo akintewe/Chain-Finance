@@ -179,6 +179,16 @@ class WalletController extends GetxController {
 
   String get privateKey => _walletData.value?['private_key'] ?? '';
 
+  // Reset wallet controller state
+  void resetState() {
+    _isLoading.value = false;
+    _walletData.value = null;
+    _tokens.clear();
+    _prices.clear();
+    _priceChanges.clear();
+    print('Wallet controller state reset');
+  }
+
   Future<Map<String, dynamic>?> getUserByUUID(String uuid) async {
     try {
       final response = await http.get(

@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import '../services/price_alert_service.dart';
+import 'auth_controller.dart';
 
 class PriceAlertController extends GetxController {
   static PriceAlertController get instance => Get.find();
@@ -33,7 +34,18 @@ class PriceAlertController extends GetxController {
     // You can load from shared preferences here
     // For now, we'll start monitoring by default
     _monitoredTokens.value = PriceAlertService.monitoredTokens;
-    startPriceMonitoring();
+    
+    // Only start monitoring if user is logged in
+    try {
+      final authController = Get.find<AuthController>();
+      if (authController.token.isNotEmpty) {
+        startPriceMonitoring();
+      } else {
+        print('User not logged in, skipping price monitoring start');
+      }
+    } catch (e) {
+      print('Error checking auth status for price monitoring: $e');
+    }
   }
   
   /// Start price monitoring
@@ -43,22 +55,28 @@ class PriceAlertController extends GetxController {
       _isMonitoring.value = true;
       _updatePriceData();
       
-      Get.snackbar(
-        'Price Alerts',
-        'Price monitoring started successfully',
-        backgroundColor: Colors.green.withOpacity(0.1),
-        colorText: Colors.green,
-        icon: const Icon(Icons.trending_up, color: Colors.green),
-        duration: const Duration(seconds: 2),
-      );
+      // Only show snackbar if context is ready
+      if (Get.context != null && Get.isSnackbarOpen == false) {
+        Get.snackbar(
+          'Price Alerts',
+          'Price monitoring started successfully',
+          backgroundColor: Colors.green.withOpacity(0.1),
+          colorText: Colors.green,
+          icon: const Icon(Icons.trending_up, color: Colors.green),
+          duration: const Duration(seconds: 2),
+        );
+      }
     } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Failed to start price monitoring',
-        backgroundColor: Colors.red.withOpacity(0.1),
-        colorText: Colors.red,
-        icon: const Icon(Icons.error, color: Colors.red),
-      );
+      // Only show snackbar if context is ready
+      if (Get.context != null && Get.isSnackbarOpen == false) {
+        Get.snackbar(
+          'Error',
+          'Failed to start price monitoring',
+          backgroundColor: Colors.red.withOpacity(0.1),
+          colorText: Colors.red,
+          icon: const Icon(Icons.error, color: Colors.red),
+        );
+      }
     }
   }
   
@@ -68,22 +86,28 @@ class PriceAlertController extends GetxController {
       PriceAlertService.stopPriceMonitoring();
       _isMonitoring.value = false;
       
-      Get.snackbar(
-        'Price Alerts',
-        'Price monitoring stopped',
-        backgroundColor: Colors.orange.withOpacity(0.1),
-        colorText: Colors.orange,
-        icon: const Icon(Icons.trending_down, color: Colors.orange),
-        duration: const Duration(seconds: 2),
-      );
+      // Only show snackbar if context is ready
+      if (Get.context != null && Get.isSnackbarOpen == false) {
+        Get.snackbar(
+          'Price Alerts',
+          'Price monitoring stopped',
+          backgroundColor: Colors.orange.withOpacity(0.1),
+          colorText: Colors.orange,
+          icon: const Icon(Icons.trending_down, color: Colors.orange),
+          duration: const Duration(seconds: 2),
+        );
+      }
     } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Failed to stop price monitoring',
-        backgroundColor: Colors.red.withOpacity(0.1),
-        colorText: Colors.red,
-        icon: const Icon(Icons.error, color: Colors.red),
-      );
+      // Only show snackbar if context is ready
+      if (Get.context != null && Get.isSnackbarOpen == false) {
+        Get.snackbar(
+          'Error',
+          'Failed to stop price monitoring',
+          backgroundColor: Colors.red.withOpacity(0.1),
+          colorText: Colors.red,
+          icon: const Icon(Icons.error, color: Colors.red),
+        );
+      }
     }
   }
   
@@ -306,5 +330,13 @@ class PriceAlertController extends GetxController {
   /// Refresh price data
   void refreshPriceData() {
     _updatePriceData();
+  }
+
+  // Reset price alert controller state
+  void resetState() {
+    _isMonitoring.value = false;
+    _monitoredTokens.clear();
+    _previousPrices.clear();
+    print('Price alert controller state reset');
   }
 } 
