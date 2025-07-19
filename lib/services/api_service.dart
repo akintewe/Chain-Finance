@@ -254,6 +254,82 @@ class ApiService {
     }
   }
 
+  // Upload profile image
+  static Future<Map<String, dynamic>?> uploadProfileImage(File imageFile) async {
+    try {
+      if (kDebugMode) {
+        print('Uploading profile image');
+        print('API URL: $baseUrl/user/profile-image');
+        print('Image path: ${imageFile.path}');
+        print('Image exists: ${await imageFile.exists()}');
+        print('Image size: ${await imageFile.length()} bytes');
+      }
+
+      var request = http.MultipartRequest(
+        'POST',
+        Uri.parse('$baseUrl/user/profile-image'),
+      );
+
+      // Add authorization header
+      request.headers['Authorization'] = 'Bearer ${_authController.token}';
+      request.headers['Accept'] = 'application/json';
+
+      // Validate file exists before uploading
+      if (!await imageFile.exists()) {
+        return {'error': 'file_error', 'message': 'Profile image file not found'};
+      }
+
+      // Add file
+      request.files.add(await http.MultipartFile.fromPath(
+        'profile_image',
+        imageFile.path,
+      ));
+
+      if (kDebugMode) {
+        print('Request headers: ${request.headers}');
+        print('Request files count: ${request.files.length}');
+      }
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+
+      if (kDebugMode) {
+        print('Profile image upload response status: ${response.statusCode}');
+        print('Profile image upload response body: ${response.body}');
+      }
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (kDebugMode) {
+          print('Profile image uploaded successfully');
+        }
+        return data;
+      } else if (response.statusCode == 401) {
+        if (kDebugMode) {
+          print('Unauthorized access - token may be invalid');
+        }
+        return {'error': 'unauthorized', 'message': 'Authentication failed'};
+      } else if (response.statusCode == 422) {
+        final data = jsonDecode(response.body);
+        if (kDebugMode) {
+          print('Validation error: ${data['message']}');
+        }
+        return {'error': 'validation_error', 'message': data['message'], 'errors': data['errors']};
+      } else {
+        if (kDebugMode) {
+          print('Failed to upload profile image: ${response.statusCode}');
+          print('Error response: ${response.body}');
+        }
+        return {'error': 'api_error', 'message': 'Failed to upload profile image'};
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Exception while uploading profile image: $e');
+      }
+      return {'error': 'network_error', 'message': 'Network connection failed'};
+    }
+  }
+
   // Get user notifications
   static Future<Map<String, dynamic>?> getNotifications() async {
     try {

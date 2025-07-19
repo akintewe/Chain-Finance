@@ -15,6 +15,9 @@ class WalletController extends GetxController {
   final _tokens = <Map<String, dynamic>>[].obs;
   final RxMap<String, double> _prices = <String, double>{}.obs;
   final RxMap<String, double> _priceChanges = <String, double>{}.obs;
+  
+  // Callback for price updates
+  Function? _onPricesUpdated;
   final RxList<Map<String, dynamic>> cryptoList = <Map<String, dynamic>>[
     {
       'name': 'Bitcoin',
@@ -94,6 +97,7 @@ class WalletController extends GetxController {
   bool get isLoading => _isLoading.value;
   Map<String, dynamic>? get walletData => _walletData.value;
   List<Map<String, dynamic>> get tokens => _tokens;
+  Map<String, double> get prices => _prices;
 
   Future<void> fetchWalletDetails() async {
     try {
@@ -275,12 +279,35 @@ class WalletController extends GetxController {
         // USDT is pegged to USD
         _prices['USDT'] = 1.0;
         _priceChanges['USDT'] = 0.0;
+        
+        // Notify that prices have been updated
+        _notifyPriceUpdate();
       }
     } catch (e) {
       print('Error updating prices: $e');
     } finally {
       _isLoading.value = false;
     }
+  }
+
+  // Method to notify when prices are updated
+  void _notifyPriceUpdate() {
+    // This will trigger any listeners or can be called by the wallet screen
+    print('Prices updated, notifying listeners...');
+    if (_onPricesUpdated != null) {
+      _onPricesUpdated!();
+    }
+  }
+
+  // Method to set price update callback
+  void setPriceUpdateCallback(Function callback) {
+    _onPricesUpdated = callback;
+  }
+
+  // Method to refresh pie chart (can be called from wallet screen)
+  void refreshPieChart() {
+    // This will be called by the wallet screen when prices are updated
+    print('Refreshing pie chart...');
   }
 
   double getPriceForToken(String symbol) => _prices[symbol] ?? 0.0;

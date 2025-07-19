@@ -9,6 +9,7 @@ import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -58,6 +59,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> with SingleTicker
     final userData = await authController.getUserData();
     nameController.text = userData['name'] ?? '';
     emailController.text = userData['email'] ?? '';
+    
+    // Refresh profile image when edit profile screen loads
+    await authController.refreshProfileImage();
   }
 
   Future<void> _requestPermissions() async {
@@ -118,7 +122,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> with SingleTicker
               },
             ),
             
-            if (_imageFile.value != null) ...[
+            if (_imageFile.value != null || authController.profileImageUrl.isNotEmpty) ...[
               const SizedBox(height: 16),
               
               // Remove Photo Option
@@ -300,6 +304,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> with SingleTicker
 
   void _removeImage() {
     _imageFile.value = null;
+    // Note: Profile image URL is managed by auth controller and will be updated automatically
     Get.snackbar(
       'Removed',
       'Profile picture removed',
@@ -308,6 +313,27 @@ class _EditProfileScreenState extends State<EditProfileScreen> with SingleTicker
       snackPosition: SnackPosition.BOTTOM,
       margin: const EdgeInsets.all(16),
       borderRadius: 12,
+    );
+  }
+
+  Widget _buildDefaultProfileImage() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(
+          Icons.add_a_photo,
+          size: 32,
+          color: AppColors.textSecondary,
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Add Photo',
+          style: AppTextStyles.body.copyWith(
+            color: AppColors.textSecondary,
+            fontSize: 12,
+          ),
+        ),
+      ],
     );
   }
 
@@ -378,24 +404,30 @@ class _EditProfileScreenState extends State<EditProfileScreen> with SingleTicker
                                 height: 120,
                               ),
                             )
-                          : Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                                Icon(
-                                  Icons.add_a_photo,
-                                  size: 32,
-                                  color: AppColors.textSecondary,
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  'Add Photo',
-                                  style: AppTextStyles.body.copyWith(
-                                    color: AppColors.textSecondary,
-                                    fontSize: 12,
+                          : authController.profileImageUrl.isNotEmpty
+                              ? ClipOval(
+                                  child: CachedNetworkImage(
+                                    imageUrl: authController.profileImageUrl,
+                                    fit: BoxFit.cover,
+                                    width: 120,
+                                    height: 120,
+                                    placeholder: (context, url) => Container(
+                                      width: 120,
+                                      height: 120,
+                                      decoration: BoxDecoration(
+                                        color: AppColors.surface,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Center(
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                        ),
+                                      ),
+                                    ),
+                                    errorWidget: (context, url, error) => _buildDefaultProfileImage(),
                                   ),
-                                ),
-                              ],
-                            ),
+                                )
+                              : _buildDefaultProfileImage(),
                     )),
                     
                     // Camera/Edit Icon
@@ -417,7 +449,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> with SingleTicker
                           ],
                         ),
                         child: Icon(
-                          _imageFile.value != null ? Icons.edit : Icons.camera_alt,
+                          (_imageFile.value != null || authController.profileImageUrl.isNotEmpty) ? Icons.edit : Icons.camera_alt,
                       color: Colors.white,
                           size: 18,
                     ),
@@ -490,6 +522,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> with SingleTicker
         nameController.text.trim(),
         _imageFile.value,
       );
+      
+      // Clear local file after successful upload
+      if (_imageFile.value != null) {
+        _imageFile.value = null;
+      }
       
       Get.snackbar(
         'Success',

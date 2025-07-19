@@ -71,7 +71,7 @@ class MyApp extends StatelessWidget {
             return const DashboardScreen();
           } else {
             // User is not logged in, show onboarding
-            return const OnboardingScreen();
+          return const OnboardingScreen();
           }
         },
       ),

@@ -13,6 +13,7 @@ import 'kyc_controller.dart';
 import 'wallet_controller.dart';
 import 'notification_controller.dart';
 import 'price_alert_controller.dart';
+import '../services/api_service.dart';
 
 class AuthController extends GetxController {
   static AuthController get instance => Get.find();
@@ -21,11 +22,13 @@ class AuthController extends GetxController {
   final _isLoading = false.obs;
   final _token = ''.obs;
   final _isLoggedOut = false.obs; // Track logout state
+  final _profileImageUrl = ''.obs; // Reactive profile image URL
   final storage = const FlutterSecureStorage();
   
   bool get isLoading => _isLoading.value;
   String get token => _token.value;
   bool get isLoggedOut => _isLoggedOut.value;
+  String get profileImageUrl => _profileImageUrl.value;
   
   @override
   void onInit() async {
@@ -52,6 +55,9 @@ class AuthController extends GetxController {
       if (storedToken != null && storedToken.isNotEmpty) {
       _token.value = storedToken;
         print('Token loaded from storage: ${storedToken.substring(0, 10)}...');
+        
+        // Load profile image automatically when token is restored
+        await loadProfileImage();
       } else {
         _token.value = '';
         print('No token found in storage');
@@ -246,6 +252,9 @@ class AuthController extends GetxController {
         
         // Check KYC status after successful login
         await _checkKYCStatus();
+        
+        // Load profile image after successful login
+        await loadProfileImage();
       } else if (response.statusCode == 401) {
         print('Authentication failed: ${data['message']}');
         _isLoading.value = false;
@@ -792,42 +801,25 @@ class AuthController extends GetxController {
       _isLoading.value = true;
       
       if (imageFile != null) {
-        // Create multipart request
-        var request = http.MultipartRequest(
-          'POST',
-          Uri.parse('$baseUrl/update-profile'),
-        );
-
-        // Add authorization header
-        request.headers.addAll({
-          'Authorization': 'Bearer $_token',
-        });
-
-        // Add text fields
-        request.fields['name'] = name;
-
-        // Add file
-        request.files.add(
-          await http.MultipartFile.fromPath(
-            'profile_image',
-            imageFile.path,
-          ),
-        );
-
-        // Send request
-        final response = await request.send();
-        final responseData = await response.stream.bytesToString();
-
-        if (response.statusCode == 200) {
+        // Upload profile image using API service
+        final result = await ApiService.uploadProfileImage(imageFile);
+        
+        if (result != null && result['error'] == null) {
+          // Update profile image URL from response
+          if (result['data'] != null && result['data']['profile_image_url'] != null) {
+            _profileImageUrl.value = result['data']['profile_image_url'];
+            print('Profile image URL updated: ${_profileImageUrl.value}');
+          }
+          
           Get.back();
           Get.snackbar(
             'Success',
-            'Profile updated successfully',
+            'Profile image updated successfully',
             backgroundColor: Colors.green.withOpacity(0.1),
             colorText: Colors.green,
           );
         } else {
-          throw jsonDecode(responseData)['message'] ?? 'Failed to update profile';
+          throw result?['message'] ?? 'Failed to upload profile image';
         }
       } else {
         // If no image, just update name
@@ -858,6 +850,60 @@ class AuthController extends GetxController {
       Get.snackbar('Error', e.toString());
     } finally {
       _isLoading.value = false;
+    }
+  }
+
+  // Get user profile data
+  Future<Map<String, dynamic>?> getUserProfile() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/user-profile'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $_token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final profileData = data['data'];
+        
+        // Update profile image URL if available
+        if (profileData != null && profileData['profile_image_url'] != null) {
+          _profileImageUrl.value = profileData['profile_image_url'];
+        }
+        
+        return profileData;
+      } else {
+        print('Failed to get user profile: ${response.statusCode}');
+        return null;
+      }
+    } catch (e) {
+      print('Error getting user profile: $e');
+      return null;
+    }
+  }
+
+  // Load profile image on app start
+  Future<void> loadProfileImage() async {
+    try {
+      final profileData = await getUserProfile();
+      if (profileData != null && profileData['profile_image_url'] != null) {
+        _profileImageUrl.value = profileData['profile_image_url'];
+        print('Profile image loaded: ${_profileImageUrl.value}');
+      }
+    } catch (e) {
+      print('Error loading profile image: $e');
+    }
+  }
+
+  // Refresh profile image (useful for hot reload or when returning to app)
+  Future<void> refreshProfileImage() async {
+    try {
+      print('Refreshing profile image...');
+      await loadProfileImage();
+    } catch (e) {
+      print('Error refreshing profile image: $e');
     }
   }
 } 

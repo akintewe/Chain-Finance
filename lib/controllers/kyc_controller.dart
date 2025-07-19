@@ -292,7 +292,7 @@ class KYCController extends GetxController {
         try {
           print('Processing successful response...');
           kycStatus.value = response['data']['kyc_status'];
-          
+        
           // Hide loader first
           Loader.hide();
           
@@ -320,15 +320,15 @@ class KYCController extends GetxController {
           } catch (e) {
             print('Error with direct navigation: $e');
             // Fallback to snackbar
-            Get.snackbar(
+        Get.snackbar(
               'Success',
               response['data']['message'] ?? 'Your documents have been submitted successfully and are pending review.',
               backgroundColor: Colors.green,
-              colorText: Colors.white,
-              snackPosition: SnackPosition.BOTTOM,
-              margin: const EdgeInsets.all(16),
+          colorText: Colors.white,
+          snackPosition: SnackPosition.BOTTOM,
+          margin: const EdgeInsets.all(16),
               duration: const Duration(seconds: 5),
-            );
+        );
           }
         } catch (e) {
           print('Error setting up navigation state: $e');

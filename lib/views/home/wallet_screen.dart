@@ -16,6 +16,7 @@ import 'package:nexa_prime/views/home/edit_favorites_screen.dart';
 import 'package:fl_chart/fl_chart.dart' as fl;
 import 'dart:async';
 import 'package:get/get.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class WalletScreen extends StatefulWidget {
   const WalletScreen({super.key});
@@ -33,7 +34,7 @@ class _WalletScreenState extends State<WalletScreen> with TickerProviderStateMix
   
   // Timer for pie chart updates
   Timer? _pieChartTimer;
-  Map<String, double> _pieChartData = {};
+  final RxMap<String, double> _pieChartData = <String, double>{}.obs;
   
   // Animation controllers for shooting stars
   late AnimationController _starsController;
@@ -96,6 +97,14 @@ class _WalletScreenState extends State<WalletScreen> with TickerProviderStateMix
   void initState() {
     super.initState();
     _loadUserData();
+    
+    // Set price update callback
+    walletController.setPriceUpdateCallback(() {
+      if (mounted) {
+        _updatePieChartData();
+      }
+    });
+    
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1000),
@@ -201,9 +210,8 @@ class _WalletScreenState extends State<WalletScreen> with TickerProviderStateMix
     // Only update if we have actual data or if data changed to prevent unnecessary rebuilds
     if (newData.isNotEmpty && (newData.length != _pieChartData.length || 
         !newData.keys.every((key) => _pieChartData.containsKey(key) && _pieChartData[key] == newData[key]))) {
-      setState(() {
-        _pieChartData = newData;
-      });
+      _pieChartData.clear();
+      _pieChartData.addAll(newData);
       print('Pie chart data updated with ${_pieChartData.length} items');
     } else if (newData.isEmpty && _pieChartData.isEmpty) {
       print('No price data available yet, retrying in 5 seconds...');
@@ -216,11 +224,42 @@ class _WalletScreenState extends State<WalletScreen> with TickerProviderStateMix
     print('Next scheduled update will be at ${DateTime.now().add(const Duration(minutes: 1))}');
   }
 
+  // Method to manually refresh pie chart (can be called from wallet controller)
+  void refreshPieChart() {
+    if (mounted) {
+      _updatePieChartData();
+    }
+  }
+
   Future<void> _loadUserData() async {
     final userData = await authController.getUserData();
-    setState(() {
-      username = userData['name'] ?? 'User';
-    });
+    username = userData['name'] ?? 'User';
+    
+    // Load profile image if not already loaded
+    if (authController.profileImageUrl.isEmpty) {
+      await authController.loadProfileImage();
+    }
+  }
+
+  Widget _buildDefaultProfileAvatar() {
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: const BoxDecoration(
+        shape: BoxShape.circle,
+        color: Colors.white,
+      ),
+      child: Center(
+        child: Text(
+          username.isNotEmpty ? username[0].toUpperCase() : 'U',
+          style: AppTextStyles.heading.copyWith(
+            color: AppColors.primary,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -494,15 +533,30 @@ class _WalletScreenState extends State<WalletScreen> with TickerProviderStateMix
                                     shape: BoxShape.circle,
                                     color: Colors.white,
                                   ),
-                                  child: Center(
-                                    child: Text(
-                                      username[0].toUpperCase(),
-                                      style: AppTextStyles.heading.copyWith(
-                                        color: AppColors.primary,
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
+                                  child: ClipOval(
+                                    child: Obx(() => authController.profileImageUrl.isNotEmpty
+                                        ? CachedNetworkImage(
+                                            imageUrl: authController.profileImageUrl,
+                                            fit: BoxFit.cover,
+                                            width: 40,
+                                            height: 40,
+                                            placeholder: (context, url) => Container(
+                                              width: 40,
+                                              height: 40,
+                                              decoration: const BoxDecoration(
+                                                color: Colors.white,
+                                                shape: BoxShape.circle,
+                                              ),
+                                              child: Center(
+                                                child: CircularProgressIndicator(
+                                                  strokeWidth: 2,
+                                                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                                                ),
+                                              ),
+                                            ),
+                                            errorWidget: (context, url, error) => _buildDefaultProfileAvatar(),
+                                          )
+                                        : _buildDefaultProfileAvatar()),
                                   ),
                                 ),
                               ),
@@ -1203,7 +1257,7 @@ class _Badge extends StatelessWidget {
 
 // Add this class at the bottom of the file after the _Badge class
 class PieChartWidget extends StatefulWidget {
-  final Map<String, double> pieChartData;
+  final RxMap<String, double> pieChartData;
   final List<Color> chartColors;
 
   const PieChartWidget({

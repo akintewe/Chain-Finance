@@ -39,7 +39,7 @@ class PriceAlertController extends GetxController {
     try {
       final authController = Get.find<AuthController>();
       if (authController.token.isNotEmpty) {
-        startPriceMonitoring();
+    startPriceMonitoring();
       } else {
         print('User not logged in, skipping price monitoring start');
       }
@@ -57,25 +57,25 @@ class PriceAlertController extends GetxController {
       
       // Only show snackbar if context is ready
       if (Get.context != null && Get.isSnackbarOpen == false) {
-        Get.snackbar(
-          'Price Alerts',
-          'Price monitoring started successfully',
-          backgroundColor: Colors.green.withOpacity(0.1),
-          colorText: Colors.green,
-          icon: const Icon(Icons.trending_up, color: Colors.green),
-          duration: const Duration(seconds: 2),
-        );
+      Get.snackbar(
+        'Price Alerts',
+        'Price monitoring started successfully',
+        backgroundColor: Colors.green.withOpacity(0.1),
+        colorText: Colors.green,
+        icon: const Icon(Icons.trending_up, color: Colors.green),
+        duration: const Duration(seconds: 2),
+      );
       }
     } catch (e) {
       // Only show snackbar if context is ready
       if (Get.context != null && Get.isSnackbarOpen == false) {
-        Get.snackbar(
-          'Error',
-          'Failed to start price monitoring',
-          backgroundColor: Colors.red.withOpacity(0.1),
-          colorText: Colors.red,
-          icon: const Icon(Icons.error, color: Colors.red),
-        );
+      Get.snackbar(
+        'Error',
+        'Failed to start price monitoring',
+        backgroundColor: Colors.red.withOpacity(0.1),
+        colorText: Colors.red,
+        icon: const Icon(Icons.error, color: Colors.red),
+      );
       }
     }
   }
@@ -88,25 +88,25 @@ class PriceAlertController extends GetxController {
       
       // Only show snackbar if context is ready
       if (Get.context != null && Get.isSnackbarOpen == false) {
-        Get.snackbar(
-          'Price Alerts',
-          'Price monitoring stopped',
-          backgroundColor: Colors.orange.withOpacity(0.1),
-          colorText: Colors.orange,
-          icon: const Icon(Icons.trending_down, color: Colors.orange),
-          duration: const Duration(seconds: 2),
-        );
+      Get.snackbar(
+        'Price Alerts',
+        'Price monitoring stopped',
+        backgroundColor: Colors.orange.withOpacity(0.1),
+        colorText: Colors.orange,
+        icon: const Icon(Icons.trending_down, color: Colors.orange),
+        duration: const Duration(seconds: 2),
+      );
       }
     } catch (e) {
       // Only show snackbar if context is ready
       if (Get.context != null && Get.isSnackbarOpen == false) {
-        Get.snackbar(
-          'Error',
-          'Failed to stop price monitoring',
-          backgroundColor: Colors.red.withOpacity(0.1),
-          colorText: Colors.red,
-          icon: const Icon(Icons.error, color: Colors.red),
-        );
+      Get.snackbar(
+        'Error',
+        'Failed to stop price monitoring',
+        backgroundColor: Colors.red.withOpacity(0.1),
+        colorText: Colors.red,
+        icon: const Icon(Icons.error, color: Colors.red),
+      );
       }
     }
   }

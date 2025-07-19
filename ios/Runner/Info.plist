@@ -50,6 +50,16 @@
 	<key>NSCameraUsageDescription</key>
 	<string>This app needs access to camera to update profile picture</string>
 	
+	<!-- Location Usage Description for OneSignal -->
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>This app uses location data to provide personalized notifications and improve user experience</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>This app uses location data to provide personalized notifications and improve user experience</string>
+	
+	<!-- Microphone Usage Description -->
+	<key>NSMicrophoneUsageDescription</key>
+	<string>This app may need access to microphone for voice features</string>
+	
 	<!-- OneSignal Configuration -->
 	<key>OneSignal_APPID</key>
 	<string>a70b21d8-05d8-476c-8050-b72807a22e9d</string>

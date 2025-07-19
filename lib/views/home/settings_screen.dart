@@ -11,6 +11,7 @@ import 'package:nexa_prime/views/home/change_password_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -40,6 +41,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final userData = await authController.getUserData();
     userName.value = userData['name'] ?? '';
     userEmail.value = userData['email'] ?? '';
+    
+    // Refresh profile image when settings screen loads
+    await authController.refreshProfileImage();
   }
 
   void _openEmailSupport() async {
@@ -56,14 +60,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
     
     if (isIOSSimulator) {
       // Show simulator-specific message
-      Get.snackbar(
+    Get.snackbar(
         'Email Support',
         'Please send an email to support@nexaprime.org\n(Email client not available in simulator)',
-        backgroundColor: AppColors.primary.withOpacity(0.1),
-        colorText: AppColors.primary,
-        snackPosition: SnackPosition.BOTTOM,
-        margin: const EdgeInsets.all(16),
-        borderRadius: 12,
+      backgroundColor: AppColors.primary.withOpacity(0.1),
+      colorText: AppColors.primary,
+      snackPosition: SnackPosition.BOTTOM,
+      margin: const EdgeInsets.all(16),
+      borderRadius: 12,
         duration: const Duration(seconds: 5),
       );
       return;
@@ -91,16 +95,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
           await launchUrl(emailUri, mode: LaunchMode.externalApplication);
           launched = true;
           
-          Get.snackbar(
-            'Email Support',
+    Get.snackbar(
+      'Email Support',
             'Opening email client...',
-            backgroundColor: AppColors.primary.withOpacity(0.1),
-            colorText: AppColors.primary,
-            snackPosition: SnackPosition.BOTTOM,
-            margin: const EdgeInsets.all(16),
-            borderRadius: 12,
-            duration: const Duration(seconds: 3),
-          );
+      backgroundColor: AppColors.primary.withOpacity(0.1),
+      colorText: AppColors.primary,
+      snackPosition: SnackPosition.BOTTOM,
+      margin: const EdgeInsets.all(16),
+      borderRadius: 12,
+      duration: const Duration(seconds: 3),
+    );
           break;
         }
       } catch (e) {
@@ -111,14 +115,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
     
     if (!launched) {
       // Fallback if email client cannot be opened
-      Get.snackbar(
+    Get.snackbar(
         'Email Support',
         'Please send an email to support@nexaprime.org',
-        backgroundColor: AppColors.primary.withOpacity(0.1),
-        colorText: AppColors.primary,
-        snackPosition: SnackPosition.BOTTOM,
-        margin: const EdgeInsets.all(16),
-        borderRadius: 12,
+      backgroundColor: AppColors.primary.withOpacity(0.1),
+      colorText: AppColors.primary,
+      snackPosition: SnackPosition.BOTTOM,
+      margin: const EdgeInsets.all(16),
+      borderRadius: 12,
         duration: const Duration(seconds: 5),
       );
     }
@@ -229,6 +233,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  Widget _buildDefaultProfileAvatar() {
+    return Container(
+      width: 80,
+      height: 80,
+      decoration: const BoxDecoration(
+        shape: BoxShape.circle,
+        color: Colors.white,
+      ),
+      child: Center(
+        child: Text(
+          userName.value.isNotEmpty ? userName.value[0].toUpperCase() : 'N',
+          style: AppTextStyles.heading.copyWith(
+            color: AppColors.primary,
+            fontSize: 32,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -250,7 +275,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   child: Row(
                   children: [
                       // Profile Picture
-                      Container(
+                      Obx(() => Container(
                         width: 80,
                         height: 80,
                         padding: const EdgeInsets.all(2),
@@ -270,18 +295,33 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             shape: BoxShape.circle,
                             color: Colors.white,
                           ),
+                          child: ClipOval(
+                            child: authController.profileImageUrl.isNotEmpty
+                                ? CachedNetworkImage(
+                                    imageUrl: authController.profileImageUrl,
+                                    fit: BoxFit.cover,
+                                    width: 80,
+                                    height: 80,
+                                    placeholder: (context, url) => Container(
+                                      width: 80,
+                                      height: 80,
+                                      decoration: const BoxDecoration(
+                                        color: Colors.white,
+                                        shape: BoxShape.circle,
+                          ),
                           child: Center(
-                            child: Text(
-                              'N',
-                              style: AppTextStyles.heading.copyWith(
-                                color: AppColors.primary,
-                                fontSize: 32,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                                        ),
+                                      ),
+                                    ),
+                                    errorWidget: (context, url, error) => _buildDefaultProfileAvatar(),
+                                  )
+                                : _buildDefaultProfileAvatar(),
                           ),
                         ),
-                    ),
+                      )),
                     const SizedBox(width: 16),
                     Expanded(
                       child: Obx(() => Column(
