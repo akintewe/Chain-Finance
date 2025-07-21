@@ -1,5 +1,6 @@
 import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'package:flutter/foundation.dart';
+import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 import 'api_service.dart';
 
 class OneSignalService {
@@ -15,6 +16,9 @@ class OneSignalService {
     if (kDebugMode) {
       print("Initializing OneSignal...");
     }
+
+    // Request App Tracking Transparency permission first
+    await _requestTrackingPermission();
 
     // Initialize OneSignal
     OneSignal.initialize(appId);
@@ -53,9 +57,6 @@ class OneSignalService {
       }
     });
 
-    // Set external user ID (optional - use your user ID)
-    // OneSignal.login("your_user_id");
-
     // Note: Player ID will be sent to backend after user login
     // to ensure proper authentication
   }
@@ -76,9 +77,23 @@ class OneSignalService {
 
   // Send tags (user properties)
   static Future<void> sendTags(Map<String, dynamic> tags) async {
-    OneSignal.User.addTags(tags);
-    if (kDebugMode) {
-      print("Tags sent: $tags");
+    try {
+      // Check if tracking permission is granted before sending tags
+      final trackingStatus = await AppTrackingTransparency.trackingAuthorizationStatus;
+      if (trackingStatus == TrackingStatus.authorized) {
+        OneSignal.User.addTags(tags);
+        if (kDebugMode) {
+          print("Tags sent: $tags");
+        }
+      } else {
+        if (kDebugMode) {
+          print("Tracking permission not granted, skipping tags");
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error sending tags: $e");
+      }
     }
   }
 
@@ -92,9 +107,23 @@ class OneSignalService {
 
   // Set external user ID
   static Future<void> setExternalUserId(String userId) async {
-    OneSignal.login(userId);
-    if (kDebugMode) {
-      print("External user ID set: $userId");
+    try {
+      // Check if tracking permission is granted before setting user ID
+      final trackingStatus = await AppTrackingTransparency.trackingAuthorizationStatus;
+      if (trackingStatus == TrackingStatus.authorized) {
+        OneSignal.login(userId);
+        if (kDebugMode) {
+          print("External user ID set: $userId");
+        }
+      } else {
+        if (kDebugMode) {
+          print("Tracking permission not granted, skipping external user ID setting");
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error setting external user ID: $e");
+      }
     }
   }
 
@@ -173,5 +202,28 @@ class OneSignalService {
   // Public method to manually send player ID (useful for when user logs in)
   static Future<void> sendPlayerIdToBackend() async {
     await _sendPlayerIdToBackend();
+  }
+
+  // Request App Tracking Transparency permission
+  static Future<void> _requestTrackingPermission() async {
+    try {
+      // Check if tracking is available
+      final status = await AppTrackingTransparency.trackingAuthorizationStatus;
+      if (kDebugMode) {
+        print("Current tracking authorization status: $status");
+      }
+      
+      // Request permission if not determined
+      if (status == TrackingStatus.notDetermined) {
+        await AppTrackingTransparency.requestTrackingAuthorization();
+        if (kDebugMode) {
+          print("App Tracking Transparency permission requested.");
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error requesting App Tracking Transparency permission: $e");
+      }
+    }
   }
 } 

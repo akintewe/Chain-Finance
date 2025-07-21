@@ -46,7 +46,7 @@
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>This app needs access to photo library to update profile picture</string>
+	<string>This app needs access to your photo library to allow you to select and upload profile pictures. For example, when you want to change your profile picture in the app settings, you can choose a photo from your library to use as your new profile picture.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>This app needs access to camera to update profile picture</string>
 	
@@ -76,5 +76,9 @@
 		<key>UNAuthorizationStatus</key>
 		<string>Authorized</string>
 	</dict>
+	
+	<!-- App Tracking Transparency Framework -->
+	<key>NSUserTrackingUsageDescription</key>
+	<string>This app would like to track your activity across other companies' apps and websites to provide personalized notifications and improve your experience. This helps us deliver relevant cryptocurrency price alerts and transaction notifications.</string>
 </dict>
 </plist>
