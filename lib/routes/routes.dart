@@ -4,6 +4,7 @@ import '../views/auth/signupScreen.dart';
 import '../views/dashboard/dashboard_screen.dart';
 import '../views/auth/email_verification_screen.dart';
 import '../views/auth/create_passcode_screen.dart';
+import '../views/home/set_transaction_pin_screen.dart';
 import '../views/home/notification_settings_screen.dart';
 import '../views/home/kyc_screen.dart';
 import '../views/home/kyc_success_screen.dart';
@@ -19,6 +20,7 @@ class Routes {
   static const String dashboard = '/dashboard';
   static const String emailVerification = '/email-verification';
   static const String createPasscode = '/create-passcode';
+  static const String setTransactionPin = '/set-transaction-pin';
   static const String notificationSettings = '/notification-settings';
   static const String kycScreen = '/kyc-screen';
   static const String kycSuccess = '/kyc-success';
@@ -53,6 +55,12 @@ class Routes {
     GetPage(
       name: createPasscode,
       page: () => CreatePasscodeScreen(),
+      customTransition: CustomPageRoute(),
+      transitionDuration: const Duration(milliseconds: 400),
+    ),
+    GetPage(
+      name: setTransactionPin,
+      page: () => SetTransactionPinScreen(),
       customTransition: CustomPageRoute(),
       transitionDuration: const Duration(milliseconds: 400),
     ),

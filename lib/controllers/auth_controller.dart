@@ -234,6 +234,13 @@ class AuthController extends GetxController {
         // Clear logout flag since user is logging in
         await clearLogoutFlag();
         
+        // Store the login password securely for later verification (gate to sensitive screens)
+        try {
+          await storage.write(key: 'login_password', value: password);
+        } catch (e) {
+          print('Warning: failed to persist login password for gating: $e');
+        }
+        
         print('Storing user data...');
         await _storeUserData(data['data']);
         print('User data stored successfully');
@@ -471,11 +478,12 @@ class AuthController extends GetxController {
       Loader.hide();
         Get.snackbar(
           'Success', 
-          data['message'] ?? 'Email verified successfully',
+          data['message'] ?? 'Email verified successfully. Please sign in.',
           backgroundColor: Colors.green.withOpacity(0.1),
           colorText: Colors.green,
         );
-        Get.toNamed(Routes.createPasscode, arguments: email);
+        // After successful email verification, take user back to Sign In screen
+        Get.offAllNamed(Routes.signin);
       } else {
           _isLoading.value = false;
       Loader.hide();
@@ -524,6 +532,74 @@ class AuthController extends GetxController {
       }
     } catch (e) {
       Get.snackbar('Error', e.toString());
+    } finally {
+      _isLoading.value = false;
+      Loader.hide();
+    }
+  }
+
+  // Set Transaction PIN for currently logged-in user from Settings screen
+  Future<void> setTransactionPinForCurrentUser(String passcode) async {
+    try {
+      print('Running setTransactionPinForCurrentUser');
+      Loader.show();
+      _isLoading.value = true;
+
+      final userData = await getUserData();
+      final email = userData['email'];
+
+      if (email == null || email.isEmpty) {
+        throw 'Unable to determine user email. Please sign in again.';
+      }
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/set-transaction-pin'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'email': email,
+          'transaction_pin': passcode,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        _isLoading.value = false;
+        Loader.hide();
+        Get.back();
+        Get.snackbar(
+          'Success',
+          'Transaction PIN set successfully',
+          backgroundColor: Colors.green.withOpacity(0.1),
+          colorText: Colors.green,
+        );
+      } else if (response.statusCode == 400) {
+        _isLoading.value = false;
+        Loader.hide();
+        final data = jsonDecode(response.body);
+        Get.snackbar(
+          'Error',
+          data['message'] ?? 'Bad request',
+          backgroundColor: Colors.red.withOpacity(0.1),
+          colorText: Colors.red,
+        );
+      } else {
+        _isLoading.value = false;
+        Loader.hide();
+        Get.snackbar(
+          'Error',
+          'Failed to set Transaction PIN',
+          backgroundColor: Colors.red.withOpacity(0.1),
+          colorText: Colors.red,
+        );
+      }
+    } catch (e) {
+      _isLoading.value = false;
+      Loader.hide();
+      Get.snackbar(
+        'Error',
+        e.toString(),
+        backgroundColor: Colors.red.withOpacity(0.1),
+        colorText: Colors.red,
+      );
     } finally {
       _isLoading.value = false;
       Loader.hide();
@@ -653,6 +729,16 @@ class AuthController extends GetxController {
     };
   }
 
+  // Retrieve stored login password (secured by platform keystore via FlutterSecureStorage)
+  Future<String?> getStoredLoginPassword() async {
+    try {
+      return await storage.read(key: 'login_password');
+    } catch (e) {
+      print('Error reading stored login password: $e');
+      return null;
+    }
+  }
+
   // Reset auth controller state
   void resetState() {
     _isLoading.value = false;
@@ -696,6 +782,7 @@ class AuthController extends GetxController {
       await storage.delete(key: 'email');
       await storage.delete(key: 'username');
       await storage.delete(key: 'uuid');
+      await storage.delete(key: 'login_password');
       print('All user data cleared from storage');
       
       // Verify token is cleared

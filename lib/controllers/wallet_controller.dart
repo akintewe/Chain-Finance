@@ -13,6 +13,8 @@ class WalletController extends GetxController {
   final _isLoading = false.obs;
   final _walletData = Rx<Map<String, dynamic>?>(null);
   final _tokens = <Map<String, dynamic>>[].obs;
+  final RxMap<String, String> _networks = <String, String>{}.obs; // code -> display name
+  final RxMap<String, dynamic> _allTokensByNetwork = <String, dynamic>{}.obs;
   final RxMap<String, double> _prices = <String, double>{}.obs;
   final RxMap<String, double> _priceChanges = <String, double>{}.obs;
   
@@ -98,6 +100,8 @@ class WalletController extends GetxController {
   Map<String, dynamic>? get walletData => _walletData.value;
   List<Map<String, dynamic>> get tokens => _tokens;
   Map<String, double> get prices => _prices;
+  Map<String, String> get networks => _networks;
+  Map<String, dynamic> get allTokensByNetwork => _allTokensByNetwork;
 
   Future<void> fetchWalletDetails() async {
     try {
@@ -122,6 +126,34 @@ class WalletController extends GetxController {
       Get.snackbar('Error', e.toString());
     } finally {
       _isLoading.value = false;
+    }
+  }
+
+  Future<void> fetchSupportedNetworksAndTokens() async {
+    try {
+      final response = await http.get(
+        Uri.parse('https://chdevapi.com.ng/api/getAllTokens'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ${_authController.token}',
+          'Accept': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final networksData = Map<String, dynamic>.from(data['data']['networks'] ?? {});
+        final tokensData = Map<String, dynamic>.from(data['data']['tokens'] ?? {});
+        // Convert display names to String map
+        final Map<String, String> mappedNetworks = networksData.map((k, v) => MapEntry(k, v.toString()));
+        _networks.assignAll(mappedNetworks);
+        _allTokensByNetwork.assignAll(tokensData);
+      } else {
+        // Non-fatal; keep UI responsive
+        print('Failed to fetch supported networks: ${response.statusCode} ${response.body}');
+      }
+    } catch (e) {
+      print('Error fetching supported networks: $e');
     }
   }
 
@@ -338,6 +370,8 @@ class WalletController extends GetxController {
   void onInit() {
     super.onInit();
     updatePrices();
+    // Preload networks and tokens listing
+    fetchSupportedNetworksAndTokens();
     // Update prices every 3 minutes
     Timer.periodic(const Duration(minutes: 3), (_) {
       print('Updating prices...');

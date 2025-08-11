@@ -4,10 +4,12 @@ import 'package:nexa_prime/controllers/price_alert_controller.dart';
 import 'package:nexa_prime/controllers/kyc_controller.dart';
 import 'package:nexa_prime/utils/colors.dart';
 import 'package:nexa_prime/utils/text_styles.dart';
+import 'package:nexa_prime/utils/button_style.dart';
 import 'package:nexa_prime/routes/routes.dart';
 import 'package:nexa_prime/views/home/edit_profile_screen.dart';
 import 'package:nexa_prime/views/home/backup_wallet_screen.dart';
 import 'package:nexa_prime/views/home/change_password_screen.dart';
+import 'package:nexa_prime/views/home/set_transaction_pin_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -26,7 +28,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   final PriceAlertController priceAlertController = Get.find();
   final KYCController kycController = Get.put(KYCController());
   final RxBool _pushNotifications = true.obs;
-  final RxBool _emailNotifications = false.obs;
   final RxBool _transactionAlerts = true.obs;
   final RxString userName = ''.obs;
   final RxString userEmail = ''.obs;
@@ -133,7 +134,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required IconData icon,
     Widget? trailing,
     VoidCallback? onTap,
-    Color iconColor = AppColors.textSecondary,
     bool showDivider = true,
   }) {
     return Column(
@@ -178,6 +178,135 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _promptPasswordAndOpenTransactionPin() async {
+    final TextEditingController passwordController = TextEditingController();
+    final storedPassword = await authController.getStoredLoginPassword();
+
+    if (storedPassword == null || storedPassword.isEmpty) {
+      Get.snackbar(
+        'Security Check',
+        'Please sign in again to access Transaction PIN settings.',
+        backgroundColor: Colors.red.withOpacity(0.1),
+        colorText: Colors.red,
+      );
+      return;
+    }
+
+    final RxBool isObscure = true.obs;
+    final RxString errorText = ''.obs;
+    final RxBool canContinue = false.obs;
+
+    void _validate() {
+      canContinue.value = passwordController.text.isNotEmpty;
+      errorText.value = '';
+    }
+
+    final bool? verified = await Get.dialog<bool>(
+      Dialog(
+        insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+        backgroundColor: Colors.transparent,
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.lock_outline, color: AppColors.secondary),
+                  const SizedBox(width: 8),
+                  Text('Verify Password', style: AppTextStyles.heading2),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Enter your login password to continue',
+                style: AppTextStyles.body.copyWith(color: AppColors.textSecondary),
+              ),
+              const SizedBox(height: 16),
+              Obx(() => TextField(
+                    controller: passwordController,
+                    obscureText: isObscure.value,
+                    onChanged: (_) => _validate(),
+                    decoration: InputDecoration(
+                      hintText: 'Password',
+                      prefixIcon: const Icon(Icons.lock),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          isObscure.value ? Icons.visibility_off : Icons.visibility,
+                          color: AppColors.textSecondary,
+                        ),
+                        onPressed: () => isObscure.value = !isObscure.value,
+                      ),
+                      filled: true,
+                      fillColor: Colors.black.withOpacity(0.1),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  )),
+              const SizedBox(height: 8),
+              Obx(() => errorText.value.isEmpty
+                  ? const SizedBox.shrink()
+                  : Text(
+                      errorText.value,
+                      style: const TextStyle(color: Colors.red, fontSize: 12),
+                    )),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Get.back(result: false),
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(color: AppColors.primary.withOpacity(0.4)),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: const Text('Cancel'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Obx(() => ElevatedButton(
+                          onPressed: canContinue.value
+                              ? () {
+                                  if (passwordController.text == storedPassword) {
+                                    Get.back(result: true);
+                                  } else {
+                                    errorText.value = 'Incorrect password';
+                                  }
+                                }
+                              : null,
+                          style: AppButtonStyles.primaryButton,
+                          child: Text('Continue', style: AppTextStyles.button),
+                        )),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+      barrierDismissible: false,
+    );
+
+    if (verified == true) {
+      // Navigate using direct widget to avoid route list mismatch during hot reload
+      Get.to(() => SetTransactionPinScreen());
+    } else if (verified == false) {
+      Get.snackbar(
+        'Incorrect Password',
+        'The password you entered is incorrect.',
+        backgroundColor: Colors.red.withOpacity(0.1),
+        colorText: Colors.red,
+      );
+    }
   }
 
   Widget _buildKYCStatusTile() {
@@ -407,6 +536,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   title: 'Change Password',
                   icon: Icons.lock_outline,
                   onTap: () => Get.to(() => const ChangePasswordScreen()),
+                ),
+                _buildSettingTile(
+                  title: 'Transaction PIN',
+                  icon: Icons.push_pin_outlined,
+                  onTap: _promptPasswordAndOpenTransactionPin,
                 ),
                 _buildSettingTile(
                   title: 'Privacy Policy',

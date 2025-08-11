@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:nexa_prime/controllers/wallet_controller.dart';
 import 'package:nexa_prime/utils/colors.dart';
 import 'package:nexa_prime/utils/text_styles.dart';
-import 'package:nexa_prime/utils/button_style.dart';
+import 'package:nexa_prime/utils/loader.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -26,6 +26,7 @@ class _SendScreenState extends State<SendScreen> with SingleTickerProviderStateM
   final TextEditingController noteController = TextEditingController();
   final WalletController walletController = Get.find();
   String? selectedToken;
+  String? selectedNetworkCode;
   final RxMap<String, dynamic> receiverData = <String, dynamic>{}.obs;
   final RxBool isLoadingUser = false.obs;
   Timer? _debounceTimer;
@@ -94,86 +95,290 @@ class _SendScreenState extends State<SendScreen> with SingleTickerProviderStateM
   }
 
   void _showTokenSelector() {
+    if (selectedNetworkCode == null) {
+      Get.snackbar(
+        'Select Network First',
+        'Please select a network before choosing a token',
+        backgroundColor: Colors.orange.withOpacity(0.1),
+        colorText: Colors.orange,
+      );
+      return;
+    }
+
+    final networkTokens = walletController.allTokensByNetwork[selectedNetworkCode!];
+    if (networkTokens == null || networkTokens.isEmpty) {
+      Get.snackbar(
+        'No Tokens Available',
+        'No tokens found for the selected network',
+        backgroundColor: Colors.red.withOpacity(0.1),
+        colorText: Colors.red,
+      );
+      return;
+    }
+
     showModalBottomSheet(
       context: context,
       backgroundColor: AppColors.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Select Token',
-              style: AppTextStyles.heading2,
-            ),
-            const SizedBox(height: 16),
-            Expanded(
-              child: ListView.builder(
-                itemCount: walletController.tokens.length,
-                itemBuilder: (context, index) {
-                  final token = walletController.tokens[index];
-                  return GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        selectedToken = token['symbol'];
-                      });
-                      Navigator.pop(context);
-                    },
-                    child: Container(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: AppColors.background,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+      isScrollControlled: true,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.7,
+        minChildSize: 0.5,
+        maxChildSize: 0.9,
+        builder: (context, scrollController) => Container(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Text(
+                    'Select Token',
+                    style: AppTextStyles.heading2,
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      walletController.networks[selectedNetworkCode!] ?? selectedNetworkCode!,
+                      style: AppTextStyles.body.copyWith(
+                        color: AppColors.primary,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
                       ),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: AppColors.primary.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Expanded(
+                child: ListView.builder(
+                  controller: scrollController,
+                  itemCount: networkTokens.length,
+                  itemBuilder: (context, index) {
+                    final tokenSymbol = networkTokens.keys.elementAt(index);
+                    final tokenData = networkTokens[tokenSymbol];
+                    return GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          selectedToken = tokenSymbol;
+                        });
+                        Navigator.pop(context);
+                      },
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: AppColors.background,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: AppColors.primary.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                tokenSymbol,
+                                style: AppTextStyles.body2.copyWith(
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
                             ),
-                            child: Image.asset(
-                              token['icon'],
-                              width: 32,
-                              height: 32,
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    tokenData['name'] ?? tokenSymbol,
+                                    style: AppTextStyles.body2.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: _getTokenTypeColor(tokenData['type']).withOpacity(0.1),
+                                          borderRadius: BorderRadius.circular(4),
+                                        ),
+                                        child: Text(
+                                          tokenData['type'] ?? 'unknown',
+                                          style: AppTextStyles.body.copyWith(
+                                            color: _getTokenTypeColor(tokenData['type']),
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ),
+                                      if (tokenData['contract'] != null) ...[
+                                        const SizedBox(width: 8),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: AppColors.secondary.withOpacity(0.1),
+                                            borderRadius: BorderRadius.circular(4),
+                                          ),
+                                          child: Text(
+                                            'Contract',
+                                            style: AppTextStyles.body.copyWith(
+                                              color: AppColors.secondary,
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
           ),
         ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  token['name'],
-                                  style: AppTextStyles.body2.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  '${token['balance']} ${token['symbol']}',
-        style: AppTextStyles.body.copyWith(
-                                    color: AppColors.textSecondary,
-                                  ),
-                                ),
-                              ],
-                            ),
+      ),
+    );
+  }
+
+  Color _getTokenTypeColor(String? type) {
+    switch (type?.toLowerCase()) {
+      case 'native':
+        return Colors.blue;
+      case 'stablecoin':
+        return Colors.green;
+      case 'defi':
+        return Colors.purple;
+      case 'gaming':
+        return Colors.orange;
+      case 'nft':
+        return Colors.pink;
+      case 'bridge':
+        return Colors.teal;
+      case 'oracle':
+        return Colors.indigo;
+      case 'meme':
+        return Colors.red;
+      case 'utility':
+        return Colors.cyan;
+      default:
+        return AppColors.textSecondary;
+    }
+  }
+
+  Future<void> _openNetworkSelector() async {
+    if (walletController.networks.isEmpty) {
+      Loader.show();
+      await walletController.fetchSupportedNetworksAndTokens();
+      Loader.hide();
+    }
+    _showNetworkSelector();
+  }
+
+  void _showNetworkSelector() {
+    final networks = walletController.networks; // code -> display name
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      isScrollControlled: true,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.7,
+        minChildSize: 0.5,
+        maxChildSize: 0.9,
+        builder: (context, scrollController) => Container(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Select Network', style: AppTextStyles.heading2),
+              const SizedBox(height: 16),
+              if (networks.isEmpty)
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Text('No networks available', style: AppTextStyles.body),
+                  ),
+                )
+              else
+                Expanded(
+                  child: ListView(
+                    controller: scrollController,
+                    children: networks.entries.map((entry) {
+                      final code = entry.key;
+                      final name = entry.value;
+                      return GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            selectedNetworkCode = code;
+                            // Clear selected token when network changes since tokens are network-specific
+                            selectedToken = null;
+                          });
+                          Navigator.pop(context);
+                        },
+                        child: Container(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: AppColors.background,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: AppColors.primary.withOpacity(0.1)),
                           ),
-                        ],
-                      ),
-            ),
-          );
-                },
-              ),
-            ),
-          ],
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: const Icon(Icons.hub_outlined, color: AppColors.primary, size: 20),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(name, style: AppTextStyles.body2.copyWith(fontWeight: FontWeight.w600)),
+                                    const SizedBox(height: 4),
+                                    Text(code.toUpperCase(), style: AppTextStyles.body.copyWith(color: AppColors.textSecondary)),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -192,7 +397,7 @@ class _SendScreenState extends State<SendScreen> with SingleTickerProviderStateM
         ),
         title: Text(
           widget.isSendingToExternal ? 'Send to External Wallet' : 'Send to Nexa Prime User',
-          style: AppTextStyles.heading2,
+          style: AppTextStyles.heading2.copyWith(fontSize: 20),
         ),
       ),
       body: AnimatedBuilder(
@@ -204,9 +409,10 @@ class _SendScreenState extends State<SendScreen> with SingleTickerProviderStateM
               opacity: _fadeAnimation,
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
                     // Quick Info Card
               Container(
                 padding: const EdgeInsets.all(16),
@@ -251,9 +457,9 @@ class _SendScreenState extends State<SendScreen> with SingleTickerProviderStateM
                           const SizedBox(height: 12),
                           Text(
                             widget.isSendingToExternal
-                                ? '• Only send tokens through Binance Smart Chain Network\n• Double-check the wallet address\n• Transaction cannot be reversed'
+                                ? '• Select your preferred blockchain network\n• Double-check the wallet address\n• Transaction cannot be reversed'
                                 : '• Instant transfers to Nexa Prime users\n• No network fees\n• Secure and reliable',
-                        style: AppTextStyles.body.copyWith(
+                            style: AppTextStyles.body.copyWith(
                               color: AppColors.textSecondary,
                               height: 1.5,
                             ),
@@ -274,65 +480,182 @@ class _SendScreenState extends State<SendScreen> with SingleTickerProviderStateM
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            'Select Token',
-                            style: AppTextStyles.body.copyWith(
-                              color: AppColors.textSecondary,
-                            ),
+                          Row(
+                            children: [
+                              Text(
+                                'Select Token',
+                                style: AppTextStyles.body.copyWith(
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                              if (selectedNetworkCode != null) ...[
+                                const SizedBox(width: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primary.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    walletController.networks[selectedNetworkCode!] ?? selectedNetworkCode!,
+                                    style: AppTextStyles.body.copyWith(
+                                      color: AppColors.primary,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
                           ),
                           const SizedBox(height: 8),
-                          GestureDetector(
-                            onTap: _showTokenSelector,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 12,
-                              ),
+                          if (selectedNetworkCode == null)
+                            Container(
+                              padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
                                 color: AppColors.background,
                                 borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+                                border: Border.all(color: Colors.orange.withOpacity(0.3)),
                               ),
                               child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                  if (selectedToken != null) ...[
-                                    Row(
-                                      children: [
-                                        Image.asset(
-                                          walletController.tokens
-                                              .firstWhere((t) => t['symbol'] == selectedToken)['icon'],
-                                          width: 24,
-                                          height: 24,
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Text(
-                                          selectedToken!,
-                                          style: AppTextStyles.body2.copyWith(
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ] else
-                                    Text(
-                                      'Select Token',
-                                      style: AppTextStyles.body2.copyWith(
-                                        color: AppColors.textSecondary,
+                                  Icon(Icons.info_outline, color: Colors.orange, size: 20),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      'Select a network first to view available tokens',
+                                      style: AppTextStyles.body.copyWith(
+                                        color: Colors.orange,
+                                        fontSize: 14,
                                       ),
                                     ),
-                                  Icon(
-                                    Icons.arrow_forward_ios,
-                                    color: AppColors.textSecondary,
-                                    size: 16,
                                   ),
                                 ],
-                        ),
+                              ),
+                            )
+                          else
+                            GestureDetector(
+                              onTap: _showTokenSelector,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 12,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.background,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    if (selectedToken != null) ...[
+                                      Row(
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.all(8),
+                                            decoration: BoxDecoration(
+                                              color: AppColors.primary.withOpacity(0.1),
+                                              borderRadius: BorderRadius.circular(8),
+                                            ),
+                                            child: Text(
+                                              selectedToken!,
+                                              style: AppTextStyles.body2.copyWith(
+                                                color: AppColors.primary,
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 14,
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            selectedToken!,
+                                            style: AppTextStyles.body2.copyWith(
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ] else
+                                      Text(
+                                        'Select Token',
+                                        style: AppTextStyles.body2.copyWith(
+                                          color: AppColors.textSecondary,
+                                        ),
+                                      ),
+                                    Icon(
+                                      Icons.arrow_forward_ios,
+                                      color: AppColors.textSecondary,
+                                      size: 16,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
                     ),
-                  ],
-                ),
+                    const SizedBox(height: 24),
+
+            // Network Selection (for external sends only, but we can show for both if needed)
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppColors.primary.withOpacity(0.1)),
               ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Select Network',
+                    style: AppTextStyles.body.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  GestureDetector(
+                    onTap: _openNetworkSelector,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.background,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          if (selectedNetworkCode != null) ...[
+                            Row(
+                              children: [
+                                const Icon(Icons.hub_outlined, size: 24, color: AppColors.textSecondary),
+                                const SizedBox(width: 8),
+                                Text(
+                                  walletController.networks[selectedNetworkCode!] ?? selectedNetworkCode!,
+                                  style: AppTextStyles.body2.copyWith(fontWeight: FontWeight.w600),
+                                ),
+                              ],
+                            ),
+                          ] else
+                            Text(
+                              'Select Network',
+                              style: AppTextStyles.body2.copyWith(
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          const Icon(Icons.arrow_forward_ios, color: AppColors.textSecondary, size: 16),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
             const SizedBox(height: 24),
 
             if (widget.isSendingToExternal) ...[
@@ -621,7 +944,7 @@ class _SendScreenState extends State<SendScreen> with SingleTickerProviderStateM
   }
 
   void _handleSend() async {
-    if (selectedToken == null || amountController.text.isEmpty) {
+    if (selectedToken == null || amountController.text.isEmpty || selectedNetworkCode == null) {
       Get.snackbar('Error', 'Please fill in all required fields');
       return;
     }
@@ -631,12 +954,15 @@ class _SendScreenState extends State<SendScreen> with SingleTickerProviderStateM
         await walletController.sendExternal({
           'to_address': addressController.text,
           'amount': double.parse(amountController.text),
+          'network': selectedNetworkCode,
+          'currency': selectedToken,
         });
       } else {
         await walletController.sendInternal({
           'receiver_uuid': uuidController.text,
           'amount': double.parse(amountController.text),
           'currency': selectedToken,
+          'network': selectedNetworkCode,
           'note': noteController.text,
         });
       }
