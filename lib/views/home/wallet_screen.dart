@@ -15,8 +15,8 @@ import 'package:nexa_prime/views/home/all_tokens_screen.dart';
 import 'package:nexa_prime/views/home/edit_favorites_screen.dart';
 import 'package:fl_chart/fl_chart.dart' as fl;
 import 'dart:async';
-import 'package:get/get.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+
 
 class WalletScreen extends StatefulWidget {
   const WalletScreen({super.key});
@@ -40,6 +40,12 @@ class _WalletScreenState extends State<WalletScreen> with TickerProviderStateMix
   late AnimationController _starsController;
   late List<ShootingStar> _shootingStars;
   final int _starCount = 15;
+
+  // Price banner data
+  final RxList<Map<String, dynamic>> _priceUpdates = <Map<String, dynamic>>[].obs;
+  late AnimationController _bannerController;
+  late Animation<double> _bannerAnimation;
+  Timer? _priceUpdateTimer;
 
   // Chart colors for pie chart and legend
   final List<Color> chartColors = [
@@ -166,6 +172,10 @@ class _WalletScreenState extends State<WalletScreen> with TickerProviderStateMix
     _pieChartTimer = Timer.periodic(const Duration(minutes: 15), (timer) {
       _updatePieChartData();
     });
+    
+    // Initialize price banner
+    _initPriceBanner();
+    _startPriceUpdates();
   }
   
   void _initShootingStars() {
@@ -230,6 +240,130 @@ class _WalletScreenState extends State<WalletScreen> with TickerProviderStateMix
       _updatePieChartData();
     }
   }
+  
+  // Price Banner Methods
+  void _initPriceBanner() {
+    _bannerController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 90),
+    );
+    
+    _bannerAnimation = Tween<double>(
+      begin: 1.0,
+      end: -1.0,
+    ).animate(CurvedAnimation(
+      parent: _bannerController,
+      curve: Curves.linear,
+    ));
+    
+    // Use repeat() for truly continuous animation
+    _bannerController.repeat();
+  }
+  
+  void _startPriceUpdates() {
+    // First, add sample data immediately for testing
+    _addSamplePriceUpdates();
+    
+    // Start animation immediately with sample data
+    if (mounted) {
+      _bannerController.repeat(); // Use repeat() for continuous animation
+    }
+    
+    // Then try to fetch real data from the crypto prices endpoint
+    _fetchPriceUpdates().then((_) {
+      // Update data but keep animation running
+      if (mounted && _priceUpdates.isNotEmpty) {
+        print('Banner updated with real data: ${_priceUpdates.length} tokens');
+      }
+    });
+    
+    // Set up a timer to check for new prices when wallet controller finishes loading
+    Timer.periodic(const Duration(seconds: 2), (timer) {
+      if (!walletController.isLoading && mounted && _priceUpdates.isEmpty) {
+        _fetchPriceUpdates();
+        timer.cancel(); // Stop checking once we have data
+      }
+    });
+    
+    // Set up timer for periodic price updates
+    _priceUpdateTimer = Timer.periodic(const Duration(minutes: 5), (timer) {
+      _fetchPriceUpdates();
+    });
+  }
+  
+  void _addSamplePriceUpdates() {
+    final sampleUpdates = [
+      {
+        'symbol': 'BTC',
+        'price': 43250.75,
+        'change': 1250.50,
+        'changePercent': 2.98,
+        'isPositive': true,
+      },
+      {
+        'symbol': 'ETH',
+        'price': 2650.25,
+        'change': -45.75,
+        'changePercent': -1.70,
+        'isPositive': false,
+      },
+      {
+        'symbol': 'BNB',
+        'price': 315.80,
+        'change': 12.40,
+        'changePercent': 4.08,
+        'isPositive': true,
+      },
+      {
+        'symbol': 'ADA',
+        'price': 0.485,
+        'change': 0.025,
+        'changePercent': 5.43,
+        'isPositive': true,
+      },
+    ];
+    
+    _priceUpdates.assignAll(sampleUpdates);
+  }
+  
+  Future<void> _fetchPriceUpdates() async {
+    try {
+      // Wait for wallet controller to finish loading prices (same as pie chart)
+      while (walletController.isLoading) {
+        await Future.delayed(const Duration(milliseconds: 100));
+      }
+      
+      // Get current prices from wallet controller (same data as pie chart)
+      final cryptoData = walletController.cryptoList;
+      final List<Map<String, dynamic>> updates = [];
+      
+      for (var token in cryptoData) {
+        final symbol = token['symbol'] ?? '';
+        final price = walletController.getPriceForToken(symbol);
+        final priceChange = walletController.getPriceChangeForToken(symbol);
+        
+        if (price > 0 && priceChange != 0) {
+          final changePercent = priceChange;
+          final isPositive = changePercent >= 0;
+          
+          updates.add({
+            'symbol': symbol,
+            'price': price,
+            'change': priceChange,
+            'changePercent': changePercent.abs(),
+            'isPositive': isPositive,
+          });
+        }
+      }
+      
+      if (updates.isNotEmpty) {
+        _priceUpdates.assignAll(updates);
+        print('Banner prices updated from wallet controller: ${updates.length} tokens');
+      }
+    } catch (e) {
+      print('Error fetching price updates: $e');
+    }
+  }
 
   Future<void> _loadUserData() async {
     final userData = await authController.getUserData();
@@ -267,6 +401,8 @@ class _WalletScreenState extends State<WalletScreen> with TickerProviderStateMix
     _animationController.dispose();
     _starsController.dispose();
     _pieChartTimer?.cancel();
+    _bannerController.dispose();
+    _priceUpdateTimer?.cancel();
     super.dispose();
   }
 
@@ -716,6 +852,168 @@ class _WalletScreenState extends State<WalletScreen> with TickerProviderStateMix
               ),
 
               const SizedBox(height: 20),
+
+              // Price Updates Banner
+              Obx(() {
+                if (_priceUpdates.isEmpty) {
+                  return Container(
+                    height: 60,
+                    margin: const EdgeInsets.only(bottom: 20),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          AppColors.primary.withOpacity(0.1),
+                          AppColors.secondary.withOpacity(0.1),
+                        ],
+                        begin: Alignment.centerLeft,
+                        end: Alignment.centerRight,
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+                    ),
+                    child: Center(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Text(
+                            'Loading price updates...',
+                            style: AppTextStyles.body.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }
+                
+                return Container(
+                  height: 60,
+                  margin: const EdgeInsets.only(bottom: 20),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        AppColors.primary.withOpacity(0.1),
+                        AppColors.secondary.withOpacity(0.1),
+                      ],
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Stack(
+                      children: [
+                        // Content
+                        Center(
+                          child: ClipRect(
+                            child: AnimatedBuilder(
+                              animation: _bannerAnimation,
+                              builder: (context, child) {
+                                return Transform.translate(
+                                  offset: Offset(
+                                    MediaQuery.of(context).size.width * _bannerAnimation.value,
+                                    0,
+                                  ),
+                                  child: OverflowBox(
+                                    maxWidth: MediaQuery.of(context).size.width * 4.0,
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                    children: _priceUpdates.map((update) {
+                                      final isPositive = update['isPositive'] ?? false;
+                                      final changePercent = update['changePercent'] ?? 0.0;
+                                      final symbol = update['symbol'] ?? '';
+                                      final price = update['price'] ?? 0.0;
+                                      
+                                      // Create ultra-compact text
+                                      String changeText = isPositive ? '+' : '';
+                                      
+                                                                              return Container(
+                                          width: 140, // Slightly wider for better spacing
+                                          margin: const EdgeInsets.symmetric(horizontal: 20),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              // Trending icon
+                                              Icon(
+                                                isPositive ? Icons.trending_up : Icons.trending_down,
+                                                color: isPositive ? Colors.green : Colors.red,
+                                                size: 10,
+                                              ),
+                                              const SizedBox(width: 4),
+                                              // Symbol (with overflow protection)
+                                              Expanded(
+                                                child: Text(
+                                                  symbol,
+                                                  style: AppTextStyles.body.copyWith(
+                                                    fontWeight: FontWeight.bold,
+                                                    color: AppColors.primary,
+                                                    fontSize: 11,
+                                                  ),
+                                                  overflow: TextOverflow.ellipsis,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 4),
+                                              // Action text (shortened)
+                                              Text(
+                                                isPositive ? '↗' : '↘',
+                                                style: AppTextStyles.body.copyWith(
+                                                  color: isPositive ? Colors.green : Colors.red,
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 4),
+                                              // Price (with overflow protection)
+                                              Expanded(
+                                                child: Text(
+                                                  '\$${price.toStringAsFixed(1)}',
+                                                  style: AppTextStyles.body.copyWith(
+                                                    color: AppColors.text,
+                                                    fontSize: 11,
+                                                  ),
+                                                  overflow: TextOverflow.ellipsis,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 4),
+                                              // Change percentage (with overflow protection)
+                                              Expanded(
+                                                child: Text(
+                                                  '$changeText${changePercent.toStringAsFixed(1)}%',
+                                                  style: AppTextStyles.body.copyWith(
+                                                    color: isPositive ? Colors.green : Colors.red,
+                                                    fontWeight: FontWeight.w600,
+                                                    fontSize: 10,
+                                                  ),
+                                                  overflow: TextOverflow.ellipsis,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                    }).toList(),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                    )],
+                    ),
+                  ),
+                );
+              }),
 
               // Favorites Section
               if (walletController.favoritesList.isNotEmpty) ...[

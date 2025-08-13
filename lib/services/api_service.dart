@@ -86,6 +86,13 @@ class ApiService {
           print('Unauthorized access - token may be invalid');
         }
         return {'error': 'unauthorized', 'message': 'Authentication failed'};
+      } else if (response.statusCode == 500) {
+        if (kDebugMode) {
+          print('Server error - session may have expired');
+        }
+        // Trigger session expired dialog through auth controller
+        _authController.showSessionExpiredDialog();
+        return {'error': 'session_expired', 'message': 'Session expired'};
       } else {
         if (kDebugMode) {
           print('Failed to fetch user profile: ${response.statusCode}');

@@ -119,6 +119,11 @@ class WalletController extends GetxController {
         final data = jsonDecode(response.body);
         _walletData.value = data['data'];
         _updateTokensList();
+      } else if (response.statusCode == 500) {
+        // Handle 500 error - show session expired dialog
+        print('Session expired - showing session expired dialog');
+        _authController.showSessionExpiredDialog();
+        return;
       } else {
         throw jsonDecode(response.body)['message'] ?? 'Failed to fetch wallet details';
       }
@@ -142,12 +147,41 @@ class WalletController extends GetxController {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final networksData = Map<String, dynamic>.from(data['data']['networks'] ?? {});
+        
+        // Handle new API structure where networks is an array
+        final networksArray = data['data']['networks'] as List<dynamic>? ?? [];
         final tokensData = Map<String, dynamic>.from(data['data']['tokens'] ?? {});
-        // Convert display names to String map
-        final Map<String, String> mappedNetworks = networksData.map((k, v) => MapEntry(k, v.toString()));
+        
+        // Create a map of network codes to display names
+        final Map<String, String> mappedNetworks = {};
+        for (String networkCode in networksArray) {
+          // Map network codes to display names
+          switch (networkCode) {
+            case 'bsc':
+              mappedNetworks[networkCode] = 'Binance Smart Chain';
+              break;
+            case 'eth':
+              mappedNetworks[networkCode] = 'Ethereum';
+              break;
+            case 'btc':
+              mappedNetworks[networkCode] = 'Bitcoin';
+              break;
+            case 'tron':
+              mappedNetworks[networkCode] = 'Tron';
+              break;
+            case 'ton':
+              mappedNetworks[networkCode] = 'Toncoin';
+              break;
+            default:
+              mappedNetworks[networkCode] = networkCode.toUpperCase();
+          }
+        }
+        
         _networks.assignAll(mappedNetworks);
         _allTokensByNetwork.assignAll(tokensData);
+        
+        print('Networks loaded: $_networks');
+        print('Tokens loaded: ${_allTokensByNetwork.keys}');
       } else {
         // Non-fatal; keep UI responsive
         print('Failed to fetch supported networks: ${response.statusCode} ${response.body}');
@@ -187,7 +221,58 @@ class WalletController extends GetxController {
       'XRP': 'XRP',
       'ADA': 'Cardano',
       'DOGE': 'Dogecoin',
-      'MATIC': 'Polygon'
+      'MATIC': 'Polygon',
+      'BUSD': 'Binance USD',
+      'CAKE': 'PancakeSwap',
+      'ADA': 'Cardano',
+      'DOT': 'Polkadot',
+      'LINK': 'Chainlink',
+      'LTC': 'Litecoin',
+      'UNI': 'Uniswap',
+      'SHIB': 'Shiba Inu',
+      'AXS': 'Axie Infinity',
+      'SXP': 'SXP',
+      'MANA': 'Decentraland',
+      'SAND': 'The Sandbox',
+      'FTM': 'Fantom',
+      'ATOM': 'Cosmos',
+      'AVAX': 'Avalanche',
+      'LUNA': 'Terra',
+      'NEAR': 'NEAR Protocol',
+      'BAKE': 'BakeryToken',
+      'XVS': 'Venus',
+      'TWT': 'Trust Wallet Token',
+      'ALPACA': 'Alpaca Finance',
+      'BELT': 'Belt Finance',
+      'AUTO': 'AutoFarm',
+      'NULS': 'NULS',
+      'BNBX': 'BNBX',
+      'DAI': 'Dai',
+      'FIL': 'Filecoin',
+      'BAT': 'Basic Attention Token',
+      'CTSI': 'Cartesi',
+      'REEF': 'Reef Finance',
+      'ALICE': 'My Neighbor Alice',
+      'HERO': 'Step Hero',
+      'DAR': 'Mines of Dalarnia',
+      'CHR': 'Chromia',
+      'GALA': 'Gala',
+      'ENJ': 'Enjin Coin',
+      'LOKA': 'League of Kingdoms',
+      'MOVR': 'Moonriver',
+      'BAND': 'Band Protocol',
+      'PERP': 'Perpetual Protocol',
+      'COTI': 'COTI',
+      'OCEAN': 'Ocean Protocol',
+      'RUNE': 'THORChain',
+      'ZIL': 'Zilliqa',
+      'HBAR': 'Hedera',
+      'ONT': 'Ontology',
+      'ONE': 'Harmony',
+      'CTK': 'CertiK',
+      'THETA': 'Theta Network',
+      'VET': 'VeChain',
+      'NKN': 'NKN'
     };
     return names[symbol] ?? symbol;
   }
@@ -252,17 +337,32 @@ class WalletController extends GetxController {
 
   Future<void> sendInternal(Map<String, dynamic> data) async {
     try {
+      // Prepare payload according to API specification
+      final payload = {
+        'receiver_uuid': data['receiver_uuid'],
+        'amount': data['amount'],
+        'currency': data['currency'],
+        'note': data['note'] ?? '',
+      };
+
       final response = await http.post(
         Uri.parse('https://chdevapi.com.ng/api/transaction/internal'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer ${_authController.token}',
         },
-        body: jsonEncode(data),
+        body: jsonEncode(payload),
       );
 
-      if (response.statusCode != 200) {
-        throw jsonDecode(response.body)['message'] ?? 'Failed to send transaction';
+      if (response.statusCode == 200) {
+        print('Internal transaction successful: ${response.body}');
+      } else if (response.statusCode == 400) {
+        final errorData = jsonDecode(response.body);
+        throw errorData['message'] ?? 'Invalid input or insufficient balance';
+      } else if (response.statusCode == 500) {
+        throw 'Transaction failed - server error';
+      } else {
+        throw 'Failed to send transaction: ${response.statusCode}';
       }
     } catch (e) {
       rethrow;
@@ -271,17 +371,27 @@ class WalletController extends GetxController {
 
   Future<void> sendExternal(Map<String, dynamic> data) async {
     try {
+      // Prepare payload according to API specification
+      final payload = {
+        'to_address': data['to_address'],
+        'amount': data['amount'],
+      };
+
       final response = await http.post(
         Uri.parse('https://chdevapi.com.ng/api/transaction/send'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer ${_authController.token}',
         },
-        body: jsonEncode(data),
+        body: jsonEncode(payload),
       );
 
-      if (response.statusCode != 200) {
-        throw jsonDecode(response.body)['message'] ?? 'Failed to send transaction';
+      if (response.statusCode == 200) {
+        print('External transaction successful: ${response.body}');
+      } else if (response.statusCode == 500) {
+        throw 'Failed to send crypto - server error';
+      } else {
+        throw 'Failed to send crypto: ${response.statusCode}';
       }
     } catch (e) {
       rethrow;

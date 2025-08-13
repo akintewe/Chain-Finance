@@ -165,10 +165,13 @@ class _SendScreenState extends State<SendScreen> with SingleTickerProviderStateM
                   itemBuilder: (context, index) {
                     final tokenSymbol = networkTokens.keys.elementAt(index);
                     final tokenData = networkTokens[tokenSymbol];
+                    // Use the symbol field from the API response if available, otherwise fallback to the key
+                    final displaySymbol = tokenData['symbol'] ?? tokenSymbol;
+                    
                     return GestureDetector(
                       onTap: () {
                         setState(() {
-                          selectedToken = tokenSymbol;
+                          selectedToken = displaySymbol;
                         });
                         Navigator.pop(context);
                       },
@@ -189,7 +192,7 @@ class _SendScreenState extends State<SendScreen> with SingleTickerProviderStateM
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Text(
-                                tokenSymbol,
+                                displaySymbol,
                                 style: AppTextStyles.body2.copyWith(
                                   color: AppColors.primary,
                                   fontWeight: FontWeight.bold,
@@ -203,7 +206,7 @@ class _SendScreenState extends State<SendScreen> with SingleTickerProviderStateM
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    tokenData['name'] ?? tokenSymbol,
+                                    tokenData['name'] ?? displaySymbol,
                                     style: AppTextStyles.body2.copyWith(
                                       fontWeight: FontWeight.w600,
                                     ),
@@ -954,19 +957,16 @@ class _SendScreenState extends State<SendScreen> with SingleTickerProviderStateM
         await walletController.sendExternal({
           'to_address': addressController.text,
           'amount': double.parse(amountController.text),
-          'network': selectedNetworkCode,
-          'currency': selectedToken,
         });
       } else {
         await walletController.sendInternal({
           'receiver_uuid': uuidController.text,
           'amount': double.parse(amountController.text),
           'currency': selectedToken,
-          'network': selectedNetworkCode,
           'note': noteController.text,
         });
       }
-              Navigator.pop(context);
+      Navigator.pop(context);
       Get.snackbar('Success', 'Transaction sent successfully');
     } catch (e) {
       Get.snackbar('Error', e.toString());

@@ -961,6 +961,11 @@ class AuthController extends GetxController {
         }
         
         return profileData;
+      } else if (response.statusCode == 500) {
+        // Handle 500 error - show session expired dialog
+        print('Session expired - showing session expired dialog');
+        showSessionExpiredDialog();
+        return null;
       } else {
         print('Failed to get user profile: ${response.statusCode}');
         return null;
@@ -969,6 +974,93 @@ class AuthController extends GetxController {
       print('Error getting user profile: $e');
       return null;
     }
+  }
+
+  // Show session expired dialog (not dismissible)
+  void showSessionExpiredDialog() {
+    Get.dialog(
+      WillPopScope(
+        onWillPop: () async => false, // Prevent back button from dismissing
+        child: Dialog(
+          backgroundColor: Colors.transparent,
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Icon
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.red.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.warning_amber_rounded,
+                    color: Colors.red,
+                    size: 32,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                
+                // Title
+                const Text(
+                  'Session Expired',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                
+                // Message
+                const Text(
+                  'Your session has expired. Please log in again to continue.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.black54,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                
+                // Logout button
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      // Logout and navigate to login
+                      logout();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text(
+                      'Logout',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      barrierDismissible: false, // Prevent tapping outside to dismiss
+    );
   }
 
   // Load profile image on app start
