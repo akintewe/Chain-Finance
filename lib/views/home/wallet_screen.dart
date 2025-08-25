@@ -9,12 +9,13 @@ import 'package:nexa_prime/views/home/notification_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
-import 'dart:math';
 import 'package:nexa_prime/views/home/token_info_screen.dart';
 import 'package:nexa_prime/views/home/all_tokens_screen.dart';
 import 'package:nexa_prime/views/home/edit_favorites_screen.dart';
-import 'package:fl_chart/fl_chart.dart' as fl;
+import 'package:nexa_prime/views/home/my_tokens_screen.dart';
+import 'package:nexa_prime/views/home/candlestick_chart_widget.dart';
 import 'dart:async';
+import 'dart:math';
 import 'package:cached_network_image/cached_network_image.dart';
 
 
@@ -25,7 +26,7 @@ class WalletScreen extends StatefulWidget {
   State<WalletScreen> createState() => _WalletScreenState();
 }
 
-class _WalletScreenState extends State<WalletScreen> with TickerProviderStateMixin {
+class _WalletScreenState extends State<WalletScreen> with TickerProviderStateMixin, WidgetsBindingObserver {
   final AuthController authController = Get.find();
   final WalletController walletController = Get.find();
   late String username = 'User';
@@ -35,6 +36,11 @@ class _WalletScreenState extends State<WalletScreen> with TickerProviderStateMix
   // Timer for pie chart updates
   Timer? _pieChartTimer;
   final RxMap<String, double> _pieChartData = <String, double>{}.obs;
+  
+  // Selected token for chart display
+  String? _selectedChartToken;
+  
+
   
   // Animation controllers for shooting stars
   late AnimationController _starsController;
@@ -102,6 +108,8 @@ class _WalletScreenState extends State<WalletScreen> with TickerProviderStateMix
   @override
   void initState() {
     super.initState();
+    // Register lifecycle observer
+    WidgetsBinding.instance.addObserver(this);
     _loadUserData();
     
     // Set price update callback
@@ -160,6 +168,8 @@ class _WalletScreenState extends State<WalletScreen> with TickerProviderStateMix
     // Initialize pie chart data immediately
     _updatePieChartData();
     
+
+    
     // Also check after a short delay to catch any quick price updates
     Timer(const Duration(seconds: 2), () {
       if (mounted) _updatePieChartData();
@@ -176,6 +186,32 @@ class _WalletScreenState extends State<WalletScreen> with TickerProviderStateMix
     // Initialize price banner
     _initPriceBanner();
     _startPriceUpdates();
+    
+    // Fetch wallet details after the build is complete
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      walletController.fetchWalletDetails();
+    });
+  }
+  
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // This method is called when dependencies change (including hot reload)
+    // Refresh wallet data to ensure it's up to date
+    if (mounted) {
+      walletController.fetchWalletDetails();
+      // Also refresh pie chart data on hot reload
+      _updatePieChartData();
+    }
+  }
+  
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    // Refresh wallet data when app becomes visible again
+    if (state == AppLifecycleState.resumed && mounted) {
+      walletController.fetchWalletDetails();
+    }
   }
   
   void _initShootingStars() {
@@ -555,10 +591,18 @@ class _WalletScreenState extends State<WalletScreen> with TickerProviderStateMix
           
           // Main content
           SafeArea(
-            child: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
+            child: RefreshIndicator(
+              onRefresh: () async {
+                // Refresh both wallet data and market data
+                await walletController.fetchWalletDetails();
+              },
+              color: AppColors.primary,
+              backgroundColor: AppColors.surface,
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(), // Required for RefreshIndicator to work
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Header
@@ -608,9 +652,12 @@ class _WalletScreenState extends State<WalletScreen> with TickerProviderStateMix
                                         ),
                                       ),
                               ),
-                              const SizedBox(width: 12),
-              GestureDetector(
-                onTap: () => Get.to(() => const NotificationScreen()),
+                              SizedBox(
+                                width: 10,
+                              ),
+
+                              GestureDetector(
+                                onTap: () => Get.to(() => const NotificationScreen()),
                 child: Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
@@ -761,21 +808,21 @@ class _WalletScreenState extends State<WalletScreen> with TickerProviderStateMix
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              _buildStatItem(
+                              Obx(() => _buildStatItem(
                                 '24h Change',
-                                '+2.5%',
-                                Colors.green,
-                              ),
-                              _buildStatItem(
+                                walletController.getPortfolio24hChange(),
+                                walletController.getPortfolio24hChangeColor(),
+                              )),
+                              Obx(() => _buildStatItem(
                                 '24h High',
-                                '\$12,500',
+                                walletController.getPortfolio24hHigh(),
                                 AppColors.text,
-                              ),
-                              _buildStatItem(
+                              )),
+                              Obx(() => _buildStatItem(
                                 '24h Low',
-                                '\$11,800',
+                                walletController.getPortfolio24hLow(),
                                 AppColors.text,
-                              ),
+                              )),
                             ],
                           ),
                   ],
@@ -849,6 +896,162 @@ class _WalletScreenState extends State<WalletScreen> with TickerProviderStateMix
                     ),
                   ),
                 ],
+              ),
+
+              const SizedBox(height: 20),
+
+              // View My Tokens and Balances Section
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'My Tokens & Balances',
+                          style: AppTextStyles.heading2.copyWith(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () => Get.to(() => const MyTokensScreen()),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  'View All',
+                                  style: AppTextStyles.body2.copyWith(
+                                    color: AppColors.primary,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Icon(
+                                  Icons.arrow_forward_ios,
+                                  color: AppColors.primary,
+                                  size: 14,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    // Quick preview of top 3 tokens
+                    Obx(() {
+                      final tokens = walletController.tokens.take(3).toList();
+                      if (tokens.isEmpty) {
+                        return Container(
+                          padding: const EdgeInsets.all(20),
+                          child: Center(
+                            child: Column(
+                              children: [
+                                Icon(
+                                  Icons.wallet_outlined,
+                                  size: 32,
+                                  color: AppColors.textSecondary,
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'No tokens found',
+                                  style: AppTextStyles.body.copyWith(
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      }
+                      
+                      return Column(
+                        children: tokens.map((token) {
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: AppColors.background,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: AppColors.primary.withOpacity(0.05)),
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primary.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    token['symbol'] ?? 'N/A',
+                                    style: AppTextStyles.body2.copyWith(
+                                      color: AppColors.primary,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        token['name'] ?? 'Unknown Token',
+                                        style: AppTextStyles.body2.copyWith(
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        '${token['balance']} ${token['symbol']}',
+                                        style: AppTextStyles.body.copyWith(
+                                          color: AppColors.textSecondary,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primary.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  child: Text(
+                                    'View',
+                                    style: AppTextStyles.body2.copyWith(
+                                      color: AppColors.primary,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }).toList(),
+                      );
+                    }),
+                  ],
+                ),
               ),
 
               const SizedBox(height: 20),
@@ -1153,6 +1356,10 @@ class _WalletScreenState extends State<WalletScreen> with TickerProviderStateMix
                           onTap: () {
                             _updatePieChartData();
                             setState(() {}); // Force refresh
+                            // Force refresh of candlestick chart
+                            if (mounted) {
+                              setState(() {});
+                            }
                           },
                           child: Container(
                             padding: const EdgeInsets.all(8),
@@ -1169,51 +1376,52 @@ class _WalletScreenState extends State<WalletScreen> with TickerProviderStateMix
                         ),
                       ],
                     ),
-              const SizedBox(height: 20),
+                    const SizedBox(height: 20),
                     SizedBox(
-                      height: 200,
-                      child: PieChartWidget(
-                        pieChartData: _pieChartData,
+                      height: 300, // Increased from 200 to 300
+                      child: CandlestickChartWidget(
+                        chartData: _pieChartData,
                         chartColors: chartColors,
+                        selectedToken: _selectedChartToken,
                       ),
                     ),
-                    const SizedBox(height: 20),
-                    // Legend
+                    const SizedBox(height: 16), // Reduced from 20 to 16
+                    // Legend - Made more compact
                     Wrap(
-                      spacing: 12,
-                      runSpacing: 8,
+                      spacing: 8, // Reduced from 12 to 8
+                      runSpacing: 6, // Reduced from 8 to 6
                       children: [
                         for (var i = 0; i < _pieChartData.length; i++)
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3), // Reduced padding
                             decoration: BoxDecoration(
                               color: AppColors.background,
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(8), // Reduced from 12 to 8
                               border: Border.all(color: AppColors.primary.withOpacity(0.1)),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Container(
-                                  width: 12,
-                                  height: 12,
+                                  width: 8, // Reduced from 12 to 8
+                                  height: 8, // Reduced from 12 to 8
                                   decoration: BoxDecoration(
                                     color: chartColors[i % chartColors.length],
                                     shape: BoxShape.circle,
                                     boxShadow: [
                                       BoxShadow(
                                         color: chartColors[i % chartColors.length].withOpacity(0.3),
-                                        blurRadius: 4,
-                                        offset: const Offset(0, 2),
+                                        blurRadius: 2, // Reduced from 4 to 2
+                                        offset: const Offset(0, 1), // Reduced from 2 to 1
                                       ),
                                     ],
                                   ),
                                 ),
-                                const SizedBox(width: 6),
+                                const SizedBox(width: 4), // Reduced from 6 to 4
                                 Text(
                                   _pieChartData.keys.elementAt(i),
                                   style: AppTextStyles.body.copyWith(
-                                    fontSize: 12,
+                                    fontSize: 10, // Reduced from 12 to 10
                                     color: AppColors.textSecondary,
                                   ),
                                 ),
@@ -1344,20 +1552,26 @@ class _WalletScreenState extends State<WalletScreen> with TickerProviderStateMix
                           final token = cryptoList[index];
                           final price = walletController.getPriceForToken(token['symbol'] ?? '');
                           final priceChange = walletController.getPriceChangeForToken(token['symbol'] ?? '');
+                          final isSelected = _selectedChartToken == token['symbol'];
                           
                           return Container(
                             margin: const EdgeInsets.only(bottom: 8),
                             decoration: BoxDecoration(
-                              color: AppColors.surface,
+                              color: isSelected ? AppColors.primary.withOpacity(0.1) : AppColors.surface,
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+                              border: Border.all(
+                                color: isSelected 
+                                  ? AppColors.primary 
+                                  : AppColors.primary.withOpacity(0.1),
+                              ),
                             ),
                             child: ListTile(
-                      onTap: () => Get.to(() => TokenInfoScreen(
-                        token: token,
-                        currentPrice: price,
-                        priceChange: priceChange,
-                      )),
+                      onTap: () {
+                        // Update selected token for chart
+                        setState(() {
+                          _selectedChartToken = token['symbol'];
+                        });
+                      },
                               leading: Container(
                                 padding: const EdgeInsets.all(8),
                                 decoration: BoxDecoration(
@@ -1407,9 +1621,9 @@ class _WalletScreenState extends State<WalletScreen> with TickerProviderStateMix
                 ),
               ),
             ),
-              ),
-            ],
           ),
+        ),
+      ]),
     );
   }
 
@@ -1548,116 +1762,6 @@ class _Badge extends StatelessWidget {
           fontWeight: FontWeight.bold,
           fontSize: 12,
         ),
-      ),
-    );
-  }
-}
-
-// Add this class at the bottom of the file after the _Badge class
-class PieChartWidget extends StatefulWidget {
-  final RxMap<String, double> pieChartData;
-  final List<Color> chartColors;
-
-  const PieChartWidget({
-    Key? key,
-    required this.pieChartData,
-    required this.chartColors,
-  }) : super(key: key);
-
-  @override
-  State<PieChartWidget> createState() => _PieChartWidgetState();
-}
-
-class _PieChartWidgetState extends State<PieChartWidget> {
-  late fl.PieChartData _cachedChartData;
-  bool _hasBuiltChart = false;
-  Map<String, double> _lastDataSnapshot = {};
-
-  @override
-  void didUpdateWidget(PieChartWidget oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    // Only rebuild the chart data if the actual data changes significantly
-    if (!_mapsEqual(oldWidget.pieChartData, widget.pieChartData)) {
-      _hasBuiltChart = false;
-      _lastDataSnapshot = Map.from(widget.pieChartData);
-    }
-  }
-
-  bool _mapsEqual(Map<String, double> map1, Map<String, double> map2) {
-    if (map1.length != map2.length) return false;
-    for (var key in map1.keys) {
-      if (!map2.containsKey(key) || map1[key] != map2[key]) return false;
-    }
-    return true;
-  }
-
-  fl.PieChartData _buildChartData() {
-    if (!_hasBuiltChart) {
-      _cachedChartData = fl.PieChartData(
-        sections: widget.pieChartData.entries.map((entry) {
-          final index = widget.pieChartData.keys.toList().indexOf(entry.key);
-          return fl.PieChartSectionData(
-            value: entry.value,
-            title: '${(entry.value / widget.pieChartData.values.reduce((a, b) => a + b) * 100).toStringAsFixed(1)}%',
-            radius: 80,
-            titleStyle: AppTextStyles.body2.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
-            color: widget.chartColors[index % widget.chartColors.length],
-            showTitle: entry.value > 0,
-            badgeWidget: _Badge(
-              entry.key,
-              widget.chartColors[index % widget.chartColors.length],
-            ),
-            badgePositionPercentageOffset: 1.2,
-          );
-        }).toList(),
-        sectionsSpace: 2,
-        centerSpaceRadius: 40,
-        startDegreeOffset: -90,
-        pieTouchData: fl.PieTouchData(
-          touchCallback: (fl.FlTouchEvent event, fl.PieTouchResponse? pieTouchResponse) {
-            // Removed the snackbar popup that was causing Bitcoin price to appear at bottom
-            // Instead, just handle the touch event silently or add other feedback if needed
-            if (event is! fl.FlPointerHoverEvent && pieTouchResponse?.touchedSection != null) {
-              // Chart section tapped - you can add other feedback here if needed
-              print('Chart section ${pieTouchResponse!.touchedSection!.touchedSectionIndex} tapped');
-            }
-          },
-        ),
-      );
-      _hasBuiltChart = true;
-    }
-    return _cachedChartData;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    // Skip rebuilding if data is empty
-    if (widget.pieChartData.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const CircularProgressIndicator(),
-            const SizedBox(height: 16),
-            Text(
-              'Loading price data...',
-              style: AppTextStyles.body.copyWith(
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    // Use RepaintBoundary to isolate this widget's rendering
-    return RepaintBoundary(
-      child: fl.PieChart(
-        _buildChartData(),
-        swapAnimationDuration: Duration.zero, // Disable animations to prevent rebuilds
       ),
     );
   }

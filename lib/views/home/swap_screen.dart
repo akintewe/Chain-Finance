@@ -6,7 +6,12 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class SwapScreen extends StatefulWidget {
-  const SwapScreen({super.key});
+  final bool isFromMyTokens;
+  
+  const SwapScreen({
+    super.key,
+    this.isFromMyTokens = false,
+  });
 
   @override
   State<SwapScreen> createState() => _SwapScreenState();
@@ -22,6 +27,7 @@ class _SwapScreenState extends State<SwapScreen> with SingleTickerProviderStateM
   Map<String, dynamic>? toToken;
   final TextEditingController fromAmountController = TextEditingController();
   final TextEditingController toAmountController = TextEditingController();
+  String? amountError;
 
   @override
   void initState() {
@@ -54,8 +60,49 @@ class _SwapScreenState extends State<SwapScreen> with SingleTickerProviderStateM
 
     _controller.forward();
     
-    // Fetch wallet data to populate token list
-    walletController.fetchWalletDetails();
+    // Add listener to validate amount input
+    fromAmountController.addListener(_validateAmount);
+    
+    // Fetch wallet data after the build is complete
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      walletController.fetchWalletDetails();
+    });
+  }
+
+  // Validate the entered amount against available balance
+  void _validateAmount() {
+    if (fromToken == null) {
+      setState(() {
+        amountError = null;
+      });
+      return;
+    }
+    
+    final enteredAmount = double.tryParse(fromAmountController.text) ?? 0.0;
+    final availableBalance = double.tryParse(fromToken!['balance'] ?? '0') ?? 0.0;
+    
+    if (enteredAmount > availableBalance) {
+      setState(() {
+        amountError = 'Insufficient balance. Available: ${availableBalance.toStringAsFixed(8)} ${fromToken!['symbol']}';
+      });
+    } else if (enteredAmount <= 0) {
+      setState(() {
+        amountError = 'Amount must be greater than 0';
+      });
+    } else {
+      setState(() {
+        amountError = null;
+      });
+    }
+  }
+  
+  // Set the maximum available amount for the selected token
+  void _setMaxAmount() {
+    if (fromToken != null) {
+      final availableBalance = double.tryParse(fromToken!['balance'] ?? '0') ?? 0.0;
+      fromAmountController.text = availableBalance.toStringAsFixed(8);
+      _validateAmount();
+    }
   }
 
   @override
@@ -66,7 +113,7 @@ class _SwapScreenState extends State<SwapScreen> with SingleTickerProviderStateM
     super.dispose();
   }
 
-    void _showTokenSelector(bool isFrom) {
+  void _showTokenSelector(bool isFrom) {
     showModalBottomSheet(
       context: context,
       backgroundColor: AppColors.surface,
@@ -79,17 +126,17 @@ class _SwapScreenState extends State<SwapScreen> with SingleTickerProviderStateM
         minChildSize: 0.5,
         maxChildSize: 0.9,
         builder: (context, scrollController) => Container(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                isFrom ? 'Select Token to Swap From' : 'Select Token to Swap To',
-                style: AppTextStyles.heading2,
-              ),
-              const SizedBox(height: 16),
-              Expanded(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+            Text(
+              isFrom ? 'Select Token to Swap From' : 'Select Token to Swap To',
+              style: AppTextStyles.heading2,
+            ),
+            const SizedBox(height: 16),
+                    Expanded(
                 child: Obx(() {
                   if (walletController.isLoading) {
                     return const Center(
@@ -130,36 +177,39 @@ class _SwapScreenState extends State<SwapScreen> with SingleTickerProviderStateM
                   
                   return ListView.builder(
                     controller: scrollController,
-                    itemCount: walletController.tokens.length,
-                    itemBuilder: (context, index) {
-                      final token = walletController.tokens[index];
-                      return GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            if (isFrom) {
-                              fromToken = token;
-                            } else {
-                              toToken = token;
-                            }
-                          });
-                          Navigator.pop(context);
-                        },
-                        child: Container(
-                          margin: const EdgeInsets.only(bottom: 12),
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: AppColors.background,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: AppColors.primary.withOpacity(0.1)),
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: AppColors.primary.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
+                itemCount: walletController.tokens.length,
+                itemBuilder: (context, index) {
+                  final token = walletController.tokens[index];
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        if (isFrom) {
+                          fromToken = token;
+                              // Clear amount when token changes
+                              fromAmountController.clear();
+                              amountError = null;
+                        } else {
+                          toToken = token;
+                        }
+                      });
+                      Navigator.pop(context);
+                    },
+                    child: Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppColors.background,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+                      ),
+                            child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                                 child: Text(
                                   token['symbol'],
                                   style: AppTextStyles.body2.copyWith(
@@ -167,38 +217,38 @@ class _SwapScreenState extends State<SwapScreen> with SingleTickerProviderStateM
                                     fontWeight: FontWeight.bold,
                                     fontSize: 16,
                                   ),
-                                ),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      token['name'],
-                                      style: AppTextStyles.body2.copyWith(
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      '${token['balance']} ${token['symbol']}',
-                                      style: AppTextStyles.body.copyWith(
-                                        color: AppColors.textSecondary,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
+                            ),
                           ),
-                        ),
-                      );
-                    },
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  token['name'],
+                                  style: AppTextStyles.body2.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  '${token['balance']} ${token['symbol']}',
+                                  style: AppTextStyles.body.copyWith(
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
                   );
                 }),
-              ),
-            ],
+                ),
+              ],
           ),
         ),
       ),
@@ -215,8 +265,11 @@ class _SwapScreenState extends State<SwapScreen> with SingleTickerProviderStateM
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: AppColors.text),
           onPressed: () {
-            // Navigate back to wallet screen (first index in bottom nav)
-            dashboardController.goToWallet();
+            if (widget.isFromMyTokens) {
+              Navigator.pop(context);
+            } else {
+              dashboardController.goToWallet();
+            }
           },
         ),
         title: Text('Swap', style: AppTextStyles.heading2),
@@ -224,7 +277,6 @@ class _SwapScreenState extends State<SwapScreen> with SingleTickerProviderStateM
           IconButton(
             icon: const Icon(Icons.refresh, color: AppColors.text),
             onPressed: () {
-              // Refresh wallet data
               walletController.fetchWalletDetails();
             },
           ),
@@ -242,7 +294,7 @@ class _SwapScreenState extends State<SwapScreen> with SingleTickerProviderStateM
                 child: Obx(() {
                   if (walletController.isLoading) {
                     return const Center(
-                      child: Column(
+                child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           CircularProgressIndicator(),
@@ -254,60 +306,60 @@ class _SwapScreenState extends State<SwapScreen> with SingleTickerProviderStateM
                   }
                   
                   return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Quick Info Card
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              AppColors.primary.withOpacity(0.1),
-                              AppColors.secondary.withOpacity(0.1),
-                            ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: AppColors.primary.withOpacity(0.2)),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.primary.withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Icon(
-                                    Icons.info_outline,
-                                    color: AppColors.primary,
-                                    size: 20,
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Text(
-                                  'Quick Info',
-                                  style: AppTextStyles.body2.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              '• Best rates guaranteed\n• No hidden fees\n• Instant swaps\n• Secure transactions',
-                              style: AppTextStyles.body.copyWith(
-                                color: AppColors.textSecondary,
-                                height: 1.5,
-                              ),
-                            ),
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Quick Info Card
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            AppColors.primary.withOpacity(0.1),
+                            AppColors.secondary.withOpacity(0.1),
                           ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
                         ),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: AppColors.primary.withOpacity(0.2)),
                       ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Icon(
+                                  Icons.info_outline,
+                                  color: AppColors.primary,
+                                  size: 20,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                'Quick Info',
+                                style: AppTextStyles.body2.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+              Text(
+                            '• Best rates guaranteed\n• No hidden fees\n• Instant swaps\n• Secure transactions',
+                            style: AppTextStyles.body.copyWith(
+                              color: AppColors.textSecondary,
+                              height: 1.5,
+                            ),
+                          ),
+                        ],
+                      ),
+              ),
               const SizedBox(height: 24),
               
                     // From Token
@@ -331,7 +383,10 @@ class _SwapScreenState extends State<SwapScreen> with SingleTickerProviderStateM
                           Row(
                             children: [
                               Expanded(
-                                child: TextField(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      TextField(
                 controller: fromAmountController,
                                   keyboardType: TextInputType.number,
                                   style: AppTextStyles.heading2.copyWith(
@@ -344,9 +399,47 @@ class _SwapScreenState extends State<SwapScreen> with SingleTickerProviderStateM
                                     ),
                                     border: InputBorder.none,
                                     contentPadding: EdgeInsets.zero,
+                                        ),
+                                      ),
+                                      if (amountError != null) ...[
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          amountError!,
+                                          style: AppTextStyles.body.copyWith(
+                                            color: Colors.red,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                // Max Button
+                                if (fromToken != null)
+                                  GestureDetector(
+                                    onTap: _setMaxAmount,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 6,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.primary.withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+                                      ),
+                                      child: Text(
+                                        'MAX',
+                                        style: AppTextStyles.body2.copyWith(
+                                          color: AppColors.primary,
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 12,
+                                        ),
                                   ),
                                 ),
                               ),
+                                const SizedBox(width: 8),
                               GestureDetector(
                                 onTap: () => _showTokenSelector(true),
                                 child: Container(
@@ -391,9 +484,42 @@ class _SwapScreenState extends State<SwapScreen> with SingleTickerProviderStateM
                         ],
                       ),
                     ),
+                      
+                      // Available Balance Display
+                      if (fromToken != null) ...[
+                        const SizedBox(height: 12),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: AppColors.background,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Available Balance:',
+                                style: AppTextStyles.body.copyWith(
+                                  color: AppColors.textSecondary,
+                                  fontSize: 12,
+                                ),
+                              ),
+                              Text(
+                                '${fromToken!['balance']} ${fromToken!['symbol']}',
+                                style: AppTextStyles.body.copyWith(
+                                  color: AppColors.textSecondary,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                      
               const SizedBox(height: 16),
               
-                    // Swap Button
+                      // Swap Direction Icon
               Center(
                 child: Container(
                         padding: const EdgeInsets.all(8),
@@ -448,6 +574,7 @@ class _SwapScreenState extends State<SwapScreen> with SingleTickerProviderStateM
                                   ),
                                 ),
                               ),
+                                const SizedBox(width: 16),
                               GestureDetector(
                                 onTap: () => _showTokenSelector(false),
                                 child: Container(
@@ -484,9 +611,9 @@ class _SwapScreenState extends State<SwapScreen> with SingleTickerProviderStateM
                                           ),
                                         ),
                                     ],
-                                  ),
-                                ),
-                              ),
+                  ),
+                ),
+              ),
                             ],
                           ),
                         ],
@@ -496,13 +623,14 @@ class _SwapScreenState extends State<SwapScreen> with SingleTickerProviderStateM
 
                     // Swap Button
                     SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: fromToken != null && toToken != null
-                            ? () {
-                                // Implement swap functionality
-                              }
-                            : null,
+                width: double.infinity,
+                child: ElevatedButton(
+                          onPressed: fromToken != null && toToken != null && amountError == null
+                      ? () {
+                          // Implement swap functionality
+                                  print('Swapping ${fromAmountController.text} ${fromToken!['symbol']} to ${toAmountController.text} ${toToken!['symbol']}');
+                        }
+                      : null,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primary,
                           foregroundColor: AppColors.surface,
@@ -518,15 +646,16 @@ class _SwapScreenState extends State<SwapScreen> with SingleTickerProviderStateM
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                      ),
-                    ),
-                  ],
-                );
-              }),
+                ),
+              ),
+            ],
+                  );
+                }),
+        ),
             ),
-          ),
-        );
-  })
+          );
+        },
+      ),
     );
   }
 }

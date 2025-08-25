@@ -2,6 +2,8 @@ import 'package:nexa_prime/utils/colors.dart';
 import 'package:nexa_prime/utils/text_styles.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:nexa_prime/services/api_service.dart';
+import 'package:flutter/foundation.dart';
 
 class TransactionScreen extends StatefulWidget {
   const TransactionScreen({super.key});
@@ -14,41 +16,82 @@ class _TransactionScreenState extends State<TransactionScreen> {
   String selectedFilter = 'All';
   DateTime? selectedDate;
 
-  // Dummy transaction data
-  final List<Map<String, dynamic>> transactions = [
-    {
-      'type': 'Received',
-      'token': 'BTC',
-      'amount': '0.025',
-      'usdAmount': '\$875.50',
-      'date': DateTime.now().subtract(const Duration(hours: 2)),
-      'from': '0x742d35Cc6...38f44e',
-      'status': 'Completed',
-      'icon': 'assets/icons/Cryptocurrency (2).png',
-    },
-    {
-      'type': 'Sent',
-      'token': 'ETH',
-      'amount': '1.5',
-      'usdAmount': '\$3,300.00',
-      'date': DateTime.now().subtract(const Duration(days: 1)),
-      'to': '0x892f35Dd6...42g44e',
-      'status': 'Completed',
-      'icon': 'assets/icons/Cryptocurrency (1).png',
-    },
-    {
-      'type': 'Swapped',
-      'fromToken': 'USDT',
-      'toToken': 'TRX',
-      'fromAmount': '1000',
-      'toAmount': '12500',
-      'usdAmount': '\$1,000.00',
-      'date': DateTime.now().subtract(const Duration(days: 2)),
-      'status': 'Completed',
-      'icon': 'assets/icons/Cryptocurrency.png',
-    },
-    // Add more dummy transactions...
-  ];
+  // Real transaction data from API
+  List<Map<String, dynamic>> transactions = [];
+  bool isLoading = true;
+  String? errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchTransactions();
+  }
+
+  Future<void> _fetchTransactions() async {
+    setState(() {
+      isLoading = true;
+      errorMessage = null;
+    });
+
+    try {
+      final response = await ApiService.getUserTransactions();
+      
+      if (response != null && response['status'] == true) {
+        final List<dynamic> rawTransactions = response['data'] ?? [];
+        
+        if (kDebugMode) {
+          print('Raw transactions count: ${rawTransactions.length}');
+          print('Raw transactions: $rawTransactions');
+        }
+        
+        // Transform API data to match our UI format
+        transactions = rawTransactions.map((tx) {
+          final type = tx['type'] ?? 'Unknown';
+          final amount = tx['amount']?.toString() ?? '0';
+          final currency = tx['currency'] ?? 'Unknown';
+          final status = tx['status'] ?? 'Unknown';
+          final createdAt = DateTime.tryParse(tx['created_at'] ?? '') ?? DateTime.now();
+          
+          // Determine transaction type for UI
+          String uiType;
+          if (type == 'send') {
+            uiType = 'Sent';
+          } else if (type == 'receive') {
+            uiType = 'Received';
+          } else {
+            uiType = type;
+          }
+          
+          return {
+            'type': uiType,
+            'token': currency,
+            'amount': amount,
+            'usdAmount': '\$${amount}', // You might want to get real USD conversion
+            'date': createdAt,
+            'from': tx['external_wallet_address'] ?? 'Unknown',
+            'to': tx['external_wallet_address'] ?? 'Unknown',
+            'status': status,
+            'tx_id': tx['tx_id'],
+            'note': tx['note'],
+          };
+        }).toList();
+        
+        setState(() {
+          isLoading = false;
+        });
+      } else {
+        setState(() {
+          isLoading = false;
+          errorMessage = response?['message'] ?? 'Failed to fetch transactions';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+        errorMessage = 'Network error: $e';
+      });
+    }
+  }
 
   List<Map<String, dynamic>> getFilteredTransactions() {
     return transactions.where((tx) {
@@ -114,17 +157,17 @@ class _TransactionScreenState extends State<TransactionScreen> {
         iconColor = Colors.red;
         amountColor = Colors.red;
         break;
-      case 'Swapped':
-        title = 'Swapped ${tx['fromToken']} to ${tx['toToken']}';
-        subtitle = '${tx['fromAmount']} ${tx['fromToken']} → ${tx['toAmount']} ${tx['toToken']}';
-        icon = Icons.swap_horiz;
-        iconColor = Colors.blue;
-        amountColor = AppColors.text;
+      case 'Pending':
+        title = 'Pending ${tx['token']}';
+        subtitle = 'Status: ${tx['status']}';
+        icon = Icons.schedule;
+        iconColor = Colors.orange;
+        amountColor = Colors.orange;
         break;
       default:
-        title = 'Unknown Transaction';
-        subtitle = '';
-        icon = Icons.help_outline;
+        title = '${tx['type']} ${tx['token']}';
+        subtitle = 'Status: ${tx['status']}';
+        icon = Icons.receipt;
         iconColor = AppColors.textSecondary;
         amountColor = AppColors.text;
     }
@@ -196,57 +239,50 @@ class _TransactionScreenState extends State<TransactionScreen> {
         ),
               ],
             ),
-            if (tx['type'] == 'Swapped') ...[
-              const SizedBox(height: 12),
+            if (tx['tx_id'] != null) ...[
+              const SizedBox(height: 8),
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: AppColors.background,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'From',
-                          style: AppTextStyles.body.copyWith(
-                            color: AppColors.textSecondary,
-                            fontSize: 12,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '${tx['fromAmount']} ${tx['fromToken']}',
-                          style: AppTextStyles.body2,
-                        ),
-                      ],
-                    ),
-                    const Icon(
-                      Icons.arrow_forward,
+                    Icon(
+                      Icons.receipt,
+                      size: 12,
                       color: AppColors.textSecondary,
-                      size: 16,
                     ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(
-                          'To',
-                          style: AppTextStyles.body.copyWith(
-                            color: AppColors.textSecondary,
-                            fontSize: 12,
-          ),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Text(
+                        'TX: ${tx['tx_id']}',
+                        style: AppTextStyles.body.copyWith(
+                          color: AppColors.textSecondary,
+                          fontSize: 10,
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '${tx['toAmount']} ${tx['toToken']}',
-                          style: AppTextStyles.body2,
-                        ),
-                      ],
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                   ],
+                ),
+              ),
+            ],
+            if (tx['note'] != null && tx['note'].isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.background,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  'Note: ${tx['note']}',
+                  style: AppTextStyles.body.copyWith(
+                    color: AppColors.textSecondary,
+                    fontSize: 12,
+                  ),
                 ),
               ),
             ],
@@ -256,10 +292,98 @@ class _TransactionScreenState extends State<TransactionScreen> {
     );
   }
 
+  Widget _buildTransactionsContent() {
+    if (isLoading) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text('Loading transactions...'),
+          ],
+        ),
+      );
+    }
+
+    if (errorMessage != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_outline,
+              size: 64,
+              color: AppColors.textSecondary,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Error loading transactions',
+              style: AppTextStyles.body.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              errorMessage!,
+              style: AppTextStyles.body.copyWith(
+                color: AppColors.textSecondary,
+                fontSize: 12,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _fetchTransactions,
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (getFilteredTransactions().isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.receipt_long_outlined,
+              size: 64,
+              color: AppColors.textSecondary,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No transactions found',
+              style: AppTextStyles.body.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
+            if (selectedFilter != 'All' || selectedDate != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                'Try adjusting your filters',
+                style: AppTextStyles.body.copyWith(
+                  color: AppColors.textSecondary,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ],
+        ),
+      );
+    }
+
+    return ListView.builder(
+      itemCount: getFilteredTransactions().length,
+      itemBuilder: (context, index) {
+        return _buildTransactionItem(getFilteredTransactions()[index]);
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final filteredTransactions = getFilteredTransactions();
-
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -268,75 +392,97 @@ class _TransactionScreenState extends State<TransactionScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Transactions',
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Transactions',
                     style: AppTextStyles.heading.copyWith(fontSize: 32),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: AppColors.primary.withOpacity(0.1),
                   ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.calendar_today,
-                      color: AppColors.textSecondary,
-                      size: 16,
-                    ),
-                    const SizedBox(width: 6),
-                    TextButton(
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        minimumSize: Size.zero,
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      // Refresh button
+                      IconButton(
+                        onPressed: _fetchTransactions,
+                        icon: Icon(
+                          Icons.refresh,
+                          color: AppColors.primary,
+                        ),
+                        tooltip: 'Refresh transactions',
                       ),
-                      onPressed: () async {
-                        final date = await showDatePicker(
-                          context: context,
-                          initialDate: selectedDate ?? DateTime.now(),
-                          firstDate: DateTime(2020),
-                          lastDate: DateTime.now(),
-                        );
-                        if (date != null) {
-                          setState(() {
-                            selectedDate = date;
-                          });
-                        }
-                      },
-                      child: Text(
-                        selectedDate != null
-                            ? DateFormat('MMM dd').format(selectedDate!)
-                            : 'Select Date',
-                        style: AppTextStyles.body2.copyWith(fontSize: 13),
-                      ),
-                    ),
-                    if (selectedDate != null) ...[
-                      const SizedBox(width: 6),
-                      GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            selectedDate = null;
-                          });
-                        },
-                        child: Icon(
-                          Icons.close,
-                          size: 14,
-                          color: AppColors.textSecondary,
+                      const SizedBox(width: 8),
+                      // Date picker
+                      Flexible(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: AppColors.surface,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: AppColors.primary.withOpacity(0.1),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.calendar_today,
+                                color: AppColors.textSecondary,
+                                size: 16,
+                              ),
+                              const SizedBox(width: 6),
+                              Flexible(
+                                child: TextButton(
+                                  style: TextButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                                    minimumSize: Size.zero,
+                                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                  ),
+                                  onPressed: () async {
+                                    final date = await showDatePicker(
+                                      context: context,
+                                      initialDate: selectedDate ?? DateTime.now(),
+                                      firstDate: DateTime(2020),
+                                      lastDate: DateTime.now(),
+                                    );
+                                    if (date != null) {
+                                      setState(() {
+                                        selectedDate = date;
+                                      });
+                                    }
+                                  },
+                                  child: Text(
+                                    selectedDate != null
+                                        ? DateFormat('MMM dd').format(selectedDate!)
+                                        : 'Select Date',
+                                    style: AppTextStyles.body2.copyWith(fontSize: 13),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ),
+                              if (selectedDate != null) ...[
+                                const SizedBox(width: 6),
+                                GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      selectedDate = null;
+                                    });
+                                  },
+                                  child: Icon(
+                                    Icons.close,
+                                    size: 14,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
                         ),
                       ),
                     ],
-                  ],
-                ),
-              ),
+                  ),
                 ],
               ),
               const SizedBox(height: 24),
@@ -361,7 +507,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
                     ),
                     Padding(
                       padding: const EdgeInsets.only(right: 8),
-                      child: _buildFilterChip('Swapped'),
+                      child: _buildFilterChip('Pending'),
                     ),
                   ],
                 ),
@@ -371,32 +517,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
               
               // Transactions list
               Expanded(
-                child: filteredTransactions.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.receipt_long_outlined,
-                              size: 64,
-                              color: AppColors.textSecondary,
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                          'No transactions found',
-                          style: AppTextStyles.body.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
-                            ),
-                          ],
-                        ),
-                      )
-                    : ListView.builder(
-                        itemCount: filteredTransactions.length,
-                        itemBuilder: (context, index) {
-                          return _buildTransactionItem(filteredTransactions[index]);
-                        },
-                      ),
+                child: _buildTransactionsContent(),
               ),
             ],
           ),

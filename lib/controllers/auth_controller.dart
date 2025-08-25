@@ -18,7 +18,31 @@ import '../services/api_service.dart';
 class AuthController extends GetxController {
   static AuthController get instance => Get.find();
   
-  final baseUrl = 'https://chdevapi.com.ng/api';
+  final baseUrl = 'http://173.212.228.47:8888/api';
+  
+  // Transform profile image URL to use new domain
+  String _transformProfileImageUrl(String? url) {
+    if (url == null || url.isEmpty) return '';
+    
+    print('Transforming profile image URL: $url');
+    
+    // If the URL contains the old domain, replace it with the new one
+    if (url.contains('api.chdevapi.com.ng')) {
+      final transformedUrl = url.replaceFirst('https://api.chdevapi.com.ng', 'http://173.212.228.47:8888');
+      print('Transformed old domain URL: $transformedUrl');
+      return transformedUrl;
+    }
+    
+    // If it's a relative path, make it absolute with the new domain
+    if (url.startsWith('/')) {
+      final transformedUrl = 'http://173.212.228.47:8888$url';
+      print('Transformed relative path URL: $transformedUrl');
+      return transformedUrl;
+    }
+    
+    print('URL unchanged: $url');
+    return url;
+  }
   final _isLoading = false.obs;
   final _token = ''.obs;
   final _isLoggedOut = false.obs; // Track logout state
@@ -581,6 +605,15 @@ class AuthController extends GetxController {
           backgroundColor: Colors.red.withOpacity(0.1),
           colorText: Colors.red,
         );
+      } else if (response.statusCode == 401) {
+        // Handle 401 error - token is invalid or expired
+        print('Unauthorized access - token may be invalid or expired');
+        _isLoading.value = false;
+        Loader.hide();
+        // Clear the token and show session expired dialog
+        _token.value = '';
+        await storage.delete(key: 'token');
+        showSessionExpiredDialog();
       } else {
         _isLoading.value = false;
         Loader.hide();
@@ -894,7 +927,7 @@ class AuthController extends GetxController {
         if (result != null && result['error'] == null) {
           // Update profile image URL from response
           if (result['data'] != null && result['data']['profile_image_url'] != null) {
-            _profileImageUrl.value = result['data']['profile_image_url'];
+            _profileImageUrl.value = _transformProfileImageUrl(result['data']['profile_image_url']);
             print('Profile image URL updated: ${_profileImageUrl.value}');
           }
           
@@ -929,6 +962,13 @@ class AuthController extends GetxController {
             backgroundColor: Colors.green.withOpacity(0.1),
             colorText: Colors.green,
           );
+        } else if (response.statusCode == 401) {
+          // Handle 401 error - token is invalid or expired
+          print('Unauthorized access - token may be invalid or expired');
+          // Clear the token and show session expired dialog
+          _token.value = '';
+          await storage.delete(key: 'token');
+          showSessionExpiredDialog();
         } else {
           throw jsonDecode(response.body)['message'] ?? 'Failed to update profile';
         }
@@ -957,10 +997,18 @@ class AuthController extends GetxController {
         
         // Update profile image URL if available
         if (profileData != null && profileData['profile_image_url'] != null) {
-          _profileImageUrl.value = profileData['profile_image_url'];
+          _profileImageUrl.value = _transformProfileImageUrl(profileData['profile_image_url']);
         }
         
         return profileData;
+      } else if (response.statusCode == 401) {
+        // Handle 401 error - token is invalid or expired
+        print('Unauthorized access - token may be invalid or expired');
+        // Clear the token and show session expired dialog
+        _token.value = '';
+        await storage.delete(key: 'token');
+        showSessionExpiredDialog();
+        return null;
       } else if (response.statusCode == 500) {
         // Handle 500 error - show session expired dialog
         print('Session expired - showing session expired dialog');
@@ -1068,7 +1116,7 @@ class AuthController extends GetxController {
     try {
       final profileData = await getUserProfile();
       if (profileData != null && profileData['profile_image_url'] != null) {
-        _profileImageUrl.value = profileData['profile_image_url'];
+        _profileImageUrl.value = _transformProfileImageUrl(profileData['profile_image_url']);
         print('Profile image loaded: ${_profileImageUrl.value}');
       }
     } catch (e) {
