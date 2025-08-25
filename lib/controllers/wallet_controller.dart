@@ -108,7 +108,20 @@ class WalletController extends GetxController {
 
   Future<void> fetchWalletDetails() async {
     try {
+      // Check if user is authenticated
+      if (_authController.token.isEmpty) {
+        print('No authentication token found');
+        Get.snackbar('Authentication Error', 'Please login to view wallet details');
+        return;
+      }
+      
       _isLoading.value = true;
+      
+      if (kDebugMode) {
+        print('Fetching wallet details...');
+        print('Token: ${_authController.token}');
+        print('API URL: http://173.212.228.47:8888/api/wallet');
+      }
       
       final response = await http.get(
         Uri.parse('http://173.212.228.47:8888/api/wallet'),
@@ -117,6 +130,11 @@ class WalletController extends GetxController {
           'Authorization': 'Bearer ${_authController.token}',
         },
       );
+
+      if (kDebugMode) {
+        print('Response status: ${response.statusCode}');
+        print('Response body: ${response.body}');
+      }
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -131,16 +149,41 @@ class WalletController extends GetxController {
         
         // Fetch market data after wallet data is loaded
         await fetchMarketData();
-      } else if (response.statusCode == 500) {
-        // Handle 500 error - show session expired dialog
-        print('Session expired - showing session expired dialog');
+      } else if (response.statusCode == 401) {
+        // Handle unauthorized error
+        final errorMessage = 'Authentication failed. Please login again.';
+        print('Authentication error: $errorMessage');
+        Get.snackbar('Authentication Error', errorMessage);
         _authController.showSessionExpiredDialog();
         return;
+      } else if (response.statusCode == 500) {
+        // Handle 500 error - show session expired dialog
+        final errorMessage = 'Server error. Please try again later.';
+        print('Server error: $errorMessage');
+        Get.snackbar('Server Error', errorMessage);
+        return;
       } else {
-        throw jsonDecode(response.body)['message'] ?? 'Failed to fetch wallet details';
+        final errorData = jsonDecode(response.body);
+        final errorMessage = errorData['message'] ?? 'Failed to fetch wallet details';
+        print('API error: ${response.statusCode} - $errorMessage');
+        Get.snackbar('API Error', errorMessage);
+        return;
       }
     } catch (e) {
-      Get.snackbar('Error', e.toString());
+      String errorMessage = 'Unknown error occurred';
+      
+      if (e.toString().contains('SocketException')) {
+        errorMessage = 'Network error: Could not connect to server. Please check your internet connection.';
+      } else if (e.toString().contains('TimeoutException')) {
+        errorMessage = 'Request timeout: Server is taking too long to respond.';
+      } else if (e.toString().contains('FormatException')) {
+        errorMessage = 'Data format error: Server response is invalid.';
+      } else {
+        errorMessage = 'Error: ${e.toString()}';
+      }
+      
+      print('Wallet fetch error: $e');
+      Get.snackbar('Wallet Error', errorMessage);
     } finally {
       _isLoading.value = false;
     }
