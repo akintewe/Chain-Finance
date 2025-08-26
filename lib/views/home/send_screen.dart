@@ -9,10 +9,12 @@ import 'package:get/get.dart';
 
 class SendScreen extends StatefulWidget {
   final bool isSendingToExternal;
+  final Map<String, dynamic>? selectedToken;
   
   const SendScreen({
     super.key, 
     required this.isSendingToExternal,
+    this.selectedToken,
   });
 
   @override
@@ -914,6 +916,82 @@ class _SendScreenState extends State<SendScreen> with SingleTickerProviderStateM
                     ),
                     const SizedBox(height: 24),
 
+                    // BNB Balance Display
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              'BNB',
+                              style: AppTextStyles.body2.copyWith(
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'BNB Balance (Transaction Fees)',
+                                  style: AppTextStyles.body.copyWith(
+                                    color: AppColors.textSecondary,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Obx(() {
+                                  final bnbBalance = walletController.getFormattedBNBBalance();
+                                  final hasSufficient = walletController.hasSufficientBNBBalance();
+                                  return Row(
+                                    children: [
+                                      Text(
+                                        '$bnbBalance BNB',
+                                        style: AppTextStyles.body2.copyWith(
+                                          fontWeight: FontWeight.w600,
+                                          color: hasSufficient ? Colors.green : Colors.red,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Icon(
+                                        hasSufficient ? Icons.check_circle : Icons.warning,
+                                        color: hasSufficient ? Colors.green : Colors.red,
+                                        size: 16,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        hasSufficient ? 'Sufficient' : 'Insufficient',
+                                        style: AppTextStyles.body.copyWith(
+                                          color: hasSufficient ? Colors.green : Colors.red,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                }),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+
             // Send Button
                     SizedBox(
               width: double.infinity,
@@ -952,11 +1030,59 @@ class _SendScreenState extends State<SendScreen> with SingleTickerProviderStateM
       return;
     }
 
+    // Check BNB balance before proceeding
+    if (!walletController.hasSufficientBNBBalance()) {
+      final currentBNB = walletController.getFormattedBNBBalance();
+      Get.dialog(
+        AlertDialog(
+          title: Text('Insufficient BNB Balance'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('You need at least 1 BNB in your wallet to make transactions.'),
+              const SizedBox(height: 16),
+              Text('Current BNB Balance: $currentBNB BNB'),
+              const SizedBox(height: 8),
+              Text(
+                'BNB is required to pay for transaction fees on the Binance Smart Chain network.',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey[600],
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('OK'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                // You can add navigation to a BNB purchase screen here
+                Get.snackbar(
+                  'Info',
+                  'Please add BNB to your wallet to continue',
+                  backgroundColor: Colors.orange,
+                  colorText: Colors.white,
+                );
+              },
+              child: Text('Get BNB'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
     try {
       if (widget.isSendingToExternal) {
         await walletController.sendExternal({
           'to_address': addressController.text,
           'amount': double.parse(amountController.text),
+          'token': selectedToken, // Add token parameter as required by API
         });
       } else {
         await walletController.sendInternal({

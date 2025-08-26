@@ -831,6 +831,92 @@ class _WalletScreenState extends State<WalletScreen> with TickerProviderStateMix
 
               const SizedBox(height: 20),
 
+              // BNB Balance Card
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        'BNB',
+                        style: AppTextStyles.heading2.copyWith(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'BNB Balance',
+                            style: AppTextStyles.body.copyWith(
+                              color: AppColors.textSecondary,
+                              fontSize: 14,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Obx(() {
+                            final bnbBalance = walletController.getFormattedBNBBalance();
+                            final hasSufficient = walletController.hasSufficientBNBBalance();
+                            return Row(
+                              children: [
+                                Text(
+                                  '$bnbBalance BNB',
+                                  style: AppTextStyles.heading2.copyWith(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                    color: hasSufficient ? Colors.green : Colors.red,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Icon(
+                                  hasSufficient ? Icons.check_circle : Icons.warning,
+                                  color: hasSufficient ? Colors.green : Colors.red,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  hasSufficient ? 'Sufficient' : 'Insufficient',
+                                  style: AppTextStyles.body.copyWith(
+                                    color: hasSufficient ? Colors.green : Colors.red,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            );
+                          }),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Required for transaction fees',
+                            style: AppTextStyles.body.copyWith(
+                              color: AppColors.textSecondary,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
               // Send/Receive Buttons
               Row(
                 children: [

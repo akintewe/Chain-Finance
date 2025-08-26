@@ -7,10 +7,12 @@ import 'package:get/get.dart';
 
 class SwapScreen extends StatefulWidget {
   final bool isFromMyTokens;
+  final Map<String, dynamic>? selectedFromToken;
   
   const SwapScreen({
     super.key,
     this.isFromMyTokens = false,
+    this.selectedFromToken,
   });
 
   @override
@@ -32,6 +34,11 @@ class _SwapScreenState extends State<SwapScreen> with SingleTickerProviderStateM
   @override
   void initState() {
     super.initState();
+    
+    // Pre-select the token if provided
+    if (widget.selectedFromToken != null) {
+      fromToken = widget.selectedFromToken;
+    }
     
     _controller = AnimationController(
       duration: const Duration(milliseconds: 300),
@@ -621,14 +628,173 @@ class _SwapScreenState extends State<SwapScreen> with SingleTickerProviderStateM
                     ),
                     const SizedBox(height: 24),
 
+                    // BNB Balance Display
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              'BNB',
+                              style: AppTextStyles.body2.copyWith(
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'BNB Balance (Transaction Fees)',
+                                  style: AppTextStyles.body.copyWith(
+                                    color: AppColors.textSecondary,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Obx(() {
+                                  final bnbBalance = walletController.getFormattedBNBBalance();
+                                  final hasSufficient = walletController.hasSufficientBNBBalance();
+                                  return Row(
+                                    children: [
+                                      Text(
+                                        '$bnbBalance BNB',
+                                        style: AppTextStyles.body2.copyWith(
+                                          fontWeight: FontWeight.w600,
+                                          color: hasSufficient ? Colors.green : Colors.red,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Icon(
+                                        hasSufficient ? Icons.check_circle : Icons.warning,
+                                        color: hasSufficient ? Colors.green : Colors.red,
+                                        size: 16,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        hasSufficient ? 'Sufficient' : 'Insufficient',
+                                        style: AppTextStyles.body.copyWith(
+                                          color: hasSufficient ? Colors.green : Colors.red,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                }),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+
                     // Swap Button
                     SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
                           onPressed: fromToken != null && toToken != null && amountError == null
-                      ? () {
+                      ? () async {
+                          // Check BNB balance before proceeding
+                          if (!walletController.hasSufficientBNBBalance()) {
+                            final currentBNB = walletController.getFormattedBNBBalance();
+                            Get.dialog(
+                              AlertDialog(
+                                title: Text('Insufficient BNB Balance'),
+                                content: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('You need at least 1 BNB in your wallet to make swaps.'),
+                                    const SizedBox(height: 16),
+                                    Text('Current BNB Balance: $currentBNB BNB'),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      'BNB is required to pay for transaction fees on the Binance Smart Chain network.',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey[600],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.of(context).pop(),
+                                    child: Text('OK'),
+                                  ),
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      Navigator.of(context).pop();
+                                      Get.snackbar(
+                                        'Info',
+                                        'Please add BNB to your wallet to continue',
+                                        backgroundColor: Colors.orange,
+                                        colorText: Colors.white,
+                                      );
+                                    },
+                                    child: Text('Get BNB'),
+                                  ),
+                                ],
+                              ),
+                            );
+                            return;
+                          }
+
                           // Implement swap functionality
-                                  print('Swapping ${fromAmountController.text} ${fromToken!['symbol']} to ${toAmountController.text} ${toToken!['symbol']}');
+                          try {
+                            final amount = double.tryParse(fromAmountController.text) ?? 0.0;
+                            if (amount <= 0) {
+                              Get.snackbar('Error', 'Please enter a valid amount');
+                              return;
+                            }
+                            
+                            // Call the swap API
+                            await walletController.swapCrypto({
+                              'tokenFrom': fromToken!['symbol']?.toString().toUpperCase() ?? '',
+                              'tokenTo': toToken!['symbol']?.toString().toUpperCase() ?? '',
+                              'amount': amount,
+                            });
+                            
+                            Get.snackbar(
+                              'Success', 
+                              'Swap initiated successfully!',
+                              backgroundColor: Colors.green,
+                              colorText: Colors.white,
+                            );
+                            
+                            // Clear the form
+                            fromAmountController.clear();
+                            toAmountController.clear();
+                            setState(() {
+                              fromToken = null;
+                              toToken = null;
+                              amountError = null;
+                            });
+                            
+                          } catch (e) {
+                            Get.snackbar(
+                              'Error', 
+                              'Failed to initiate swap: $e',
+                              backgroundColor: Colors.red,
+                              colorText: Colors.white,
+                            );
+                          }
                         }
                       : null,
                         style: ElevatedButton.styleFrom(

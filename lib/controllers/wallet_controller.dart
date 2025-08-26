@@ -761,6 +761,7 @@ class WalletController extends GetxController {
       final payload = {
         'to_address': data['to_address'],
         'amount': data['amount'],
+        'token': data['token'], // Add token parameter as required by API
       };
 
       final response = await http.post(
@@ -782,6 +783,59 @@ class WalletController extends GetxController {
     } catch (e) {
       rethrow;
     }
+  }
+
+  Future<void> swapCrypto(Map<String, dynamic> data) async {
+    try {
+      // Prepare payload according to API specification
+      final payload = {
+        'tokenFrom': data['tokenFrom'],
+        'tokenTo': data['tokenTo'],
+        'amount': data['amount'],
+      };
+
+      final response = await http.post(
+        Uri.parse('http://173.212.228.47:8888/api/transaction/swap'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ${_authController.token}',
+        },
+        body: jsonEncode(payload),
+      );
+
+      if (response.statusCode == 200) {
+        print('Swap transaction successful: ${response.body}');
+      } else if (response.statusCode == 400) {
+        final errorData = jsonDecode(response.body);
+        throw errorData['message'] ?? 'Invalid input or insufficient balance';
+      } else if (response.statusCode == 500) {
+        throw 'Swap failed - server error';
+      } else {
+        throw 'Failed to swap: ${response.statusCode}';
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  // Check if user has sufficient BNB balance for transactions
+  bool hasSufficientBNBBalance() {
+    if (_walletData.value == null) return false;
+    
+    final bnbBalance = double.tryParse(_walletData.value!['bnb_balance'] ?? '0') ?? 0.0;
+    return bnbBalance >= 1.0; // Minimum 1 BNB required
+  }
+
+  // Get current BNB balance
+  double getBNBBalance() {
+    if (_walletData.value == null) return 0.0;
+    return double.tryParse(_walletData.value!['bnb_balance'] ?? '0') ?? 0.0;
+  }
+
+  // Get formatted BNB balance for display
+  String getFormattedBNBBalance() {
+    final balance = getBNBBalance();
+    return balance.toStringAsFixed(8);
   }
 
   Future<void> updatePrices() async {

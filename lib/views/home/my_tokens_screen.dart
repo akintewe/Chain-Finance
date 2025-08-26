@@ -161,7 +161,10 @@ class _MyTokensScreenState extends State<MyTokensScreen> {
                   child: ElevatedButton(
                     onPressed: () {
                       Navigator.pop(context);
-                      Get.to(() => const SwapScreen(isFromMyTokens: true));
+                      Get.to(() => SwapScreen(
+                        isFromMyTokens: true,
+                        selectedFromToken: token, // Pass the selected token
+                      ));
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
@@ -184,10 +187,13 @@ class _MyTokensScreenState extends State<MyTokensScreen> {
                 const SizedBox(width: 16),
                 Expanded(
                   child: ElevatedButton(
-                                         onPressed: () {
-                       Navigator.pop(context);
-                       Get.to(() => const SendScreen(isSendingToExternal: true));
-                     },
+                    onPressed: () {
+                      Navigator.pop(context);
+                      Get.to(() => SendScreen(
+                        isSendingToExternal: true,
+                        selectedToken: token, // Pass the selected token
+                      ));
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.surface,
                       foregroundColor: AppColors.primary,
