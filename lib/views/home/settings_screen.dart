@@ -2,6 +2,7 @@ import 'package:nexa_prime/controllers/wallet_controller.dart';
 import 'package:nexa_prime/controllers/auth_controller.dart';
 import 'package:nexa_prime/controllers/price_alert_controller.dart';
 import 'package:nexa_prime/controllers/kyc_controller.dart';
+import 'package:nexa_prime/services/api_service.dart';
 import 'package:nexa_prime/utils/colors.dart';
 import 'package:nexa_prime/utils/text_styles.dart';
 import 'package:nexa_prime/utils/button_style.dart';
@@ -180,6 +181,188 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  Future<void> _deleteAccount() async {
+    // First confirmation dialog
+    final shouldProceed = await Get.dialog<bool>(
+      AlertDialog(
+        title: const Text('Delete Account'),
+        content: const Text(
+          'Are you sure you want to delete your account? This action cannot be undone.\n\n'
+          'All your data, including wallet balance, transaction history, and personal information will be permanently removed.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(result: false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Get.back(result: true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Delete Account'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldProceed != true) return;
+
+    // Second confirmation dialog - ask user to type "DELETE" for confirmation
+    final TextEditingController confirmationController = TextEditingController();
+    final RxString errorText = ''.obs;
+    final RxBool canContinue = false.obs;
+
+    void validateConfirmation() {
+      canContinue.value = confirmationController.text.toUpperCase() == 'DELETE';
+      errorText.value = '';
+    }
+
+    final bool? confirmed = await Get.dialog<bool>(
+      Dialog(
+        insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+        backgroundColor: Colors.transparent,
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.warning, color: Colors.red),
+                  const SizedBox(width: 8),
+                  Text('Final Confirmation', style: AppTextStyles.heading2),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'This is your final chance to cancel. Type "DELETE" below to confirm account deletion.',
+                style: AppTextStyles.body.copyWith(color: AppColors.textSecondary),
+              ),
+              const SizedBox(height: 16),
+              Obx(() => TextField(
+                    controller: confirmationController,
+                    onChanged: (_) => validateConfirmation(),
+                    decoration: InputDecoration(
+                      hintText: 'Type DELETE to confirm',
+                      filled: true,
+                      fillColor: Colors.black.withOpacity(0.1),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      errorText: errorText.value.isEmpty ? null : errorText.value,
+                    ),
+                  )),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Get.back(result: false),
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(color: AppColors.primary.withOpacity(0.4)),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: const Text('Cancel'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Obx(() => ElevatedButton(
+                          onPressed: canContinue.value
+                              ? () {
+                                  if (confirmationController.text.toUpperCase() == 'DELETE') {
+                                    Get.back(result: true);
+                                  } else {
+                                    errorText.value = 'Please type "DELETE" to confirm';
+                                  }
+                                }
+                              : null,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                          child: const Text('Delete Forever', style: TextStyle(color: Colors.white)),
+                        )),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+      barrierDismissible: false,
+    );
+
+    if (confirmed != true) return;
+
+    // Show loading dialog
+    Get.dialog(
+      const Center(
+        child: CircularProgressIndicator(),
+      ),
+      barrierDismissible: false,
+    );
+
+    try {
+      // Get user UUID (you may need to modify this based on your auth controller)
+      final userData = await authController.getUserData();
+      final userUuid = userData['uuid'] ?? userData['id'];
+
+      if (userUuid == null || userUuid.isEmpty) {
+        Get.back(); // Close loading dialog
+        Get.snackbar(
+          'Error',
+          'Unable to identify user account. Please try again.',
+          backgroundColor: Colors.red.withOpacity(0.1),
+          colorText: Colors.red,
+        );
+        return;
+      }
+
+      // Call delete API
+      final result = await ApiService.deleteUser(userUuid.toString());
+
+      Get.back(); // Close loading dialog
+
+      if (result != null && result['success'] == true) {
+        // Success - logout and navigate to login screen
+        await authController.logout();
+        Get.offAllNamed('/signin'); // Adjust route as needed
+
+        Get.snackbar(
+          'Account Deleted',
+          'Your account has been successfully deleted.',
+          backgroundColor: Colors.green.withOpacity(0.1),
+          colorText: Colors.green,
+          duration: const Duration(seconds: 5),
+        );
+      } else {
+        // Handle different error types
+        final message = result?['message'] ?? 'Failed to delete account';
+
+        Get.snackbar(
+          'Delete Failed',
+          message,
+          backgroundColor: Colors.red.withOpacity(0.1),
+          colorText: Colors.red,
+          duration: const Duration(seconds: 5),
+        );
+      }
+    } catch (e) {
+      Get.back(); // Close loading dialog
+      Get.snackbar(
+        'Error',
+        'An unexpected error occurred. Please try again.',
+        backgroundColor: Colors.red.withOpacity(0.1),
+        colorText: Colors.red,
+      );
+    }
+  }
+
   Future<void> _promptPasswordAndOpenTransactionPin() async {
     final TextEditingController passwordController = TextEditingController();
     final storedPassword = await authController.getStoredLoginPassword();
@@ -198,7 +381,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final RxString errorText = ''.obs;
     final RxBool canContinue = false.obs;
 
-    void _validate() {
+    void validatePassword() {
       canContinue.value = passwordController.text.isNotEmpty;
       errorText.value = '';
     }
@@ -233,7 +416,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               Obx(() => TextField(
                     controller: passwordController,
                     obscureText: isObscure.value,
-                    onChanged: (_) => _validate(),
+                    onChanged: (_) => validatePassword(),
                     decoration: InputDecoration(
                       hintText: 'Password',
                       prefixIcon: const Icon(Icons.lock),
@@ -546,6 +729,43 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   title: 'Privacy Policy',
                   icon: Icons.privacy_tip_outlined,
                   onTap: () => Get.toNamed(Routes.privacyPolicy),
+                ),
+
+                _buildSectionHeader('Account'),
+                Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.red.withOpacity(0.05),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.red.withOpacity(0.2)),
+                  ),
+                  child: ListTile(
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.red.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(Icons.delete_forever, color: Colors.red, size: 20),
+                    ),
+                    title: Text(
+                      'Delete Account',
+                      style: AppTextStyles.body2.copyWith(color: Colors.red),
+                    ),
+                    subtitle: Text(
+                      'Permanently delete your account',
+                      style: AppTextStyles.body.copyWith(
+                        color: Colors.red.withOpacity(0.7),
+                        fontSize: 12,
+                      ),
+                    ),
+                    trailing: const Icon(
+                      Icons.arrow_forward_ios,
+                      size: 16,
+                      color: Colors.red,
+                    ),
+                    onTap: _deleteAccount,
+                  ),
                 ),
 
                 const SizedBox(height: 32),

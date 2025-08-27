@@ -450,4 +450,62 @@ class ApiService {
       return {'error': 'network_error', 'message': 'Network connection failed'};
     }
   }
+
+  // Delete user account
+  static Future<Map<String, dynamic>?> deleteUser(String userUuid) async {
+    try {
+      if (kDebugMode) {
+        print('Deleting user account');
+        print('API URL: $baseUrl/users/$userUuid');
+        print('Token: ${_authController.token.isNotEmpty ? 'Present' : 'Missing'}');
+      }
+
+      final response = await http.delete(
+        Uri.parse('$baseUrl/users/$userUuid'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ${_authController.token}',
+          'Accept': 'application/json',
+        },
+      );
+
+      if (kDebugMode) {
+        print('Delete user response status: ${response.statusCode}');
+        print('Delete user response body: ${response.body}');
+      }
+
+      if (response.statusCode == 200) {
+        if (kDebugMode) {
+          print('User account deleted successfully');
+        }
+        return {'success': true, 'message': 'User deleted successfully'};
+      } else if (response.statusCode == 401) {
+        if (kDebugMode) {
+          print('Unauthorized access - token may be invalid');
+        }
+        return {'error': 'unauthorized', 'message': 'Authentication failed'};
+      } else if (response.statusCode == 404) {
+        if (kDebugMode) {
+          print('User not found');
+        }
+        return {'error': 'not_found', 'message': 'User not found'};
+      } else if (response.statusCode == 500) {
+        if (kDebugMode) {
+          print('Server error - could not delete user');
+        }
+        return {'error': 'server_error', 'message': 'Could not delete user'};
+      } else {
+        if (kDebugMode) {
+          print('Failed to delete user: ${response.statusCode}');
+          print('Error response: ${response.body}');
+        }
+        return {'error': 'api_error', 'message': 'Failed to delete user'};
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Exception while deleting user: $e');
+      }
+      return {'error': 'network_error', 'message': 'Network connection failed'};
+    }
+  }
 } 
