@@ -39,6 +39,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> with SingleTickerPr
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<double> _scaleAnimation;
+  late bool isTablet;
 
   @override
   void initState() {
@@ -100,6 +101,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> with SingleTickerPr
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
+            // Initialize isTablet based on screen width
+            isTablet = MediaQuery.of(context).size.width > 600;
+
             return Stack(
               children: [
                 // Background gradient
@@ -152,8 +156,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> with SingleTickerPr
                           return Transform.scale(
                             scale: _scaleAnimation.value,
                             child: Container(
-                    height: constraints.maxHeight * 0.06,
-                    width: constraints.maxHeight * 0.06,
+                    height: isTablet ? constraints.maxHeight * 0.05 : constraints.maxHeight * 0.06,
+                    width: isTablet ? constraints.maxHeight * 0.05 : constraints.maxHeight * 0.06,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 gradient: AppColors.primaryGradient,
@@ -196,7 +200,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> with SingleTickerPr
                           duration: const Duration(milliseconds: 500),
                           opacity: currentIndex == index ? 1.0 : 0.0,
                           child: Column(
-                            mainAxisAlignment: MainAxisAlignment.end,
+                            mainAxisAlignment: isTablet ? MainAxisAlignment.center : MainAxisAlignment.end,
                             children: [
                                   // Image with animation
                                   AnimatedBuilder(
@@ -205,7 +209,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> with SingleTickerPr
                                       return Transform.scale(
                                         scale: _scaleAnimation.value,
                                         child: Container(
-                                height: constraints.maxHeight * 0.5,
+                                height: isTablet ? constraints.maxHeight * 0.35 : constraints.maxHeight * 0.5,
                                           decoration: BoxDecoration(
                                             borderRadius: BorderRadius.circular(30),
                                             boxShadow: [
@@ -227,8 +231,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> with SingleTickerPr
                                       );
                                     },
                               ),
-                              
-                              SizedBox(height: constraints.maxHeight * 0.02),
+
+                              SizedBox(height: isTablet ? constraints.maxHeight * 0.015 : constraints.maxHeight * 0.02),
                               
                                   // Text with animation
                                   AnimatedBuilder(
@@ -271,8 +275,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> with SingleTickerPr
                       },
                     ),
                   ),
-                      
-                   SizedBox(height: constraints.maxHeight * 0.02),
+
+                   SizedBox(height: isTablet ? constraints.maxHeight * 0.015 : constraints.maxHeight * 0.02),
                       
                       // Page indicators with animation
                   Row(
@@ -292,8 +296,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> with SingleTickerPr
                       ),
                     ),
                   ),
-                  
-                  SizedBox(height: constraints.maxHeight * 0.03),
+
+                  SizedBox(height: isTablet ? constraints.maxHeight * 0.025 : constraints.maxHeight * 0.03),
                   
                       // Buttons row with animation
                       AnimatedBuilder(
@@ -307,7 +311,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> with SingleTickerPr
                     children: [
                       Expanded(
                                     child: Container(
-                          height: constraints.maxHeight * 0.06,
+                          height: isTablet ? constraints.maxHeight * 0.05 : constraints.maxHeight * 0.06,
                             decoration: BoxDecoration(
                               gradient: AppColors.primaryGradient,
                                         borderRadius: BorderRadius.circular(15),
@@ -335,7 +339,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> with SingleTickerPr
                       SizedBox(width: constraints.maxWidth * 0.04),
                       Expanded(
                                     child: Container(
-                          height: constraints.maxHeight * 0.06,
+                          height: isTablet ? constraints.maxHeight * 0.05 : constraints.maxHeight * 0.06,
                                       decoration: BoxDecoration(
                                         color: AppColors.surface,
                                         borderRadius: BorderRadius.circular(15),

@@ -130,16 +130,16 @@ class _SendScreenState extends State<SendScreen> with SingleTickerProviderStateM
         minChildSize: 0.5,
         maxChildSize: 0.9,
         builder: (context, scrollController) => Container(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
-                children: [
-                  Text(
-                    'Select Token',
-                    style: AppTextStyles.heading2,
+          children: [
+            Text(
+              'Select Token',
+              style: AppTextStyles.heading2,
                   ),
                   const SizedBox(width: 8),
                   Container(
@@ -158,41 +158,41 @@ class _SendScreenState extends State<SendScreen> with SingleTickerProviderStateM
                     ),
                   ),
                 ],
-              ),
-              const SizedBox(height: 16),
-              Expanded(
-                child: ListView.builder(
+            ),
+            const SizedBox(height: 16),
+            Expanded(
+              child: ListView.builder(
                   controller: scrollController,
                   itemCount: networkTokens.length,
-                  itemBuilder: (context, index) {
+                itemBuilder: (context, index) {
                     final tokenSymbol = networkTokens.keys.elementAt(index);
                     final tokenData = networkTokens[tokenSymbol];
                     // Use the symbol field from the API response if available, otherwise fallback to the key
                     final displaySymbol = tokenData['symbol'] ?? tokenSymbol;
                     
-                    return GestureDetector(
-                      onTap: () {
-                        setState(() {
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() {
                           selectedToken = displaySymbol;
-                        });
-                        Navigator.pop(context);
-                      },
-                      child: Container(
-                        margin: const EdgeInsets.only(bottom: 12),
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: AppColors.background,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: AppColors.primary.withOpacity(0.1)),
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: AppColors.primary.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
+                      });
+                      Navigator.pop(context);
+                    },
+                    child: Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppColors.background,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                               child: Text(
                                 displaySymbol,
                                 style: AppTextStyles.body2.copyWith(
@@ -200,20 +200,20 @@ class _SendScreenState extends State<SendScreen> with SingleTickerProviderStateM
                                   fontWeight: FontWeight.bold,
                                   fontSize: 16,
                                 ),
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
+          ),
+        ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
                                     tokenData['name'] ?? displaySymbol,
-                                    style: AppTextStyles.body2.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                    ),
+                                  style: AppTextStyles.body2.copyWith(
+                                    fontWeight: FontWeight.w600,
                                   ),
-                                  const SizedBox(height: 4),
+                                ),
+                                const SizedBox(height: 4),
                                   Row(
                                     children: [
                                       Container(
@@ -224,7 +224,7 @@ class _SendScreenState extends State<SendScreen> with SingleTickerProviderStateM
                                         ),
                                         child: Text(
                                           tokenData['type'] ?? 'unknown',
-                                          style: AppTextStyles.body.copyWith(
+        style: AppTextStyles.body.copyWith(
                                             color: _getTokenTypeColor(tokenData['type']),
                                             fontSize: 10,
                                             fontWeight: FontWeight.w600,
@@ -251,17 +251,17 @@ class _SendScreenState extends State<SendScreen> with SingleTickerProviderStateM
                                       ],
                                     ],
                                   ),
-                                ],
-                              ),
+                              ],
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
-                    );
-                  },
-                ),
+            ),
+          );
+                },
               ),
-            ],
+            ),
+          ],
           ),
         ),
       ),
@@ -414,10 +414,10 @@ class _SendScreenState extends State<SendScreen> with SingleTickerProviderStateM
               opacity: _fadeAnimation,
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
-                  children: [
+          children: [
                     // Quick Info Card
               Container(
                 padding: const EdgeInsets.all(16),
@@ -464,7 +464,7 @@ class _SendScreenState extends State<SendScreen> with SingleTickerProviderStateM
                             widget.isSendingToExternal
                                 ? '• Select your preferred blockchain network\n• Double-check the wallet address\n• Transaction cannot be reversed'
                                 : '• Instant transfers to Nexa Prime users\n• No network fees\n• Secure and reliable',
-                            style: AppTextStyles.body.copyWith(
+                        style: AppTextStyles.body.copyWith(
                               color: AppColors.textSecondary,
                               height: 1.5,
                             ),
@@ -486,12 +486,12 @@ class _SendScreenState extends State<SendScreen> with SingleTickerProviderStateM
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
-                            children: [
-                              Text(
-                                'Select Token',
-                                style: AppTextStyles.body.copyWith(
-                                  color: AppColors.textSecondary,
-                                ),
+                        children: [
+                          Text(
+                            'Select Token',
+                            style: AppTextStyles.body.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
                               ),
                               if (selectedNetworkCode != null) ...[
                                 const SizedBox(width: 8),
@@ -539,24 +539,24 @@ class _SendScreenState extends State<SendScreen> with SingleTickerProviderStateM
                               ),
                             )
                           else
-                            GestureDetector(
-                              onTap: _showTokenSelector,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 12,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: AppColors.background,
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: AppColors.primary.withOpacity(0.1)),
-                                ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    if (selectedToken != null) ...[
-                                      Row(
-                                        children: [
+                          GestureDetector(
+                            onTap: _showTokenSelector,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 12,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.background,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  if (selectedToken != null) ...[
+                                    Row(
+                                      children: [
                                           Container(
                                             padding: const EdgeInsets.all(8),
                                             decoration: BoxDecoration(
@@ -571,28 +571,28 @@ class _SendScreenState extends State<SendScreen> with SingleTickerProviderStateM
                                                 fontSize: 14,
                                               ),
                                             ),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Text(
-                                            selectedToken!,
-                                            style: AppTextStyles.body2.copyWith(
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ] else
-                                      Text(
-                                        'Select Token',
-                                        style: AppTextStyles.body2.copyWith(
-                                          color: AppColors.textSecondary,
                                         ),
-                                      ),
-                                    Icon(
-                                      Icons.arrow_forward_ios,
-                                      color: AppColors.textSecondary,
-                                      size: 16,
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          selectedToken!,
+                                          style: AppTextStyles.body2.copyWith(
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ],
                                     ),
+                                  ] else
+                                    Text(
+                                      'Select Token',
+                                      style: AppTextStyles.body2.copyWith(
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    ),
+                                  Icon(
+                                    Icons.arrow_forward_ios,
+                                    color: AppColors.textSecondary,
+                                    size: 16,
+                                  ),
                                   ],
                                 ),
                               ),
@@ -654,13 +654,13 @@ class _SendScreenState extends State<SendScreen> with SingleTickerProviderStateM
                               ),
                             ),
                           const Icon(Icons.arrow_forward_ios, color: AppColors.textSecondary, size: 16),
-                        ],
+                                ],
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
             const SizedBox(height: 24),
 
             if (widget.isSendingToExternal) ...[
@@ -1092,7 +1092,7 @@ class _SendScreenState extends State<SendScreen> with SingleTickerProviderStateM
           'note': noteController.text,
         });
       }
-      Navigator.pop(context);
+              Navigator.pop(context);
       Get.snackbar('Success', 'Transaction sent successfully');
     } catch (e) {
       Get.snackbar('Error', e.toString());

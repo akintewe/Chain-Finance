@@ -258,12 +258,12 @@ class _TransactionScreenState extends State<TransactionScreen> {
                     Expanded(
                       child: Text(
                         'TX: ${tx['tx_id']}',
-                        style: AppTextStyles.body.copyWith(
-                          color: AppColors.textSecondary,
+                          style: AppTextStyles.body.copyWith(
+                            color: AppColors.textSecondary,
                           fontSize: 10,
                         ),
                         overflow: TextOverflow.ellipsis,
-                      ),
+                        ),
                     ),
                   ],
                 ),
@@ -394,11 +394,11 @@ class _TransactionScreenState extends State<TransactionScreen> {
             children: [
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Transactions',
+            children: [
+              Text(
+                'Transactions',
                     style: AppTextStyles.heading.copyWith(fontSize: 32),
-                  ),
+              ),
                   const SizedBox(height: 16),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
@@ -416,73 +416,73 @@ class _TransactionScreenState extends State<TransactionScreen> {
                       // Date picker
                       Flexible(
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: AppColors.surface,
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(
-                              color: AppColors.primary.withOpacity(0.1),
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.calendar_today,
-                                color: AppColors.textSecondary,
-                                size: 16,
-                              ),
-                              const SizedBox(width: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: AppColors.primary.withOpacity(0.1),
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.calendar_today,
+                      color: AppColors.textSecondary,
+                      size: 16,
+                    ),
+                    const SizedBox(width: 6),
                               Flexible(
                                 child: TextButton(
-                                  style: TextButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                                    minimumSize: Size.zero,
-                                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                  ),
-                                  onPressed: () async {
-                                    final date = await showDatePicker(
-                                      context: context,
-                                      initialDate: selectedDate ?? DateTime.now(),
-                                      firstDate: DateTime(2020),
-                                      lastDate: DateTime.now(),
-                                    );
-                                    if (date != null) {
-                                      setState(() {
-                                        selectedDate = date;
-                                      });
-                                    }
-                                  },
-                                  child: Text(
-                                    selectedDate != null
-                                        ? DateFormat('MMM dd').format(selectedDate!)
-                                        : 'Select Date',
-                                    style: AppTextStyles.body2.copyWith(fontSize: 13),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      onPressed: () async {
+                        final date = await showDatePicker(
+                          context: context,
+                          initialDate: selectedDate ?? DateTime.now(),
+                          firstDate: DateTime(2020),
+                          lastDate: DateTime.now(),
+                        );
+                        if (date != null) {
+                          setState(() {
+                            selectedDate = date;
+                          });
+                        }
+                      },
+                      child: Text(
+                        selectedDate != null
+                            ? DateFormat('MMM dd').format(selectedDate!)
+                            : 'Select Date',
+                        style: AppTextStyles.body2.copyWith(fontSize: 13),
                                     overflow: TextOverflow.ellipsis,
                                   ),
-                                ),
-                              ),
-                              if (selectedDate != null) ...[
-                                const SizedBox(width: 6),
-                                GestureDetector(
-                                  onTap: () {
-                                    setState(() {
-                                      selectedDate = null;
-                                    });
-                                  },
-                                  child: Icon(
-                                    Icons.close,
-                                    size: 14,
-                                    color: AppColors.textSecondary,
-                                  ),
-                                ),
-                              ],
-                            ],
-                          ),
+                      ),
+                    ),
+                    if (selectedDate != null) ...[
+                      const SizedBox(width: 6),
+                      GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            selectedDate = null;
+                          });
+                        },
+                        child: Icon(
+                          Icons.close,
+                          size: 14,
+                          color: AppColors.textSecondary,
                         ),
                       ),
                     ],
-                  ),
+                  ],
+                ),
+                        ),
+                      ),
+                    ],
+              ),
                 ],
               ),
               const SizedBox(height: 24),
