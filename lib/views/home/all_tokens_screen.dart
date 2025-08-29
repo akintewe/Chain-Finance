@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:nexa_prime/utils/colors.dart';
 import 'package:nexa_prime/utils/text_styles.dart';
+import 'package:nexa_prime/utils/responsive_helper.dart';
 import 'package:nexa_prime/controllers/wallet_controller.dart';
 import 'package:nexa_prime/views/home/token_info_screen.dart';
 
@@ -50,7 +51,7 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: ResponsiveHelper.getResponsiveAllPadding(context, all: 16.0),
             child: TextField(
               controller: searchController,
               onChanged: filterTokens,

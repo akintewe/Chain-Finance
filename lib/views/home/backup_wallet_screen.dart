@@ -2,6 +2,7 @@ import 'package:nexa_prime/controllers/wallet_controller.dart';
 import 'package:nexa_prime/utils/colors.dart';
 import 'package:nexa_prime/utils/text_styles.dart';
 import 'package:nexa_prime/utils/button_style.dart';
+import 'package:nexa_prime/utils/responsive_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -36,7 +37,7 @@ class BackupWalletScreen extends StatelessWidget {
         title: Text('Backup Wallet', style: AppTextStyles.button),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
+        padding: ResponsiveHelper.getResponsiveAllPadding(context, all: 24.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

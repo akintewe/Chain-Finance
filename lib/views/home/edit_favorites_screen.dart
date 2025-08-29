@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:nexa_prime/utils/colors.dart';
 import 'package:nexa_prime/utils/text_styles.dart';
+import 'package:nexa_prime/utils/responsive_helper.dart';
 import 'package:nexa_prime/controllers/wallet_controller.dart';
 
 class EditFavoritesScreen extends StatefulWidget {
@@ -74,7 +75,7 @@ class _EditFavoritesScreenState extends State<EditFavoritesScreen> with SingleTi
         title: Text('Edit Favorites', style: AppTextStyles.heading2),
         actions: [
           Container(
-            margin: const EdgeInsets.only(right: 16),
+            margin: EdgeInsets.only(right: ResponsiveHelper.getHorizontalPadding(context)),
             decoration: BoxDecoration(
               gradient: AppColors.primaryGradient,
               borderRadius: BorderRadius.circular(12),
@@ -97,7 +98,7 @@ class _EditFavoritesScreenState extends State<EditFavoritesScreen> with SingleTi
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            margin: const EdgeInsets.all(16),
+            margin: ResponsiveHelper.getResponsiveAllPadding(context, all: 16),
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: AppColors.surface,
@@ -214,7 +215,12 @@ class _EditFavoritesScreenState extends State<EditFavoritesScreen> with SingleTi
           ),
           if (availableTokens.isNotEmpty) ...[
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 24, 16, 16),
+              padding: EdgeInsets.fromLTRB(
+                ResponsiveHelper.getHorizontalPadding(context), 
+                24, 
+                ResponsiveHelper.getHorizontalPadding(context), 
+                16
+              ),
               child: Text(
                 'Available Tokens',
                 style: AppTextStyles.heading2.copyWith(fontSize: 18),
@@ -222,7 +228,7 @@ class _EditFavoritesScreenState extends State<EditFavoritesScreen> with SingleTi
             ),
             Expanded(
               child: ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: ResponsiveHelper.getResponsivePadding(context, horizontal: 16),
                 itemCount: availableTokens.length,
                 itemBuilder: (context, index) {
                   final token = availableTokens[index];

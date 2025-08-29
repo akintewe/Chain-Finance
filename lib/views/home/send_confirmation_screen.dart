@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:nexa_prime/controllers/wallet_controller.dart';
 import 'package:nexa_prime/utils/colors.dart';
 import 'package:nexa_prime/utils/text_styles.dart';
+import 'package:nexa_prime/utils/responsive_helper.dart';
 
 class SendConfirmationScreen extends StatelessWidget {
   final bool isSendingToExternal;
@@ -33,7 +34,7 @@ class SendConfirmationScreen extends StatelessWidget {
         ),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(24.0),
+        padding: ResponsiveHelper.getResponsiveAllPadding(context, all: 24.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

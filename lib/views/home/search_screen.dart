@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:nexa_prime/controllers/wallet_controller.dart';
 import 'package:nexa_prime/utils/colors.dart';
 import 'package:nexa_prime/utils/text_styles.dart';
+import 'package:nexa_prime/utils/responsive_helper.dart';
 import 'package:nexa_prime/views/home/token_info_screen.dart';
 
 class SearchScreen extends StatefulWidget {
@@ -127,7 +128,7 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
           children: [
             // Search Bar
             Container(
-              margin: const EdgeInsets.all(20),
+              margin: ResponsiveHelper.getResponsiveAllPadding(context, all: 20),
               decoration: BoxDecoration(
                 color: AppColors.surface,
                 borderRadius: BorderRadius.circular(16),
@@ -203,7 +204,7 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
               child: filteredTokens.isEmpty
                   ? _buildEmptyState()
                   : ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      padding: ResponsiveHelper.getResponsivePadding(context, horizontal: 20),
                       itemCount: filteredTokens.length,
                       itemBuilder: (context, index) {
                         final token = filteredTokens[index];

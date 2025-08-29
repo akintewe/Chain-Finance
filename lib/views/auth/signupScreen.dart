@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import '../../utils/colors.dart';
 import '../../utils/text_styles.dart';
 import '../../utils/button_style.dart';
+import '../../utils/responsive_helper.dart';
 import 'package:nexa_prime/controllers/auth_controller.dart';
 import 'package:flutter_rx/flutter_rx.dart';
 
@@ -57,7 +58,7 @@ class SignUpScreen extends StatelessWidget {
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.all(24.0),
+            padding: ResponsiveHelper.getResponsiveAllPadding(context, all: 24.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

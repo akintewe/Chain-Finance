@@ -2,6 +2,7 @@ import 'package:nexa_prime/controllers/auth_controller.dart';
 import 'package:nexa_prime/controllers/wallet_controller.dart';
 import 'package:nexa_prime/utils/colors.dart';
 import 'package:nexa_prime/utils/text_styles.dart';
+import 'package:nexa_prime/utils/responsive_helper.dart';
 import 'package:nexa_prime/views/home/receive_screen.dart';
 import 'package:nexa_prime/views/home/send_screen.dart';
 import 'package:nexa_prime/views/home/search_screen.dart';
@@ -445,7 +446,7 @@ class _WalletScreenState extends State<WalletScreen> with TickerProviderStateMix
   void _showSendOptions() {
     Get.bottomSheet(
       Container(
-        padding: const EdgeInsets.all(24),
+        padding: ResponsiveHelper.getResponsiveAllPadding(context, all: 24),
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
@@ -598,11 +599,11 @@ class _WalletScreenState extends State<WalletScreen> with TickerProviderStateMix
               },
               color: AppColors.primary,
               backgroundColor: AppColors.surface,
-              child: SingleChildScrollView(
+            child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(), // Required for RefreshIndicator to work
-                child: Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Column(
+        child: Padding(
+          padding: ResponsiveHelper.getResponsiveAllPadding(context, all: 20.0),
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Header
@@ -656,8 +657,8 @@ class _WalletScreenState extends State<WalletScreen> with TickerProviderStateMix
                                 width: 10,
                               ),
 
-                              GestureDetector(
-                                onTap: () => Get.to(() => const NotificationScreen()),
+              GestureDetector(
+                onTap: () => Get.to(() => const NotificationScreen()),
                 child: Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
@@ -910,7 +911,7 @@ class _WalletScreenState extends State<WalletScreen> with TickerProviderStateMix
                           ),
                         ],
                       ),
-                    ),
+                          ),
                   ],
                 ),
               ),
@@ -1462,7 +1463,7 @@ class _WalletScreenState extends State<WalletScreen> with TickerProviderStateMix
                         ),
                       ],
                     ),
-                    const SizedBox(height: 20),
+              const SizedBox(height: 20),
                     SizedBox(
                       height: 300, // Increased from 200 to 300
                       child: CandlestickChartWidget(
@@ -1707,8 +1708,8 @@ class _WalletScreenState extends State<WalletScreen> with TickerProviderStateMix
                 ),
               ),
             ),
+              ),
           ),
-        ),
       ]),
     );
   }

@@ -4,6 +4,7 @@ import 'package:nexa_prime/controllers/wallet_controller.dart';
 import 'package:nexa_prime/utils/colors.dart';
 import 'package:nexa_prime/utils/text_styles.dart';
 import 'package:nexa_prime/utils/loader.dart';
+import 'package:nexa_prime/utils/responsive_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -130,7 +131,7 @@ class _SendScreenState extends State<SendScreen> with SingleTickerProviderStateM
         minChildSize: 0.5,
         maxChildSize: 0.9,
         builder: (context, scrollController) => Container(
-        padding: const EdgeInsets.all(24),
+        padding: ResponsiveHelper.getResponsiveAllPadding(context, all: 24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -316,7 +317,7 @@ class _SendScreenState extends State<SendScreen> with SingleTickerProviderStateM
         minChildSize: 0.5,
         maxChildSize: 0.9,
         builder: (context, scrollController) => Container(
-          padding: const EdgeInsets.all(24),
+          padding: ResponsiveHelper.getResponsiveAllPadding(context, all: 24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -413,7 +414,7 @@ class _SendScreenState extends State<SendScreen> with SingleTickerProviderStateM
             child: FadeTransition(
               opacity: _fadeAnimation,
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
+                padding: ResponsiveHelper.getResponsiveAllPadding(context, all: 24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,

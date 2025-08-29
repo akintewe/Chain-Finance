@@ -2,6 +2,7 @@ import 'package:nexa_prime/controllers/wallet_controller.dart';
 import 'package:nexa_prime/controllers/dashboard_controller.dart';
 import 'package:nexa_prime/utils/colors.dart';
 import 'package:nexa_prime/utils/text_styles.dart';
+import 'package:nexa_prime/utils/responsive_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:nexa_prime/views/home/swap_screen.dart';
@@ -98,7 +99,7 @@ class _MyTokensScreenState extends State<MyTokensScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (context) => Container(
-        padding: const EdgeInsets.all(24),
+        padding: ResponsiveHelper.getResponsiveAllPadding(context, all: 24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [

@@ -2,6 +2,7 @@ import 'package:nexa_prime/controllers/wallet_controller.dart';
 import 'package:nexa_prime/controllers/dashboard_controller.dart';
 import 'package:nexa_prime/utils/colors.dart';
 import 'package:nexa_prime/utils/text_styles.dart';
+import 'package:nexa_prime/utils/responsive_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -133,7 +134,7 @@ class _SwapScreenState extends State<SwapScreen> with SingleTickerProviderStateM
         minChildSize: 0.5,
         maxChildSize: 0.9,
         builder: (context, scrollController) => Container(
-        padding: const EdgeInsets.all(24),
+        padding: ResponsiveHelper.getResponsiveAllPadding(context, all: 24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -275,7 +276,7 @@ class _SwapScreenState extends State<SwapScreen> with SingleTickerProviderStateM
             if (widget.isFromMyTokens) {
               Navigator.pop(context);
             } else {
-              dashboardController.goToWallet();
+            dashboardController.goToWallet();
             }
           },
         ),
@@ -297,7 +298,7 @@ class _SwapScreenState extends State<SwapScreen> with SingleTickerProviderStateM
             child: FadeTransition(
               opacity: _fadeAnimation,
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
+                padding: ResponsiveHelper.getResponsiveAllPadding(context, all: 24),
                 child: Obx(() {
                   if (walletController.isLoading) {
                     return const Center(

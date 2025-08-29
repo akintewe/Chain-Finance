@@ -6,6 +6,7 @@ import 'package:nexa_prime/services/api_service.dart';
 import 'package:nexa_prime/utils/colors.dart';
 import 'package:nexa_prime/utils/text_styles.dart';
 import 'package:nexa_prime/utils/button_style.dart';
+import 'package:nexa_prime/utils/responsive_helper.dart';
 import 'package:nexa_prime/routes/routes.dart';
 import 'package:nexa_prime/views/home/edit_profile_screen.dart';
 import 'package:nexa_prime/views/home/backup_wallet_screen.dart';
@@ -216,12 +217,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
       errorText.value = '';
     }
 
-    final bool? confirmed = await Get.dialog<bool>(
-      Dialog(
-        insetPadding: const EdgeInsets.symmetric(horizontal: 24),
-        backgroundColor: Colors.transparent,
-        child: Container(
-          padding: const EdgeInsets.all(20),
+          final bool? confirmed = await Get.dialog<bool>(
+        Dialog(
+          insetPadding: ResponsiveHelper.getResponsivePadding(context, horizontal: 24),
+          backgroundColor: Colors.transparent,
+          child: Container(
+            padding: ResponsiveHelper.getResponsiveAllPadding(context, all: 20),
           decoration: BoxDecoration(
             color: AppColors.surface,
             borderRadius: BorderRadius.circular(16),
@@ -388,10 +389,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     final bool? verified = await Get.dialog<bool>(
       Dialog(
-        insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+        insetPadding: ResponsiveHelper.getResponsivePadding(context, horizontal: 24),
         backgroundColor: Colors.transparent,
         child: Container(
-          padding: const EdgeInsets.all(20),
+          padding: ResponsiveHelper.getResponsiveAllPadding(context, all: 20),
           decoration: BoxDecoration(
             color: AppColors.surface,
             borderRadius: BorderRadius.circular(16),
@@ -573,7 +574,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.all(20.0),
+            padding: ResponsiveHelper.getResponsiveAllPadding(context, all: 20.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

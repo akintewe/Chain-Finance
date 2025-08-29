@@ -6,6 +6,7 @@ import 'package:nexa_prime/controllers/dashboard_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../utils/colors.dart';
+import '../../utils/responsive_helper.dart';
 import 'dart:ui';
 
 class DashboardScreen extends StatefulWidget {
@@ -52,7 +53,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
       body: Obx(() => _screens[dashboardController.currentIndex]),
       extendBody: true,
       bottomNavigationBar: Container(
-        margin: const EdgeInsets.all(16),
+        margin: ResponsiveHelper.getResponsiveAllPadding(context, all: 16),
         height: 65,
         child: Stack(
           children: [

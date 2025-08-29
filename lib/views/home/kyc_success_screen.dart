@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../utils/colors.dart';
+import '../../utils/responsive_helper.dart';
 import '../../routes/routes.dart';
 
 class KYCSuccessScreen extends StatelessWidget {
@@ -16,7 +17,7 @@ class KYCSuccessScreen extends StatelessWidget {
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(24.0),
+          padding: ResponsiveHelper.getResponsiveAllPadding(context, all: 24.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [

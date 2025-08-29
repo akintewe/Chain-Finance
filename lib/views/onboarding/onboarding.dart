@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../utils/text_styles.dart';
 import '../../utils/colors.dart';
+import '../../utils/responsive_helper.dart';
 import 'dart:math' as math;
 
 class OnboardingScreen extends StatefulWidget {
@@ -102,7 +103,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> with SingleTickerPr
         child: LayoutBuilder(
           builder: (context, constraints) {
             // Initialize isTablet based on screen width
-            isTablet = MediaQuery.of(context).size.width > 600;
+            isTablet = ResponsiveHelper.isTablet(context);
 
             return Stack(
               children: [
@@ -145,7 +146,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> with SingleTickerPr
 
                 // Main content
                 Padding(
-                  padding: EdgeInsets.all(constraints.maxWidth * 0.05),
+                  padding: ResponsiveHelper.getResponsiveAllPadding(context, all: constraints.maxWidth * 0.05),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

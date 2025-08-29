@@ -3,7 +3,7 @@ import 'dart:convert';
 
 class PriceService {
   static const String baseUrl = 'https://rest.coinapi.io/v1';
-  static const String apiKey = '81e48921-999e-47bb-b043-c6561ca82dc9';
+  static const String apiKey = '0dac3ea0-747d-4ed2-aaaa-32b7454c6207';
 
   static Future<Map<String, dynamic>> getAllRates(String baseAsset) async {
     try {

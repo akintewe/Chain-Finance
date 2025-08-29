@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:nexa_prime/utils/colors.dart';
 import 'package:nexa_prime/utils/text_styles.dart';
+import 'package:nexa_prime/utils/responsive_helper.dart';
 import 'package:nexa_prime/services/price_service.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'dart:math' show min, max;
@@ -157,7 +158,7 @@ class _TokenInfoScreenState extends State<TokenInfoScreen> {
       ),
       body: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.all(20),
+          padding: ResponsiveHelper.getResponsiveAllPadding(context, all: 20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

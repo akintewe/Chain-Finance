@@ -1,5 +1,6 @@
 import 'package:nexa_prime/utils/colors.dart';
 import 'package:nexa_prime/utils/text_styles.dart';
+import 'package:nexa_prime/utils/responsive_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:nexa_prime/services/api_service.dart';
@@ -388,7 +389,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(20.0),
+          padding: ResponsiveHelper.getResponsiveAllPadding(context, all: 20.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

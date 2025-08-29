@@ -4,6 +4,7 @@ import 'package:nexa_prime/utils/colors.dart';
 import 'package:nexa_prime/utils/custom_textfield.dart';
 import 'package:nexa_prime/utils/text_styles.dart';
 import 'package:nexa_prime/utils/button_style.dart';
+import 'package:nexa_prime/utils/responsive_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
@@ -76,7 +77,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> with SingleTicker
     
     Get.bottomSheet(
       Container(
-        padding: const EdgeInsets.all(24),
+        padding: ResponsiveHelper.getResponsiveAllPadding(context, all: 24),
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
@@ -367,7 +368,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> with SingleTicker
       body: FadeTransition(
         opacity: _fadeAnimation,
         child: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
+        padding: ResponsiveHelper.getResponsiveAllPadding(context, all: 24.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [

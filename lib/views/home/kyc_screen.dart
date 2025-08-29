@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'dart:io';
 import '../../controllers/kyc_controller.dart';
 import '../../utils/colors.dart';
+import '../../utils/responsive_helper.dart';
 
 
 class KYCScreen extends StatelessWidget {
@@ -34,7 +35,7 @@ class KYCScreen extends StatelessWidget {
         centerTitle: true,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: ResponsiveHelper.getResponsiveAllPadding(context, all: 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

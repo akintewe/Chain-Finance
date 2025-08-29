@@ -1,6 +1,7 @@
 import 'package:nexa_prime/controllers/wallet_controller.dart';
 import 'package:nexa_prime/utils/colors.dart';
 import 'package:nexa_prime/utils/text_styles.dart';
+import 'package:nexa_prime/utils/responsive_helper.dart';
 import 'package:nexa_prime/views/home/receive_qr_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -74,7 +75,7 @@ class _ReceiveScreenState extends State<ReceiveScreen> with SingleTickerProvider
         children: [
           // Search Bar
           Container(
-            margin: const EdgeInsets.all(20),
+            margin: ResponsiveHelper.getResponsiveAllPadding(context, all: 20),
             decoration: BoxDecoration(
               color: AppColors.surface,
               borderRadius: BorderRadius.circular(16),
@@ -109,8 +110,8 @@ class _ReceiveScreenState extends State<ReceiveScreen> with SingleTickerProvider
           Expanded(
             child: Obx(() => walletController.isLoading
                 ? const Center(child: CircularProgressIndicator())
-                : ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                :                   ListView.builder(
+                    padding: ResponsiveHelper.getResponsivePadding(context, horizontal: 20),
                     itemCount: filteredTokens.length,
                     itemBuilder: (context, index) {
                       final token = filteredTokens[index];

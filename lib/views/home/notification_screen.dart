@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:nexa_prime/utils/colors.dart';
 import 'package:nexa_prime/utils/text_styles.dart';
+import 'package:nexa_prime/utils/responsive_helper.dart';
 import '../../controllers/notification_controller.dart';
 
 class NotificationScreen extends StatefulWidget {
@@ -136,7 +137,7 @@ class _NotificationScreenState extends State<NotificationScreen> with SingleTick
                   child: notificationController.notifications.isEmpty
                       ? _buildEmptyState()
                       : ListView.builder(
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          padding: ResponsiveHelper.getResponsivePadding(context, horizontal: 20),
                           itemCount: notificationController.notifications.length,
                           itemBuilder: (context, index) {
                             final notification = notificationController.notifications[index];
