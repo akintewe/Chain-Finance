@@ -8,9 +8,8 @@ import 'views/dashboard/dashboard_screen.dart';
 import 'controllers/auth_controller.dart';
 import 'controllers/notification_controller.dart';
 import 'controllers/price_alert_controller.dart';
-import 'package:nexa_prime/utils/loader.dart';
 import 'package:nexa_prime/services/onesignal_service.dart';
-import 'dart:math';
+import 'package:nexa_prime/widgets/att_wrapper.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -50,30 +49,32 @@ class MyApp extends StatelessWidget {
         ),
       ),
       getPages: Routes.routes,
-      home: FutureBuilder<bool>(
-        future: _checkLoginStatus(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            // Show a loading screen while checking auth status
-            return Scaffold(
-              backgroundColor: AppColors.background,
-              body: Center(
-                child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+      home: ATTWrapper(
+        child: FutureBuilder<bool>(
+          future: _checkLoginStatus(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              // Show a loading screen while checking auth status
+              return Scaffold(
+                backgroundColor: AppColors.background,
+                body: Center(
+                  child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                  ),
                 ),
-              ),
-            );
-          }
-          
-          // Navigate to the appropriate screen based on auth status
-          if (snapshot.hasData && snapshot.data == true) {
-            // User is logged in, show dashboard
-            return const DashboardScreen();
-          } else {
-            // User is not logged in, show onboarding
-          return const OnboardingScreen();
-          }
-        },
+              );
+            }
+            
+            // Navigate to the appropriate screen based on auth status
+            if (snapshot.hasData && snapshot.data == true) {
+              // User is logged in, show dashboard
+              return const DashboardScreen();
+            } else {
+              // User is not logged in, show onboarding
+            return const OnboardingScreen();
+            }
+          },
+        ),
       ),
     );
   }

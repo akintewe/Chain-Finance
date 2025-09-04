@@ -47,11 +47,7 @@ We use App Tracking Transparency (ATT) framework to request permission before co
 
 ## 4. Information Sharing
 
-### 4.1 Third-Party Services
-We use the following third-party services:
-- **OneSignal**: For push notifications and analytics
-- **Firebase**: For app analytics and crash reporting
-- **Cryptocurrency APIs**: For real-time price data
+
 
 ### 4.2 Legal Requirements
 We may share your information when required by law or to:
@@ -88,7 +84,7 @@ You can request access to or deletion of your data by contacting us.
 
 ### 7.1 Service Description
 Our app provides cryptocurrency wallet and exchange services through:
-- Integration with third-party exchange APIs
+
 - Direct user-to-exchange transactions
 - Price monitoring and alerts
 
@@ -155,10 +151,3 @@ We implement robust Anti-Money Laundering and Know Your Customer procedures:
 - Transaction monitoring
 - Suspicious activity reporting
 - Risk assessment protocols
-
-### 15.3 Third-Party Exchange Partnerships
-We partner with licensed cryptocurrency exchanges to provide services:
-- Secure API integrations
-- Regulatory compliance verification
-- Geographic service restrictions
-- Transaction processing standards 

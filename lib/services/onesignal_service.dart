@@ -1,6 +1,6 @@
 import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'package:flutter/foundation.dart';
-
+import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 import 'api_service.dart';
 
 class OneSignalService {
@@ -17,13 +17,11 @@ class OneSignalService {
       print("Initializing OneSignal...");
     }
 
-
-
-    // Initialize OneSignal
+    // Initialize OneSignal first (without any permissions)
     OneSignal.initialize(appId);
 
-    // Request permission for push notifications
-    await OneSignal.Notifications.requestPermission(true);
+    // DO NOT request push notification permission here
+    // ATT permission must come first, then push notifications
 
     // Set up notification event listeners
     OneSignal.Notifications.addForegroundWillDisplayListener((event) {
@@ -77,9 +75,17 @@ class OneSignalService {
   // Send tags (user properties)
   static Future<void> sendTags(Map<String, dynamic> tags) async {
     try {
-      OneSignal.User.addTags(tags);
-      if (kDebugMode) {
-        print("Tags sent: $tags");
+      // Check if tracking permission is granted before sending tags
+      final trackingStatus = await AppTrackingTransparency.trackingAuthorizationStatus;
+      if (trackingStatus == TrackingStatus.authorized) {
+        OneSignal.User.addTags(tags);
+        if (kDebugMode) {
+          print("Tags sent: $tags");
+        }
+      } else {
+        if (kDebugMode) {
+          print("Tracking permission not granted, skipping tags");
+        }
       }
     } catch (e) {
       if (kDebugMode) {
@@ -99,9 +105,17 @@ class OneSignalService {
   // Set external user ID
   static Future<void> setExternalUserId(String userId) async {
     try {
-      OneSignal.login(userId);
-      if (kDebugMode) {
-        print("External user ID set: $userId");
+      // Check if tracking permission is granted before setting user ID
+      final trackingStatus = await AppTrackingTransparency.trackingAuthorizationStatus;
+      if (trackingStatus == TrackingStatus.authorized) {
+        OneSignal.login(userId);
+        if (kDebugMode) {
+          print("External user ID set: $userId");
+        }
+      } else {
+        if (kDebugMode) {
+          print("Tracking permission not granted, skipping external user ID setting");
+        }
       }
     } catch (e) {
       if (kDebugMode) {
@@ -187,5 +201,91 @@ class OneSignalService {
     await _sendPlayerIdToBackend();
   }
 
+  // Request App Tracking Transparency permission after UI is ready
+  static Future<void> requestTrackingPermission() async {
+    try {
+      // Add a small delay to ensure UI is fully ready
+      await Future.delayed(const Duration(milliseconds: 500));
+      
+      // Check if tracking is available
+      final status = await AppTrackingTransparency.trackingAuthorizationStatus;
+      if (kDebugMode) {
+        print("Current tracking authorization status: $status");
+      }
+      
+      // Request permission if not determined
+      if (status == TrackingStatus.notDetermined) {
+        final result = await AppTrackingTransparency.requestTrackingAuthorization();
+        if (kDebugMode) {
+          print("App Tracking Transparency permission requested. Result: $result");
+        }
+        
+        // Set external user ID only if tracking is allowed
+        if (result == TrackingStatus.authorized) {
+          await _setExternalUserIdIfAllowed();
+        }
+        
+        // Now request push notification permission AFTER ATT
+        await _requestPushNotificationPermission();
+      } else if (status == TrackingStatus.authorized) {
+        // If already authorized, set external user ID
+        await _setExternalUserIdIfAllowed();
+        
+        // Request push notification permission
+        await _requestPushNotificationPermission();
+      } else {
+        // ATT was denied or restricted, but still request push notifications
+        await _requestPushNotificationPermission();
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error requesting App Tracking Transparency permission: $e");
+      }
+      // Even if ATT fails, still request push notifications
+      await _requestPushNotificationPermission();
+    }
+  }
 
+  // Request only push notification permission (used by ATT manager)
+  static Future<void> requestPushNotificationPermissionOnly() async {
+    await _requestPushNotificationPermission();
+  }
+
+  // Private method to handle external user ID setting
+  static Future<void> _setExternalUserIdIfAllowed() async {
+    try {
+      final status = await AppTrackingTransparency.trackingAuthorizationStatus;
+      if (status == TrackingStatus.authorized) {
+        // Only proceed with tracking if permission is granted
+        if (kDebugMode) {
+          print("Tracking authorized - can set external user ID");
+        }
+        // Add any tracking-specific logic here
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error setting external user ID: $e");
+      }
+    }
+  }
+
+  // Private method to request push notification permission
+  static Future<void> _requestPushNotificationPermission() async {
+    try {
+      if (kDebugMode) {
+        print("Requesting push notification permission after ATT...");
+      }
+      
+      // Request permission for push notifications
+      final permissionGranted = await OneSignal.Notifications.requestPermission(true);
+      
+      if (kDebugMode) {
+        print("Push notification permission result: $permissionGranted");
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error requesting push notification permission: $e");
+      }
+    }
+  }
 } 

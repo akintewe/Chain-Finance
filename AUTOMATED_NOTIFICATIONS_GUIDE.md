@@ -23,7 +23,7 @@
 - Educational content for new users
 - Re-engagement messages
 
-## 🔗 Third-Party Integration Options
+
 
 ### **Option A: Zapier Integration**
 

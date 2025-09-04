@@ -34,7 +34,6 @@
 - ✅ Created comprehensive privacy policy (`PRIVACY_POLICY.md`)
 - ✅ Created detailed app store review notes (`APP_STORE_REVIEW_NOTES.md`)
 - ✅ Documented regulatory compliance procedures
-- ✅ Explained third-party exchange partnerships
 - ✅ Detailed AML/KYC procedures
 
 ## Technical Implementation Details
@@ -99,7 +98,7 @@ static Future<void> setExternalUserId(String userId) async {
 ### Privacy Policy
 - ✅ Comprehensive data collection explanation
 - ✅ ATT framework compliance details
-- ✅ Third-party service disclosures
+
 - ✅ User rights and choices
 - ✅ Cryptocurrency exchange compliance
 - ✅ GDPR and CCPA compliance

@@ -79,6 +79,6 @@
 	
 	<!-- App Tracking Transparency Framework -->
 	<key>NSUserTrackingUsageDescription</key>
-	<string>This app would like to track your activity across other companies' apps and websites to provide personalized notifications and improve your experience. This helps us deliver relevant cryptocurrency price alerts and transaction notifications.</string>
+	<string>This app would like to track your activity across other companies' apps and websites to provide personalized cryptocurrency price alerts and transaction notifications. Tracking helps us deliver relevant market updates and improve your trading experience. You can change this permission at any time in Settings.</string>
 </dict>
 </plist>

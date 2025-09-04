@@ -7,6 +7,7 @@ import 'package:get/get.dart';
 import '../../utils/text_styles.dart';
 import '../../utils/colors.dart';
 import '../../utils/responsive_helper.dart';
+import '../../services/onesignal_service.dart';
 import 'dart:math' as math;
 
 class OnboardingScreen extends StatefulWidget {

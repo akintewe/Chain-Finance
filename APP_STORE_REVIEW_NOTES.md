@@ -3,11 +3,17 @@
 ## App Tracking Transparency (ATT) Implementation
 
 ### Location of ATT Permission Request
-The App Tracking Transparency permission request is implemented in the OneSignal service initialization. The permission request appears:
+The App Tracking Transparency permission request is implemented to appear BEFORE any other permissions and is GUARANTEED to show on app launch. The permission request appears:
 
-1. **When the app first launches** - Before initializing OneSignal push notifications
-2. **Location in code**: `lib/services/onesignal_service.dart` in the `_requestTrackingPermission()` method
-3. **User experience**: The ATT dialog appears automatically when the app starts, before any tracking data is collected
+1. **When the app first launches** - ATT prompt appears automatically after UI is ready (1 second delay)
+2. **Implementation**: Centralized ATT manager ensures prompt shows regardless of entry point
+3. **Order of permissions**: ATT permission → Push notification permission (in that order)
+4. **Location in code**: 
+   - Main manager: `lib/services/att_manager.dart`
+   - UI wrapper: `lib/widgets/att_wrapper.dart` 
+   - Integrated in: `lib/main.dart` (wraps entire app)
+5. **User experience**: ATT dialog appears first on ANY screen, then push notification dialog appears only after ATT is handled
+6. **Robustness**: Works for both new users (onboarding) and returning users (dashboard), handles app lifecycle events
 
 ### What Data We Track
 We only collect tracking data after explicit user permission:
@@ -38,7 +44,6 @@ The photo library purpose string has been updated in `ios/Runner/Info.plist`:
 Nexa Prime is a cryptocurrency wallet and exchange platform that:
 
 1. **Provides wallet services**: Users can store, send, and receive cryptocurrencies
-2. **Integrates with third-party exchanges**: We partner with licensed cryptocurrency exchanges through APIs
 3. **Offers price monitoring**: Real-time cryptocurrency price tracking and alerts
 4. **Implements KYC/AML**: Know Your Customer and Anti-Money Laundering compliance
 
@@ -47,11 +52,6 @@ Nexa Prime is a cryptocurrency wallet and exchange platform that:
 - **Restrictions**: Services are limited to jurisdictions where we have appropriate licensing
 - **Compliance**: We comply with local financial regulations in each market
 
-### Third-Party Exchange Partnerships
-We partner with established, licensed cryptocurrency exchanges:
-- **Binance API**: For cryptocurrency trading and price data
-- **Coinbase API**: For additional trading options
-- **Other licensed exchanges**: For comprehensive market coverage
 
 ### Regulatory Compliance
 
@@ -75,7 +75,7 @@ We partner with established, licensed cryptocurrency exchanges:
 
 ### Decentralized vs Centralized
 - **Hybrid approach**: We provide both centralized exchange access and decentralized wallet features
-- **Centralized**: Exchange trading through licensed third-party APIs
+
 - **Decentralized**: Self-custody wallet functionality
 
 ### Token Availability
