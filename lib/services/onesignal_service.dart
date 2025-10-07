@@ -20,6 +20,9 @@ class OneSignalService {
     // Initialize OneSignal first (without any permissions)
     OneSignal.initialize(appId);
 
+    // Explicitly disable automatic permission requests
+    OneSignal.consentRequired(true);
+    
     // DO NOT request push notification permission here
     // ATT permission must come first, then push notifications
 
@@ -275,6 +278,9 @@ class OneSignalService {
       if (kDebugMode) {
         print("Requesting push notification permission after ATT...");
       }
+      
+      // Provide consent first (required when consentRequired is true)
+      OneSignal.consentGiven(true);
       
       // Request permission for push notifications
       final permissionGranted = await OneSignal.Notifications.requestPermission(true);

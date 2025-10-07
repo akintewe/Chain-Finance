@@ -11,6 +11,13 @@ class AppTextStyles {
     height: 1.2,
   );
 
+  static TextStyle get heading1 => GoogleFonts.manrope(
+    fontSize: 32,
+    fontWeight: FontWeight.w600,
+    color: AppColors.text,
+    height: 1.2,
+  );
+
   static TextStyle get heading2 => GoogleFonts.manrope(
     fontSize: 30,
     fontWeight: FontWeight.w400,

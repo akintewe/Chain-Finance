@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 import '../services/att_manager.dart';
 
 /// Widget that ensures ATT permission is requested when the app UI is ready
@@ -17,6 +18,8 @@ class ATTWrapper extends StatefulWidget {
 
 class _ATTWrapperState extends State<ATTWrapper> with WidgetsBindingObserver {
   bool _hasRequestedATT = false;
+  int _retryCount = 0;
+  static const int _maxRetries = 3;
 
   @override
   void initState() {
@@ -46,29 +49,57 @@ class _ATTWrapperState extends State<ATTWrapper> with WidgetsBindingObserver {
   }
 
   Future<void> _requestATTPermissionIfNeeded() async {
-    if (_hasRequestedATT) return;
+    if (_hasRequestedATT && _retryCount >= _maxRetries) return;
     
     try {
-      // Add a small delay to ensure UI is completely ready
-      await Future.delayed(const Duration(milliseconds: 1000));
+      // Multiple timing attempts for different iOS versions
+      final delays = [200, 500, 1000]; // ms
+      final delay = _retryCount < delays.length ? delays[_retryCount] : 1000;
+      
+      await Future.delayed(Duration(milliseconds: delay));
       
       if (mounted) {
         if (kDebugMode) {
-          print("ATTWrapper: Requesting ATT permission...");
+          print("ATTWrapper: Requesting ATT permission (attempt ${_retryCount + 1})...");
         }
         
         await ATTManager.requestPermissionIfNeeded();
-        _hasRequestedATT = true;
         
-        if (kDebugMode) {
-          print("ATTWrapper: ATT permission request completed");
+        // Check if the request actually worked
+        final status = await ATTManager.getCurrentStatus();
+        if (status == TrackingStatus.notDetermined && _retryCount < _maxRetries) {
+          // Still notDetermined, retry with different timing
+          _retryCount++;
+          if (kDebugMode) {
+            print("ATTWrapper: ATT still notDetermined, retrying...");
+          }
+          Future.delayed(const Duration(seconds: 2), () {
+            if (mounted) {
+              _requestATTPermissionIfNeeded();
+            }
+          });
+        } else {
+          _hasRequestedATT = true;
+          if (kDebugMode) {
+            print("ATTWrapper: ATT permission request completed with status: $status");
+          }
         }
       }
     } catch (e) {
       if (kDebugMode) {
         print("ATTWrapper: Error requesting ATT permission: $e");
       }
-      _hasRequestedATT = true; // Mark as attempted to avoid infinite retries
+      _retryCount++;
+      if (_retryCount < _maxRetries) {
+        // Retry after error
+        Future.delayed(const Duration(seconds: 1), () {
+          if (mounted) {
+            _requestATTPermissionIfNeeded();
+          }
+        });
+      } else {
+        _hasRequestedATT = true; // Stop after max retries
+      }
     }
   }
 

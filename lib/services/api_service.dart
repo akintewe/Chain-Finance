@@ -508,4 +508,192 @@ class ApiService {
       return {'error': 'network_error', 'message': 'Network connection failed'};
     }
   }
+
+  // Virtual Account API Methods
+  static Future<Map<String, dynamic>?> getVirtualAccount(String token) async {
+    try {
+      if (kDebugMode) {
+        print('Getting virtual account');
+        print('API URL: $baseUrl/virtual-account');
+      }
+
+      final response = await http.get(
+        Uri.parse('$baseUrl/virtual-account'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+          'Accept': 'application/json',
+        },
+      );
+
+      if (kDebugMode) {
+        print('Get virtual account response status: ${response.statusCode}');
+        print('Get virtual account response body: ${response.body}');
+      }
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return {'success': true, 'data': data};
+      } else if (response.statusCode == 404) {
+        return {'success': false, 'message': 'Virtual account not found'};
+      } else {
+        return {'success': false, 'message': 'Failed to get virtual account'};
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Exception while getting virtual account: $e');
+      }
+      return {'success': false, 'message': 'Network connection failed'};
+    }
+  }
+
+  static Future<Map<String, dynamic>?> createVirtualAccount(String token, String accountName) async {
+    try {
+      if (kDebugMode) {
+        print('Creating virtual account');
+        print('API URL: $baseUrl/virtual-account');
+      }
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/virtual-account'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+          'Accept': 'application/json',
+        },
+        body: jsonEncode({
+          'accountName': accountName,
+        }),
+      );
+
+      if (kDebugMode) {
+        print('Create virtual account response status: ${response.statusCode}');
+        print('Create virtual account response body: ${response.body}');
+      }
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return {'success': true, 'data': data};
+      } else {
+        return {'success': false, 'message': 'Failed to create virtual account'};
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Exception while creating virtual account: $e');
+      }
+      return {'success': false, 'message': 'Network connection failed'};
+    }
+  }
+
+  static Future<Map<String, dynamic>?> getVirtualCards(String token) async {
+    try {
+      if (kDebugMode) {
+        print('Getting virtual cards');
+        print('API URL: $baseUrl/virtual-cards');
+      }
+
+      final response = await http.get(
+        Uri.parse('$baseUrl/virtual-cards'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+          'Accept': 'application/json',
+        },
+      );
+
+      if (kDebugMode) {
+        print('Get virtual cards response status: ${response.statusCode}');
+        print('Get virtual cards response body: ${response.body}');
+      }
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return {'success': true, 'data': data};
+      } else {
+        return {'success': false, 'message': 'Failed to get virtual cards'};
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Exception while getting virtual cards: $e');
+      }
+      return {'success': false, 'message': 'Network connection failed'};
+    }
+  }
+
+  static Future<Map<String, dynamic>?> createVirtualCard(String token, dynamic design) async {
+    try {
+      if (kDebugMode) {
+        print('Creating virtual card');
+        print('API URL: $baseUrl/virtual-cards');
+      }
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/virtual-cards'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+          'Accept': 'application/json',
+        },
+        body: jsonEncode({
+          'design': design.toJson(),
+        }),
+      );
+
+      if (kDebugMode) {
+        print('Create virtual card response status: ${response.statusCode}');
+        print('Create virtual card response body: ${response.body}');
+      }
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return {'success': true, 'data': data};
+      } else {
+        return {'success': false, 'message': 'Failed to create virtual card'};
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Exception while creating virtual card: $e');
+      }
+      return {'success': false, 'message': 'Network connection failed'};
+    }
+  }
+
+  static Future<Map<String, dynamic>?> fundVirtualAccount(String token, double amount) async {
+    try {
+      if (kDebugMode) {
+        print('Funding virtual account');
+        print('API URL: $baseUrl/virtual-account/fund');
+        print('Amount: $amount');
+      }
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/virtual-account/fund'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+          'Accept': 'application/json',
+        },
+        body: jsonEncode({
+          'amount': amount,
+        }),
+      );
+
+      if (kDebugMode) {
+        print('Fund virtual account response status: ${response.statusCode}');
+        print('Fund virtual account response body: ${response.body}');
+      }
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return {'success': true, 'data': data};
+      } else {
+        return {'success': false, 'message': 'Failed to fund virtual account'};
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Exception while funding virtual account: $e');
+      }
+      return {'success': false, 'message': 'Network connection failed'};
+    }
+  }
 } 

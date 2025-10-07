@@ -8,13 +8,14 @@ import 'views/dashboard/dashboard_screen.dart';
 import 'controllers/auth_controller.dart';
 import 'controllers/notification_controller.dart';
 import 'controllers/price_alert_controller.dart';
+import 'controllers/virtual_account_controller.dart';
 import 'package:nexa_prime/services/onesignal_service.dart';
 import 'package:nexa_prime/widgets/att_wrapper.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize OneSignal
+  // Initialize OneSignal (without permissions)
   await OneSignalService.initialize();
 
   // Initialize AuthController first and wait for it to be ready
@@ -25,6 +26,7 @@ void main() async {
   Get.put(WalletController());
   Get.put(NotificationController());
   Get.put(PriceAlertController());
+  Get.put(VirtualAccountController());
   
   runApp(const MyApp());
 }

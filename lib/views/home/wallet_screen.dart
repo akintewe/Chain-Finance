@@ -15,6 +15,7 @@ import 'package:nexa_prime/views/home/all_tokens_screen.dart';
 import 'package:nexa_prime/views/home/edit_favorites_screen.dart';
 import 'package:nexa_prime/views/home/my_tokens_screen.dart';
 import 'package:nexa_prime/views/home/candlestick_chart_widget.dart';
+import 'package:nexa_prime/views/home/virtual_account_screen.dart';
 import 'dart:async';
 import 'dart:math';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -983,6 +984,39 @@ class _WalletScreenState extends State<WalletScreen> with TickerProviderStateMix
                     ),
                   ),
                 ],
+              ),
+
+              const SizedBox(height: 16),
+
+              // Virtual Account Button
+              SizedBox(
+                width: double.infinity,
+                child: Container(
+                  height: 50,
+                  decoration: BoxDecoration(
+                          color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(15),
+                          border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+                  ),
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.transparent,
+                      shadowColor: Colors.transparent,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                    ),
+                   onPressed: () => Get.to(() => const VirtualAccountScreen()),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text('Virtual Account', style: AppTextStyles.body2),
+                              const SizedBox(width: 8),
+                              const Icon(Icons.credit_card, size: 16, color: AppColors.text),
+                      ],
+                    ),
+                  ),
+                ),
               ),
 
               const SizedBox(height: 20),

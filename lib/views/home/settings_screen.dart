@@ -13,7 +13,9 @@ import 'package:nexa_prime/views/home/backup_wallet_screen.dart';
 import 'package:nexa_prime/views/home/change_password_screen.dart';
 import 'package:nexa_prime/views/home/set_transaction_pin_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
+import '../debug/att_debug_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
@@ -826,6 +828,61 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                   ),
                 ),
+                
+                // ATT Debug access (commented out - working now!)
+                /*
+                Container(
+                  margin: const EdgeInsets.only(bottom: 20),
+                  child: GestureDetector(
+                    onTap: () {
+                      Get.to(() => const ATTDebugScreen());
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppColors.black),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.bug_report,
+                            color: Colors.orange,
+                            size: 24,
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'ATT Debug Info',
+                                  style: AppTextStyles.body2.copyWith(
+                                    color: AppColors.black,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                Text(
+                                  'Debug mode only - Check ATT status',
+                                  style: AppTextStyles.body2.copyWith(
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Icon(
+                            Icons.arrow_forward_ios,
+                            color: AppColors.textSecondary,
+                            size: 16,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                */
               ],
             ),
           ),

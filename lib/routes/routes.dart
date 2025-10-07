@@ -10,6 +10,9 @@ import '../views/home/kyc_screen.dart';
 import '../views/home/kyc_success_screen.dart';
 import '../views/home/kyc_status_screen.dart';
 import '../views/home/privacy_policy_screen.dart';
+import '../views/home/virtual_card_selection_screen.dart';
+import '../views/home/virtual_account_screen.dart';
+import '../views/home/fund_virtual_account_screen.dart';
 
 import 'package:get/get.dart';
 
@@ -26,6 +29,9 @@ class Routes {
   static const String kycSuccess = '/kyc-success';
   static const String kycStatus = '/kyc-status';
   static const String privacyPolicy = '/privacy-policy';
+  static const String virtualCardSelection = '/virtual-card-selection';
+  static const String virtualAccount = '/virtual-account';
+  static const String fundVirtualAccount = '/fund-virtual-account';
 
   static final routes = [
     GetPage(
@@ -91,6 +97,24 @@ class Routes {
     GetPage(
       name: privacyPolicy,
       page: () => const PrivacyPolicyScreen(),
+      transition: Transition.rightToLeft,
+      transitionDuration: const Duration(milliseconds: 300),
+    ),
+    GetPage(
+      name: virtualCardSelection,
+      page: () => const VirtualCardSelectionScreen(),
+      transition: Transition.rightToLeft,
+      transitionDuration: const Duration(milliseconds: 300),
+    ),
+    GetPage(
+      name: virtualAccount,
+      page: () => const VirtualAccountScreen(),
+      transition: Transition.rightToLeft,
+      transitionDuration: const Duration(milliseconds: 300),
+    ),
+    GetPage(
+      name: fundVirtualAccount,
+      page: () => const FundVirtualAccountScreen(),
       transition: Transition.rightToLeft,
       transitionDuration: const Duration(milliseconds: 300),
     ),
